@@ -4,7 +4,9 @@ import pygame
 class Button(pygame.sprite.Sprite):
     def __init__(self, image, xoy):
         pygame.sprite.Sprite.__init__(self)
-        self.image = image
+        self.state = image[0]
+        self.trigger = image[1]
+        self.image = self.state
         self.func = None
         self.args = None
         self.rect = self.image.get_rect(center=xoy)
@@ -17,8 +19,12 @@ class Button(pygame.sprite.Sprite):
         self.args = args
 
     def update(self, there, command=None):
-        if self.rect.colliderect(there[0], there[1], 1, 1) and there[2] and there[3] == 1 and self.func:
-            self.func(self.args) if self.args else self.func()
+        if self.rect.colliderect(there[0], there[1], 1, 1):
+            self.image = self.trigger
+            if there[2] and there[3] == 1 and self.func:
+                self.func(self.args) if self.args else self.func()
+        else:
+            self.image = self.state
 
 
 class InteractLabel(pygame.sprite.Sprite):

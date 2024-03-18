@@ -22,4 +22,4 @@ class Player:
         self.units_count = 100
         start_ground.fraction = self.fraction_type
         start_ground.units_count = self.units_count
-        start_ground.image = pygame.image.load('data/ground/barrier.png').convert_alpha()
+        # start_ground.image = pygame.image.load('data/ground/barrier.png').convert_alpha()

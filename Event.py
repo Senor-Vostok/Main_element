@@ -1,3 +1,4 @@
+import Player
 from Structures import *
 from Interfaces import *
 import pygame
@@ -5,7 +6,7 @@ import pygame
 label_choice = None
 
 
-def place_structure(gr, structure_name='f'):
+def place_structure(gr, structure_name='mill'):
     gr.biom[1] = structure_name
     gr.structure = ClassicStructure(gr.textures.animations_structures[structure_name][0],
                                     (gr.rect[0] + gr.rect[2] // 2, gr.rect[1] + gr.rect[3] // 2), structure_name,
@@ -30,13 +31,13 @@ def check_ground_info(gr, screen):
         screen.blit(biome_name, (gr.rect.x + 20, gr.rect.y + 40))
 
 
-def check_event(there, ground, screen):  # event_id - какое действие пришло обработчику (изменить структуру/поселение и тд)
+def check_event(gr, there, screen):  # event_id - какое действие пришло обработчику (изменить структуру/поселение и тд)
     global label_choice
     if there[3] == 1:  # лкм
         pass  # убрать интерфейс
     elif there[3] == 3:  # пкм
         if not label_choice:
-            label_choice = PopupMenu((ground.rect[0] + ground.rect[2] // 2, ground.rect[1] + ground.rect[3] // 2))
+            label_choice = PopupMenu((gr.rect[0] + gr.rect[2] // 2, gr.rect[1] + gr.rect[3] // 2))
         # do_name, *args = Окно из интерфейса
         # запихиваем интерфейс в label_choice
         # checker(do_name, *args)
@@ -47,7 +48,11 @@ def check_event(there, ground, screen):  # event_id - какое действи�
 # label_choice.update(btn, screen)
 
 
-def checker(name, *args):
-    if name == 'build':
+def checker(player, gr, action_name, *args): #args: (название_постройки, стоимость, список_разрешенных_биомов)
+    if action_name == 'build':
         # Можем ли мы позволить себе постройку если да то строй
-        pass
+        if (player.action_pts >= args[1]) and (gr.name in gr.biome_permissions[args[0]]):
+            place_structure(gr, args[0])
+        else:
+            # говорим, что невозможно построить
+            pass

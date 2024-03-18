@@ -10,7 +10,7 @@ class Textures:
 
         self.font = pygame.font.SysFont('Futura book C', 30)
 
-        self.loading = pygame.image.load('data/loading/logo.png').convert_alpha()
+        self.loading = pygame.transform.scale(pygame.image.load('data/loading/logo.png').convert_alpha(), (1920, 1080))
 
         self.label = self.render('data/ground/label.png', (400, 30))
 
@@ -35,6 +35,11 @@ class Textures:
             'mine': [self.render(f'data/structures/mine/anim{i}.png', (120, 180)) for i in range(1, 8)]}
 
         self.popup_menu = {'label': self.render(f'data/widgets/surfaces/surface1.png', (120, 180))}
+
+        self.main_menu = {'background': [self.render(f'data/widgets/menu/background.png', (1920, 1080))],
+                          'name': [self.render(f'data/widgets/menu/main element.png', (466, 194))],
+                          'button_start': [self.render(f'data/widgets/menu/button.png', (500, 90)),
+                                           self.render(f'data/widgets/menu/buttont.png', (500, 90))]}
 
     def render(self, address, size):
         return pygame.transform.scale(pygame.image.load(address), size).convert_alpha()

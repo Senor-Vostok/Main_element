@@ -1,6 +1,6 @@
 import pygame
-
 import Player
+import Interfaces
 from Textures import Textures
 from Machine import World
 from Generation import Generation
@@ -11,61 +11,85 @@ from win32api import GetSystemMetrics
 
 import Widgets
 
-width = GetSystemMetrics(0)
-height = GetSystemMetrics(1)
-centre = (width // 2, height // 2)
-pygame.init()
-clock = pygame.time.Clock()
-textures = Textures()
 
-win = pygame.display.set_mode((width, height))
-pygame.mouse.set_visible(False)
-my_font = pygame.font.SysFont('Futura book C', 30)
+class EventHandler:
+    def __init__(self):
+        pygame.init()
+        self.textures = Textures()
+        self.size = GetSystemMetrics(0), GetSystemMetrics(1)
+        self.centre = (GetSystemMetrics(0) // 2, GetSystemMetrics(1) // 2)
+        self.clock = pygame.time.Clock()
+        self.screen = pygame.display.set_mode(self.size, pygame.FULLSCREEN, vsync=1)
+        pygame.mouse.set_visible(False)
 
-win.blit(textures.loading, (centre[0] - 960, centre[1] - 540))
-pygame.display.update()
+        self.matr = None
+        self.world_coord = 0
+        self.screen_world = None
 
-size_world = 200
-barrier = 20
-gen = Generation(size_world, win, centre)  # Получаем массив сгенерированной "земли"
-world_pos_x = (size_world + barrier) // 2
-world_pos_y = (size_world + barrier) // 2
-gen.generation()
-matr_world = gen.add_barier(barrier)
-world = World(win, centre, [world_pos_x, world_pos_y], matr_world)  # Инициализация мира (его отображение)
-world.create()  # заполнение динамической сетки
+        self.camera = Cam()
 
-camera = Cam()  # Создание камеры
+        self.open_some = True
+        self.flag = True
 
-open_some = False
-flag = True  # потом нормально сделаем
+        self.player = None
 
-player = Player.Player(777)
-player.start_point = (world.sq2 // 2, world.sq1 // 2)
-start_x = player.start_point[0]
-start_y = player.start_point[1]
-player.setup(world.great_world[start_x][start_y]) #на старте поселение игрока спавнится в центральной клетке (пустая клетка)
+        self.interfaces = dict()
 
-while True:
-    normal = clock.tick()
-    c = None
-    for i in pygame.event.get([pygame.QUIT, pygame.KEYUP, pygame.KEYDOWN, pygame.MOUSEBUTTONUP, pygame.MOUSEBUTTONDOWN,
-                               pygame.MOUSEMOTION]):
-        camera.event(i)
-        if i.type == pygame.KEYDOWN:
-            c = i
-            if i.key == pygame.K_1:
-                with open('online/Protocols', mode='w') as file:
-                    w = '\n'.join('\t'.join('|'.join(k) for k in i) for i in gen.masbiom)
-                    file.write(f'm-0-{w}')
-            if i.key == pygame.K_2 and flag:
-                flag = False
-                os.startfile(rf'{os.getcwd()}\online\H.py')  # временно так
-        if i.type == pygame.QUIT:
-            sys.exit()
-    camera.inter()
-    camera.speed = camera.const_for_speed / (clock.get_fps() + 1)
-    world.draw(camera.i, camera.move, open_some)  # Вырисовываем картинку
-    win.blit(textures.point, (camera.i[0] - 10, camera.i[1] - 10))
-    win.blit(textures.font.render(f'fps: {clock.get_fps() // 1}', False, (99, 73, 47)), (30, 30))
-    pygame.display.update()
+    def generation(self, size=200, barrier=20):
+        gen = Generation(size, self.screen, self.centre)
+        self.world_coord = (size + barrier) // 2
+        gen.generation()
+        self.matr = gen.add_barrier(barrier)
+
+    def player(self, id):
+        self.player = Player.Player(id)
+        self.player.start_point = (self.screen_world.sq2 // 2, self.screen_world.sq1 // 2)
+        self.player.setup(self.screen_world.great_world[self.player.start_point[0]][self.player.start_point[1]])
+
+    def init_world(self):
+        self.generation(200)
+        self.screen_world = World(self.screen, self.centre, [self.world_coord, self.world_coord], self.matr)
+        self.screen_world.create()
+
+    def machine(self):
+        self.camera.inter()
+        self.camera.speed = self.camera.const_for_speed / (self.clock.get_fps() + 1)
+        self.screen_world.draw(self.camera.i, self.camera.move, self.open_some)  # Вырисовываем картинку
+
+    def close(self, data=['menu', False, init_world]):
+        self.open_some = data[1]
+        self.interfaces.pop(data[0])
+        data[2]()
+
+    def show_menu(self):
+        menu = Interfaces.Menu(self.centre, self.textures)
+        menu.button_start.connect(self.close, 'menu', False, self.init_world)
+        self.interfaces['menu'] = menu.create_surface()
+
+    def update(self):
+        self.clock.tick()
+        c = None
+        for i in pygame.event.get():
+            self.camera.event(i)
+            if i.type == pygame.KEYDOWN:
+                c = i
+            if i.type == pygame.QUIT:
+                sys.exit()
+        if self.screen_world:
+            self.machine()
+        try:
+            for i in self.interfaces:
+                self.interfaces[i].update(self.camera.i, self.screen, c)
+        except Exception:
+            pass
+        self.screen.blit(self.textures.point, (self.camera.i[0] - 10, self.camera.i[1] - 10))
+        self.screen.blit(self.textures.font.render(f'fps: {self.clock.get_fps() // 1}', False, (99, 73, 47)), (30, 30))
+
+
+if __name__ == '__main__':
+    pygame.init()
+    handler = EventHandler()
+    handler.show_menu()
+    while True:
+        handler.update()
+        pygame.display.flip()

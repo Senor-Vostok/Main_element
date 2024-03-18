@@ -3,7 +3,12 @@ import Textures
 
 
 class Menu:
-    pass
+    def __init__(self, xoy, textures=Textures.Textures()):
+        self.background = BackGround(textures.main_menu['background'][0], xoy)
+        self.button_start = Button(textures.main_menu['button_start'], (xoy[0] - 530, xoy[1] - 450))
+
+    def create_surface(self):
+        return Surface(self.background, self.button_start)
 
 
 class PopupMenu:
