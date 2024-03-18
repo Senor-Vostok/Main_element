@@ -1,7 +1,5 @@
 import pygame
-from datetime import datetime
-
-import Textures
+from Textures import Textures
 from Machine import World
 from Generation import Generation
 from Cam_class import Cam
@@ -12,17 +10,19 @@ width = GetSystemMetrics(0)
 height = GetSystemMetrics(1)
 centre = (width // 2, height // 2)
 pygame.init()
+clock = pygame.time.Clock()
+textures = Textures()
 
 win = pygame.display.set_mode((width, height), pygame.FULLSCREEN, vsync=1)
 pygame.mouse.set_visible(False)
 my_font = pygame.font.SysFont('Futura book C', 30)
 
-win.blit(pygame.image.load('data/loading/logo.png').convert_alpha(), (centre[0] - 960, centre[1] - 540))
+win.blit(textures.loading, (centre[0] - 960, centre[1] - 540))
 pygame.display.update()
 
 size_world = 200
 barrier = 20
-gen = Generation(size_world)  # Получаем массив сгенерированной "земли"
+gen = Generation(size_world, win, centre)  # Получаем массив сгенерированной "земли"
 world_pos_x = (size_world + barrier) // 2
 world_pos_y = (size_world + barrier) // 2
 gen.generation()
@@ -35,12 +35,14 @@ camera = Cam()  # Создание камеры
 open_some = False
 
 while True:
-    a = datetime.now().microsecond
-    for i in pygame.event.get():
+    normal = clock.tick(60)
+    for i in pygame.event.get([pygame.QUIT, pygame.KEYUP, pygame.KEYDOWN, pygame.MOUSEBUTTONUP, pygame.MOUSEBUTTONDOWN, pygame.MOUSEMOTION]):
         camera.event(i)
         if i.type == pygame.QUIT:
             sys.exit()
     camera.inter()
+    camera.speed = camera.const_for_speed / (clock.get_fps() + 1)
     world.draw(camera.i, camera.move, open_some)  # Вырисовываем картинку
-    win.blit(Textures.point, (camera.i[0] - 10, camera.i[1] - 10))
+    win.blit(textures.point, (camera.i[0] - 10, camera.i[1] - 10))
+    win.blit(textures.font.render(f'fps: {clock.get_fps() // 1}', False, (99, 73, 47)), (30, 30))
     pygame.display.update()

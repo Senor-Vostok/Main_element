@@ -1,13 +1,12 @@
 import pygame
-import Textures
 
 
 class ClassicStructure(pygame.sprite.Sprite):
-    def __init__(self, image, xoy, name):
+    def __init__(self, image, xoy, name, textures):
         pygame.sprite.Sprite.__init__(self)
         self.image = image
         self.name = name
-        self.animation = Textures.animations_structures[name]
+        self.animation = textures.animations_structures[name]
         self.rect = self.image.get_rect(center=xoy)
 
         self.second_animation = 0
