@@ -32,6 +32,8 @@ class InteractLabel(pygame.sprite.Sprite):
         pygame.sprite.Sprite.__init__(self)
         self.image = image
         self.text = "_"
+        self.func = None
+        self.args = None
         # self.font.render(self.text, False, (99, 73, 47))
         self.rect = self.image.get_rect(center=xoy)
         self.font = pygame.font.SysFont("Futura book C", self.rect[3] + self.rect[3] // 4)
@@ -46,6 +48,10 @@ class InteractLabel(pygame.sprite.Sprite):
             i += 1
         screen.blit(image, (self.rect.x + 2, self.rect.y + 2))
 
+    def connect(self, func, *args):
+        self.func = func
+        self.args = args
+
     def update(self, there, command=None):
         if not self.rect.colliderect(there[0], there[1], 1, 1) and there[2] and there[3] == 1:
             self.can_write = False
@@ -58,7 +64,10 @@ class InteractLabel(pygame.sprite.Sprite):
         if command:
             if command.key == pygame.K_BACKSPACE:
                 self.text = self.text[:-2] + "_"
-            elif len(command.unicode) > 0:
+            elif int(command.key) == 13:
+                if self.func:
+                    self.func(self.args) if self.args else self.func()
+            elif len(str(command.unicode)) > 0:
                 self.text = self.text[:-1] + command.unicode + "_"
 
 

@@ -1,6 +1,5 @@
 import pygame
 from Structures import ClassicStructure
-import Event
 
 
 class Ground(pygame.sprite.Sprite):
@@ -44,14 +43,14 @@ class Ground(pygame.sprite.Sprite):
     def self_animation(self, stadia):
         self.image = self.animation[stadia - 1]
 
-    def draw(self, screen, there):
+    def draw(self, screen, there, handler):
         screen.blit(self.image, (self.rect.x, self.rect.y))
-        self.select = self.rect.colliderect(there[0], there[1], 1, 1)
-        if self.select and self.name != 'barrier':
+        if self.rect.colliderect(there[0], there[1], 1, 1) and self.name != 'barrier':
             screen.blit(self.select_image, (self.rect.x, self.rect.y))
         if self.structure:
             self.draw_structure(screen)
-        Event.check_event(self, there, screen)
+        if self.rect.colliderect(there[0], there[1], 1, 1):
+            handler.check_ground_please(self)
 
     def update(self, synchronous, move, y_n):  # synchronous - для синхронизации анимации у разных объектов земли
         if self.animation:

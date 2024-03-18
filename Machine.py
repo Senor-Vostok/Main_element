@@ -5,7 +5,8 @@ from Textures import Textures
 
 
 class World:
-    def __init__(self, win, centre, cord, bioms):
+    def __init__(self, win, centre, cord, biomes, handler):
+        self.handler = handler
         self.textures = Textures()
         self.land = self.textures.land
 
@@ -13,8 +14,8 @@ class World:
 
         self.priority = self.textures.priority  # Приоритеты текстур
 
-        self.bioms = bioms  # Получение данных о матрице мира
-        self.gr_main = 60
+        self.biomes = biomes  # Получение данных о матрице мира
+        self.gr_main = int(60 * self.textures.resizer)
         self.sq1 = centre[0] * 2 // self.gr_main + 3 if centre[0] * 2 // self.gr_main % 2 == 0 else centre[0] * 2 // self.gr_main + 2  # Разбиение экрана на секторы, с помощью которых строится динамическая сетка
         self.sq2 = centre[1] * 2 // self.gr_main + 5 if centre[1] * 2 // self.gr_main % 2 == 0 else centre[1] * 2 // self.gr_main + 4
 
@@ -39,28 +40,28 @@ class World:
             self.great_world.pop(-1)
             self.great_world.insert(0, [None for _ in range(self.sq1)])
             for i in range(self.sq1):
-                self.add_ground(0, i, self.bioms[self.world_cord[0]][self.world_cord[1] + i])
+                self.add_ground(0, i, self.biomes[self.world_cord[0]][self.world_cord[1] + i])
         elif stor == 'down':  # По принципу Up
             self.great_world.pop(0)
             self.great_world.insert(self.sq1, [None for _ in range(self.sq1)])
             for i in range(self.sq1):
-                self.add_ground(self.sq2 - 1, i, self.bioms[self.world_cord[0] + self.sq2 - 1][self.world_cord[1] + i])
+                self.add_ground(self.sq2 - 1, i, self.biomes[self.world_cord[0] + self.sq2 - 1][self.world_cord[1] + i])
         elif stor == 'left':
             for i in range(self.sq2):
                 self.great_world[i].pop(-1)
                 self.great_world[i].insert(0, None)
             for i in range(self.sq2):
-                self.add_ground(i, 0, self.bioms[self.world_cord[0] + i][self.world_cord[1]])
+                self.add_ground(i, 0, self.biomes[self.world_cord[0] + i][self.world_cord[1]])
         elif stor == 'right':
             for i in range(self.sq2):
                 self.great_world[i].pop(0)
                 self.great_world[i].insert(self.sq1 - 1, None)
             for i in range(self.sq2):
-                self.add_ground(i, self.sq1 - 1, self.bioms[self.world_cord[0] + i][self.world_cord[1] + self.sq1 - 1])
+                self.add_ground(i, self.sq1 - 1, self.biomes[self.world_cord[0] + i][self.world_cord[1] + self.sq1 - 1])
         else:  # Заполнение динамической сетки если до этого её не было
             for i in range(self.sq2):
                 for j in range(self.sq1):
-                    self.add_ground(i, j, self.bioms[self.world_cord[0] + i][self.world_cord[1] + j])
+                    self.add_ground(i, j, self.biomes[self.world_cord[0] + i][self.world_cord[1] + j])
 
     def draw(self, there, move=(0, 0), open_some=False):  # Отображение на экране спрайтов
         flag = self.check_barrier(move, self.centre)
@@ -70,13 +71,9 @@ class World:
             for j in range(len(self.great_world[i])):
                 self.great_world[i][j].update(self.synchronous, move, flag and not open_some)  # Обновление спрайтов земли
                 sorted_by_priority.append(self.great_world[i][j])
-        s = None
         for i in sorted(sorted_by_priority, key=lambda x: x.structure != None):  # потом заменить на "если есть в клетке"
-            i.draw(self.win, there)  # Показ слайдов земли по приоритетам
-            if i.rect.colliderect(there[0], there[1], 1, 1):
-                s = i
+            i.draw(self.win, there, self.handler)  # Показ слайдов земли по приоритетам
         self.synchronous = self.synchronous + 1 if self.synchronous < 1000000 else 0
-        return s
 
     def move_scene(self):  # Тут происходит проверка, когда нужно обновлять динамическую сетку
         if max(self.now_dr[0], self.start_dr[0]) - min(self.now_dr[0], self.start_dr[0]) > self.gr_main:
@@ -104,7 +101,7 @@ class World:
                 res = self.now_dr[0] + j * self.gr_main <= point[0] - 2 * move[0] <= self.now_dr[0] + j * self.gr_main + self.gr_main and \
                       self.now_dr[1] + i * self.gr_main <= point[1] - 2 * move[1] <= self.now_dr[1] + i * self.gr_main + self.gr_main
                 if res:
-                    if self.bioms[self.world_cord[0] + i][self.world_cord[1] + j][0] == 'barrier':
+                    if self.biomes[self.world_cord[0] + i][self.world_cord[1] + j][0] == 'barrier':
                         move[0], move[1] = -move[0], -move[1]
                         return False
         return True
@@ -115,6 +112,6 @@ class World:
             self.now_dr[1] = self.great_world[0][0].rect[1] + self.great_world[0][0].rect[3] / 2 - self.gr_main / 2
             self.move_scene()
 
-    def add_ground(self, i, j, biom):  # Вспомогательная функция для добавления спрайта земля на сетку
-        sprite = Ground(random.choice(self.land[biom[0]]), (self.now_dr[0] + j * self.gr_main + self.gr_main / 2, self.now_dr[1] + i * self.gr_main + self.gr_main / 2), biom, self.textures)
+    def add_ground(self, i, j, biome):  # Вспомогательная функция для добавления спрайта земля на сетку
+        sprite = Ground(random.choice(self.land[biome[0]]), (self.now_dr[0] + j * self.gr_main + self.gr_main / 2, self.now_dr[1] + i * self.gr_main + self.gr_main / 2), biome, self.textures)
         self.great_world[i][j] = sprite

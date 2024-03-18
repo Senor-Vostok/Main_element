@@ -3,7 +3,6 @@ import pygame
 from Textures import Textures
 from numpy import floor
 from perlin_noise import PerlinNoise
-from functools import cache
 
 
 class Generation:
