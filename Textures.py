@@ -12,22 +12,29 @@ class Textures:
 
         self.loading = pygame.image.load('data/loading/logo.png').convert_alpha()
 
-        self.label = pygame.image.load('data/ground/label.png').convert_alpha()
+        self.label = self.render('data/ground/label.png', (400, 30))
 
-        self.select = pygame.image.load('data/ground/ground_select.png').convert_alpha()
+        self.select = self.render('data/ground/ground_select.png', (60, 60))
 
-        self.point = pygame.image.load('data/ground/test.png').convert_alpha()
+        self.point = self.render('data/ground/test.png', (20, 20))
 
         self.animation_ground = {
-            'water': [pygame.image.load(f'data/ground/water{i}.png').convert_alpha() for i in range(1, 4)]}
+            'water': [self.render(f'data/ground/water{i}.png', (60, 60)) for i in range(1, 4)]}
 
-        self.land = {'ground': [pygame.image.load(f'data/ground/ground{i}.png').convert_alpha() for i in range(1, 5)],
-                     'stone': [pygame.image.load('data/ground/stone.png').convert_alpha()],
-                     'barrier': [pygame.image.load('data/ground/barrier.png').convert_alpha()],
-                     'flower': [pygame.image.load('data/ground/flower.png').convert_alpha()],
-                     'water': [pygame.image.load(f'data/ground/water.png')],
-                     'sand': [pygame.image.load('data/ground/sand.png').convert_alpha()],
-                     'snow': [pygame.image.load('data/ground/snow.png').convert_alpha()]}
+        self.land = {'ground': [self.render(f'data/ground/ground{i}.png', (60, 60)) for i in range(1, 5)],
+                     'stone': [self.render('data/ground/stone.png', (60, 60))],
+                     'barrier': [self.render('data/ground/barrier.png', (60, 60))],
+                     'flower': [self.render('data/ground/flower.png', (60, 60))],
+                     'water': [self.render(f'data/ground/water1.png', (60, 60))],
+                     'sand': [self.render('data/ground/sand.png', (60, 60))],
+                     'snow': [self.render('data/ground/snow.png', (60, 60))]}
 
-        self.animations_structures = {'tower': [pygame.image.load(f'data/structures/tower/s{i}.png').convert_alpha() for i in range(1, 6)],
-                                       'mill': [pygame.image.load(f'data/structures/mill/s{i}.png') for i in range(1, 4)]}
+        self.animations_structures = {
+            'tower': [self.render(f'data/structures/tower/anim{i}.png', (120, 180)) for i in range(1, 6)],
+            'mill': [self.render(f'data/structures/mill/anim{i}.png', (120, 180)) for i in range(1, 4)],
+            'mine': [self.render(f'data/structures/mine/anim{i}.png', (120, 180)) for i in range(1, 8)]}
+
+        self.popup_menu = {'label': self.render(f'data/widgets/surfaces/surface1.png', (120, 180))}
+
+    def render(self, address, size):
+        return pygame.transform.scale(pygame.image.load(address), size).convert_alpha()

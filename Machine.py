@@ -70,9 +70,13 @@ class World:
             for j in range(len(self.great_world[i])):
                 self.great_world[i][j].update(self.synchronous, move, flag and not open_some)  # Обновление спрайтов земли
                 sorted_by_priority.append(self.great_world[i][j])
+        s = None
         for i in sorted(sorted_by_priority, key=lambda x: x.structure != None):  # потом заменить на "если есть в клетке"
             i.draw(self.win, there)  # Показ слайдов земли по приоритетам
+            if i.rect.colliderect(there[0], there[1], 1, 1):
+                s = i
         self.synchronous = self.synchronous + 1 if self.synchronous < 1000000 else 0
+        return s
 
     def move_scene(self):  # Тут происходит проверка, когда нужно обновлять динамическую сетку
         if max(self.now_dr[0], self.start_dr[0]) - min(self.now_dr[0], self.start_dr[0]) > self.gr_main:

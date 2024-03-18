@@ -1,4 +1,6 @@
 import pygame
+
+import Player
 from Textures import Textures
 from Machine import World
 from Generation import Generation
@@ -37,6 +39,12 @@ camera = Cam()  # Создание камеры
 
 open_some = False
 flag = True  # потом нормально сделаем
+
+player = Player.Player(777)
+player.start_point = (world.sq2 // 2, world.sq1 // 2)
+start_x = player.start_point[0]
+start_y = player.start_point[1]
+player.setup(world.great_world[start_x][start_y]) #на старте поселение игрока спавнится в центральной клетке (пустая клетка)
 
 while True:
     normal = clock.tick()
