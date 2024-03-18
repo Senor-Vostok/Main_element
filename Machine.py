@@ -1,4 +1,5 @@
 import pygame
+import random
 from Ground_class import Ground
 import Textures
 
@@ -66,7 +67,7 @@ class World:
                 self.great_world[i][j].update(self.synchronous, move, flag and not open_some)  # Обновление спрайтов земли
                 sorted_by_priority.append(self.great_world[i][j])
         self.update_object(move, flag, open_some)  # Обновление оставшихся спрайтов и динамической сетки
-        for i in sorted(sorted_by_priority, key=lambda x: self.priority.index(x.name)):
+        for i in sorted(sorted_by_priority, key=lambda x: x.structure != None):  # потом заменить на "если есть в клетке"
             i.draw(self.win, there)  # Показ слайдов земли по приоритетам
         self.synchronous = self.synchronous + 1 if self.synchronous < 1000000 else 0  # Задел на будущее если будет анимированная земля
 
@@ -96,7 +97,7 @@ class World:
                 res = self.now_dr[0] + j * self.gr_main <= point[0] - 2 * move[0] <= self.now_dr[0] + j * self.gr_main + self.gr_main and \
                       self.now_dr[1] + i * self.gr_main <= point[1] - 2 * move[1] <= self.now_dr[1] + i * self.gr_main + self.gr_main
                 if res:
-                    if self.bioms[self.world_cord[0] + i][self.world_cord[1] + j] == 'barrier':
+                    if self.bioms[self.world_cord[0] + i][self.world_cord[1] + j][0] == 'barrier':
                         return False
         return True
 
@@ -107,6 +108,6 @@ class World:
             self.move_scene()
 
     def add_ground(self, i, j, biom):  # Вспомогательная функция для добавления спрайта земля на сетку
-        sprite = Ground(Textures.land[biom], (self.now_dr[0] + j * self.gr_main + self.gr_main // 2,
-                                          self.now_dr[1] + i * self.gr_main + self.gr_main // 2), biom)
+        sprite = Ground(random.choice(Textures.land[biom[0]]), (self.now_dr[0] + j * self.gr_main + self.gr_main // 2,
+                                      self.now_dr[1] + i * self.gr_main + self.gr_main // 2), biom)
         self.great_world[i][j] = sprite

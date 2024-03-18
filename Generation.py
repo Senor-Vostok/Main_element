@@ -5,8 +5,8 @@ from perlin_noise import PerlinNoise
 
 class Generation:
     def __init__(self, massive):
-        self.translate = {0: 'ground', 1: 'stone'}
-        self.masbiom = [['stone' for _ in range(massive)] for _ in range(massive)]
+        self.translate = {0: 'water', 1: 'sand', 2: 'flower', 3: 'ground', 4: 'stone', 5: 'snow'}
+        self.masbiom = [[['\0', '\0'] for _ in range(massive)] for _ in range(massive)]  # Первый биом второй структура
         self.masive = massive
         self.coord_objects = list()
         self.select_cord_objects = list()
@@ -14,28 +14,25 @@ class Generation:
     def add_barier(self, size):
         for i in range(self.masive + size * 2):
             if i < size:
-                self.masbiom.insert(0, ['barrier'] * (self.masive + size * 2))
+                self.masbiom.insert(0, [['barrier', '\0']] * (self.masive + size * 2))
             elif i >= self.masive + size:
-                self.masbiom.append(['barrier'] * (self.masive + size * 2))
+                self.masbiom.append([['barrier', '\0']] * (self.masive + size * 2))
             else:
-                self.masbiom[i] = ['barrier'] * size + self.masbiom[i] + ['barrier'] * size
+                self.masbiom[i] = [['barrier', '\0']] * size + self.masbiom[i] + [['barrier', '\0']] * size
         return self.masbiom
 
     def get_key(self, z):
-        if z < -8:
+        if z < -6:
             return 0
-        elif z in range(-8, -6):
-            return 1
         elif z in range(-6, -5):
-            return 0
+            return 1
         elif z in range(-5, -2):
-            return 1
-        elif z in range(-2, 2):
-            return 0
-        elif z in range(1, 7):
-            return 1
-        else:
-            return 0
+            return 2
+        elif z in range(-2, 5):
+            return 3
+        elif z in range(5, 7):
+            return 4
+        return 5
 
     def generation(self):  # пока отключено
         seed = random.randint(1000, 9000)
@@ -50,5 +47,5 @@ class Generation:
             landscale[int(x)][int(z)] = self.get_key(int(y))
         for i in range(self.masive):
             for j in range(self.masive):
-                self.masbiom[i][j] = self.translate[landscale[i][j]]
+                self.masbiom[i][j][0] = self.translate[landscale[i][j]]
         return self.masbiom
