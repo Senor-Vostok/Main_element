@@ -28,8 +28,9 @@ while True:
     try:
         host.sock.listen()
         client, adr = host.sock.accept()
-        if client not in host.array_clients:
-            host.array_clients.append(client)
+        if adr not in host.array_clients:
+            host.array_clients.append(adr)
+            print(host.array_clients)
             with open('Protocols', mode='rt') as file:
                 file = file.read().split('-0-')
                 host.send_to(file[0], file[1].split('\n'), client)

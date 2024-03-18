@@ -7,6 +7,8 @@ import sys
 import os
 from win32api import GetSystemMetrics
 
+import Widgets
+
 width = GetSystemMetrics(0)
 height = GetSystemMetrics(1)
 centre = (width // 2, height // 2)
@@ -14,7 +16,7 @@ pygame.init()
 clock = pygame.time.Clock()
 textures = Textures()
 
-win = pygame.display.set_mode((width, height), pygame.FULLSCREEN, vsync=1)
+win = pygame.display.set_mode((width, height))
 pygame.mouse.set_visible(False)
 my_font = pygame.font.SysFont('Futura book C', 30)
 
@@ -37,19 +39,20 @@ open_some = False
 flag = True  # потом нормально сделаем
 
 while True:
-    normal = clock.tick(60)
-    for i in pygame.event.get([pygame.QUIT, pygame.KEYUP, pygame.KEYDOWN, pygame.MOUSEBUTTONUP, pygame.MOUSEBUTTONDOWN, pygame.MOUSEMOTION]):
+    normal = clock.tick()
+    c = None
+    for i in pygame.event.get([pygame.QUIT, pygame.KEYUP, pygame.KEYDOWN, pygame.MOUSEBUTTONUP, pygame.MOUSEBUTTONDOWN,
+                               pygame.MOUSEMOTION]):
         camera.event(i)
         if i.type == pygame.KEYDOWN:
-            #  временно так
+            c = i
             if i.key == pygame.K_1:
-                with open('Protocols', mode='w') as file:
+                with open('online/Protocols', mode='w') as file:
                     w = '\n'.join('\t'.join('|'.join(k) for k in i) for i in gen.masbiom)
                     file.write(f'm-0-{w}')
             if i.key == pygame.K_2 and flag:
                 flag = False
-                os.startfile(rf'{os.getcwd()}\H.py')
-            # временно так
+                os.startfile(rf'{os.getcwd()}\online\H.py')  # временно так
         if i.type == pygame.QUIT:
             sys.exit()
     camera.inter()

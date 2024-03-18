@@ -72,7 +72,7 @@ class World:
                 sorted_by_priority.append(self.great_world[i][j])
         for i in sorted(sorted_by_priority, key=lambda x: x.structure != None):  # потом заменить на "если есть в клетке"
             i.draw(self.win, there)  # Показ слайдов земли по приоритетам
-        self.synchronous = self.synchronous + 1 if self.synchronous < 1000000 else 0  # Задел на будущее если будет анимированная земля
+        self.synchronous = self.synchronous + 1 if self.synchronous < 1000000 else 0
 
     def move_scene(self):  # Тут происходит проверка, когда нужно обновлять динамическую сетку
         if max(self.now_dr[0], self.start_dr[0]) - min(self.now_dr[0], self.start_dr[0]) > self.gr_main:
@@ -101,6 +101,7 @@ class World:
                       self.now_dr[1] + i * self.gr_main <= point[1] - 2 * move[1] <= self.now_dr[1] + i * self.gr_main + self.gr_main
                 if res:
                     if self.bioms[self.world_cord[0] + i][self.world_cord[1] + j][0] == 'barrier':
+                        move[0], move[1] = -move[0], -move[1]
                         return False
         return True
 

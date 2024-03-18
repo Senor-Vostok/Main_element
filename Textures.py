@@ -12,6 +12,8 @@ class Textures:
 
         self.loading = pygame.image.load('data/loading/logo.png').convert_alpha()
 
+        self.label = pygame.image.load('data/ground/label.png').convert_alpha()
+
         self.select = pygame.image.load('data/ground/ground_select.png').convert_alpha()
 
         self.point = pygame.image.load('data/ground/test.png').convert_alpha()
@@ -27,5 +29,5 @@ class Textures:
                      'sand': [pygame.image.load('data/ground/sand.png').convert_alpha()],
                      'snow': [pygame.image.load('data/ground/snow.png').convert_alpha()]}
 
-        self.animations_structures = {
-            'f': [pygame.image.load(f'data/structures/mill/s{i}.png').convert_alpha() for i in range(1, 4)]}
+        self.animations_structures = {'tower': [pygame.image.load(f'data/structures/tower/s{i}.png').convert_alpha() for i in range(1, 6)],
+                                       'mill': [pygame.image.load(f'data/structures/mill/s{i}.png') for i in range(1, 4)]}

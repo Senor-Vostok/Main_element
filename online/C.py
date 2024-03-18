@@ -1,7 +1,7 @@
 import socket
 import select
 
-HOST = 'localhost'
+HOST = '26.39.51.10'
 PORT = 5050
 
 ACK_TEXT = 'text_received'
@@ -32,6 +32,10 @@ def main():
                 end = bool("<end> read_array" == message)
             if end:
                 print(gen)
+
+
+def do_some():
+    pass
 
 
 def encoding(sock):
