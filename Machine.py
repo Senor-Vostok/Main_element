@@ -1,15 +1,16 @@
 import pygame
 from Ground_class import Ground
+import Textures
 
 
 class World:
     def __init__(self, win, centre, cord, bioms):
-        self.import_textures()  # Импортируем текстуры
+        self.my_font = pygame.font.SysFont('Futura book C', 30)
 
-        self.priority = ['ground', 'barrier']  # Приоритеты текстур
+        self.priority = Textures.priority  # Приоритеты текстур
 
         self.bioms = bioms  # Получение данных о матрице мира
-        self.gr_main = 180
+        self.gr_main = 60
         self.sq1 = centre[0] * 2 // self.gr_main + 3 if centre[0] * 2 // self.gr_main % 2 == 0 else centre[0] * 2 // self.gr_main + 2  # Разбиение экрана на секторы, с помощью которых строится динамическая сетка
         self.sq2 = centre[1] * 2 // self.gr_main + 5 if centre[1] * 2 // self.gr_main % 2 == 0 else centre[1] * 2 // self.gr_main + 4
 
@@ -57,25 +58,17 @@ class World:
                 for j in range(self.sq1):
                     self.add_ground(i, j, self.bioms[self.world_cord[0] + i][self.world_cord[1] + j])
 
-    def draw(self, move=(0, 0), way='stay', open_some=False):  # Отображение на экране спрайтов
-        self.win.fill((0, 0, 0))
+    def draw(self, there, move=(0, 0), open_some=False):  # Отображение на экране спрайтов
         flag = self.check_barrier(move, self.centre)
         sorted_by_priority = list()
         for i in range(len(self.great_world)):
             for j in range(len(self.great_world[i])):
                 self.great_world[i][j].update(self.synchronous, move, flag and not open_some)  # Обновление спрайтов земли
                 sorted_by_priority.append(self.great_world[i][j])
-        self.update_object(move, way, flag, open_some)  # Обновление оставшихся спрайтов и динамической сетки
+        self.update_object(move, flag, open_some)  # Обновление оставшихся спрайтов и динамической сетки
         for i in sorted(sorted_by_priority, key=lambda x: self.priority.index(x.name)):
-            i.draw(self.win)  # Показ слайдов земли по приоритетам
+            i.draw(self.win, there)  # Показ слайдов земли по приоритетам
         self.synchronous = self.synchronous + 1 if self.synchronous < 1000000 else 0  # Задел на будущее если будет анимированная земля
-
-    def import_textures(self):
-        self.my_font = pygame.font.SysFont('Futura book C', 30)
-
-        # Textures world
-        self.land = {'ground': pygame.image.load('data/ground/ground.png').convert_alpha(),
-                     'barrier': pygame.image.load('data/ground/barrier.png').convert_alpha()}
 
     def move_scene(self):  # Тут происходит проверка, когда нужно обновлять динамическую сетку
         if max(self.now_dr[0], self.start_dr[0]) - min(self.now_dr[0], self.start_dr[0]) > self.gr_main:
@@ -107,13 +100,13 @@ class World:
                         return False
         return True
 
-    def update_object(self, move, way, flag, open_some):
+    def update_object(self, move, flag, open_some):
         if flag and not open_some:
-            self.now_dr[0] = self.great_world[0][0].rect[0] + 10
-            self.now_dr[1] = self.great_world[0][0].rect[1] + 10
+            self.now_dr[0] = self.great_world[0][0].rect[0] + self.great_world[0][0].rect[2] // 2 - self.gr_main // 2
+            self.now_dr[1] = self.great_world[0][0].rect[1] + self.great_world[0][0].rect[3] // 2 - self.gr_main // 2
             self.move_scene()
 
     def add_ground(self, i, j, biom):  # Вспомогательная функция для добавления спрайта земля на сетку
-        sprite = Ground(self.land[biom], (self.now_dr[0] + j * self.gr_main + self.gr_main // 2,
+        sprite = Ground(Textures.land[biom], (self.now_dr[0] + j * self.gr_main + self.gr_main // 2,
                                           self.now_dr[1] + i * self.gr_main + self.gr_main // 2), biom)
         self.great_world[i][j] = sprite
