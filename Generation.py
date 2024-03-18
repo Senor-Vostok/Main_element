@@ -11,7 +11,7 @@ class Generation:
         self.textures = Textures()
         self.font = pygame.font.SysFont('Futura book C', 30)
         self.translate = {0: 'water', 1: 'sand', 2: 'flower', 3: 'ground', 4: 'stone', 5: 'snow'}
-        self.masbiom = [[['\0', '\0'] for _ in range(massive)] for _ in range(massive)]  # Первый биом второй структура
+        self.masbiom = [[['null', 'null'] for _ in range(massive)] for _ in range(massive)]  # Первый биом второй структура
         self.masive = massive
         self.win = screen
         self.centre = centre
@@ -19,11 +19,11 @@ class Generation:
     def add_barier(self, size):
         for i in range(self.masive + size * 2):
             if i < size:
-                self.masbiom.insert(0, [['barrier', '\0']] * (self.masive + size * 2))
+                self.masbiom.insert(0, [['barrier', 'null']] * (self.masive + size * 2))
             elif i >= self.masive + size:
-                self.masbiom.append([['barrier', '\0']] * (self.masive + size * 2))
+                self.masbiom.append([['barrier', 'null']] * (self.masive + size * 2))
             else:
-                self.masbiom[i] = [['barrier', '\0']] * size + self.masbiom[i] + [['barrier', '\0']] * size
+                self.masbiom[i] = [['barrier', 'null']] * size + self.masbiom[i] + [['barrier', 'null']] * size
         return self.masbiom
 
     def get_key(self, z):

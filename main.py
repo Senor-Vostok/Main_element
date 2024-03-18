@@ -4,6 +4,7 @@ from Machine import World
 from Generation import Generation
 from Cam_class import Cam
 import sys
+import os
 from win32api import GetSystemMetrics
 
 width = GetSystemMetrics(0)
@@ -33,11 +34,22 @@ world.create()  # заполнение динамической сетки
 camera = Cam()  # Создание камеры
 
 open_some = False
+flag = True  # потом нормально сделаем
 
 while True:
     normal = clock.tick(60)
     for i in pygame.event.get([pygame.QUIT, pygame.KEYUP, pygame.KEYDOWN, pygame.MOUSEBUTTONUP, pygame.MOUSEBUTTONDOWN, pygame.MOUSEMOTION]):
         camera.event(i)
+        if i.type == pygame.KEYDOWN:
+            #  временно так
+            if i.key == pygame.K_1:
+                with open('Protocols', mode='w') as file:
+                    w = '\n'.join('\t'.join('|'.join(k) for k in i) for i in gen.masbiom)
+                    file.write(f'm-0-{w}')
+            if i.key == pygame.K_2 and flag:
+                flag = False
+                os.startfile(rf'{os.getcwd()}\H.py')
+            # временно так
         if i.type == pygame.QUIT:
             sys.exit()
     camera.inter()
