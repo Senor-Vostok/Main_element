@@ -28,7 +28,7 @@ class Ground(pygame.sprite.Sprite):
         self.select = False
 
         # списки размещаемых структур для каждого биома
-        self.biome_permissions = {'tower': ['sand', 'flower'],
+        self.biome_permissions = {'tower': ['sand', 'flower', 'ground'],
                                   'mill': ['sand', 'flower'],
                                   'mine': ['stone', 'snow']}
 

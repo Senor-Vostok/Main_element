@@ -10,6 +10,7 @@ class Button(pygame.sprite.Sprite):
         self.func = None
         self.args = None
         self.rect = self.image.get_rect(center=xoy)
+        self.one_press = True
 
     def draw(self, screen):
         screen.blit(self.image, (self.rect.x, self.rect.y))
@@ -22,7 +23,18 @@ class Button(pygame.sprite.Sprite):
         if self.rect.colliderect(there[0], there[1], 1, 1):
             self.image = self.trigger
             if there[2] and there[3] == 1 and self.func:
-                self.func(self.args) if self.args else self.func()
+                if self.one_press:
+                    self.one_press = False
+                    if len(self.args) == 0:
+                        return self.func()
+                    elif len(self.args) == 1:
+                        return self.func(self.args[0])
+                    elif len(self.args) == 2:
+                        return self.func(self.args[0], self.args[1])
+                    elif len(self.args) == 3:
+                        return self.func(self.args[0], self.args[1], self.args[2])
+            else:
+                self.one_press = True
         else:
             self.image = self.state
 

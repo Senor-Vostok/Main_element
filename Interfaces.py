@@ -1,3 +1,5 @@
+import pygame.transform
+
 from Widgets import *
 import Textures
 
@@ -39,3 +41,26 @@ class PopupMenu:
 
     def create_surface(self):
         return Surface(self.button_information, self.button_build, self.button_destroy, self.button_fight, self.button_cancel)
+
+
+class InGame:
+    def __init__(self, xoy, textures=Textures.Textures()):
+        r = textures.resizer
+        self.button_end = Button(textures.ingame['button_end'], (xoy[0] - 755 * r, xoy[1] + 510 * r))
+
+    def create_surface(self):
+        return Surface(self.button_end)
+
+
+class BuildMenu:
+    def __init__(self, xoy, textures=Textures.Textures()):
+        r = textures.resizer
+        self.background = BackGround(textures.buildmenu['background'][0], (xoy[0] + 705 * r, xoy[1]))
+        self.button_project = Button(textures.buildmenu['button_project'], (xoy[0] + 705 * r, xoy[1] + 465 * r))
+        self.down = Button(textures.buildmenu['down'], (xoy[0] + 705 * r, xoy[1] + 361 * r))
+        self.up = Button(textures.buildmenu['up'], (xoy[0] + 705 * r, xoy[1] - 381 * r))
+        self.structure = BackGround(pygame.transform.scale(textures.animations_structures['tower'][0], (360 * r, 540 * r)), (xoy[0] + 705 * r, xoy[1]))
+
+    def create_surface(self):
+        return Surface(self.background, self.button_project, self.down, self.up, self.structure)
+

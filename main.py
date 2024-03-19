@@ -32,6 +32,9 @@ class EventHandler:
 
         self.interfaces = dict()
 
+        self.structures = [i for i in self.textures.animations_structures]
+        self.now_str = 0
+
     def check_ground_please(self, ground):
         if self.camera.i[3] == 3:
             if 'popup_menu' in self.interfaces:
@@ -53,41 +56,64 @@ class EventHandler:
         self.generation(200)
         self.screen_world = World(self.screen, self.centre, [self.world_coord, self.world_coord], self.matr, self)
         self.screen_world.create()
+        self.show_ingame(self.centre)
 
     def machine(self):
         self.camera.inter()
         self.camera.speed = self.camera.const_for_speed / (self.clock.get_fps() + 1)
         self.screen_world.draw(self.camera.i, self.camera.move, self.open_some)  # Вырисовываем картинку
 
-    def close(self, data):
-        self.open_some = data[1]
-        self.interfaces.pop(data[0])
-        if data[2]: data[2]()
+    def close(self, name, open_some, func=None):
+        self.open_some = open_some
+        self.interfaces.pop(name)
+        if func: func()
 
     def go_back_to_menu(self):
-        self.close(['pause', True, None])
+        self.close('pause', True)
         self.show_menu(self.centre)
         self.screen_world = None
+
+    def next_struct(self, ind):
+        self.now_str = (self.now_str + ind) % len(self.structures) if self.now_str + ind >= 0 else len(
+            self.structures) - 1
+        self.interfaces['buildmenu'].structure.image = pygame.transform.scale(
+            self.textures.animations_structures[self.structures[self.now_str]][0],
+            (360 * self.textures.resizer, 540 * self.textures.resizer))
+
+    def show_ingame(self, centre):
+        game = Interfaces.InGame(centre, self.textures)
+        self.interfaces['ingame'] = game
 
     def show_menu(self, centre):
         menu = Interfaces.Menu(centre, self.textures)
         menu.button_start.connect(self.close, 'menu', False, self.init_world)
         menu.button_exit.connect(sys.exit)
-        self.interfaces['menu'] = menu.create_surface()
+        self.interfaces['menu'] = menu
 
-    def place_structure(self, data):
-        data[0].structure = ClassicStructure(self.textures.animations_structures['mill'][0], (data[0].rect[0] + data[0].rect[2] // 2, data[0].rect[1] + data[0].rect[3] // 2), 'mill', self.textures)
-        data[0].biom[1] = 'mill'
+    def show_buildmenu(self, centre, ground=None):
+        build = Interfaces.BuildMenu(centre, self.textures)
+        build.down.connect(self.next_struct, -1)
+        build.up.connect(self.next_struct, 1)
+        self.now_str = 0
+        build.button_project.connect(self.place_structure, ground)
+        if 'popup_menu' in self.interfaces: self.interfaces.pop('popup_menu')
+        self.interfaces['buildmenu'] = build
+
+    def place_structure(self, ground):
+        ground.structure = ClassicStructure(self.textures.animations_structures[self.structures[self.now_str]][0], (
+        ground.rect[0] + ground.rect[2] // 2, ground.rect[1] + ground.rect[3] // 2), self.structures[self.now_str], self.textures)
+        ground.biom[1] = self.structures[self.now_str]
+        if 'buildmenu' in self.interfaces: self.interfaces.pop('buildmenu')
 
     def show_pause(self, centre):
         pause = Interfaces.Pause(centre, self.textures)
         pause.button_menu.connect(self.go_back_to_menu)
-        self.interfaces['pause'] = pause.create_surface()
+        self.interfaces['pause'] = pause
 
     def show_popup_menu(self, centre, ground=None):
         popup = Interfaces.PopupMenu(centre, self.textures)
-        popup.button_build.connect(self.place_structure, ground)
-        self.interfaces['popup_menu'] = popup.create_surface()
+        popup.button_build.connect(self.show_buildmenu, self.centre, ground)
+        self.interfaces['popup_menu'] = popup
 
     def update(self):
         self.screen.fill((233, 217, 202))
@@ -98,16 +124,16 @@ class EventHandler:
             if i.type == pygame.KEYDOWN:
                 c = i
                 if i.key == pygame.K_ESCAPE and not self.open_some:
-                    self.show_pause(self.centre) if 'pause' not in self.interfaces else self.close(['pause', False, None])
-                if 'popup_menu' in self.interfaces:
-                    self.interfaces.pop('popup_menu')
+                    self.show_pause(self.centre) if 'pause' not in self.interfaces else self.close('pause', False, None)
+                if 'popup_menu' in self.interfaces: self.interfaces.pop('popup_menu')
+                if 'buildmenu' in self.interfaces: self.interfaces.pop('buildmenu')
             if i.type == pygame.QUIT:
                 sys.exit()
         if self.screen_world:
             self.machine()
         try:
             for i in self.interfaces:
-                self.interfaces[i].update(self.camera.i, self.screen, c)
+                self.interfaces[i].create_surface().update(self.camera.i, self.screen, c)
         except Exception:
             pass
         self.screen.blit(self.textures.point, (self.camera.i[0] - 10, self.camera.i[1] - 10))

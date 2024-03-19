@@ -10,7 +10,7 @@ class Textures:
         self.resizer = GetSystemMetrics(0) / 1920
         self.priority = ['water', 'sand', 'flower', 'ground', 'stone', 'snow', 'barrier']
 
-        self.font = pygame.font.SysFont('Futura book C', 30)
+        self.font = pygame.font.SysFont('progresspixel-bold', 30)
 
         self.loading = pygame.transform.scale(pygame.image.load('data/loading/logo.png').convert_alpha(), (1920, 1080))
 
@@ -62,6 +62,17 @@ class Textures:
                       'button_menu': [self.render(f'data/widgets/menu/buttons/button6.png', (400, 70)),
                                       self.render(f'data/widgets/menu/buttons/button6t.png', (400, 70))],
                       'button_setting': self.main_menu['button_setting']}
+
+        self.ingame = {'button_end': [self.render(f'data/widgets/menu/buttons/button7.png', (400, 50)),
+                                      self.render(f'data/widgets/menu/buttons/button7t.png', (400, 50))]}
+
+        self.buildmenu = {'background': [self.render(f'data/widgets/buildmenu/labels/background.png', (500, 1000))],
+                          'button_project': [self.render(f'data/widgets/buildmenu/buttons/button1.png', (400, 50)),
+                                             self.render(f'data/widgets/buildmenu/buttons/button1t.png', (400, 50))],
+                          'up': [self.render(f'data/widgets/buildmenu/buttons/up1.png', (304, 128)),
+                                 self.render(f'data/widgets/buildmenu/buttons/up2.png', (304, 128))],
+                          'down': [self.render(f'data/widgets/buildmenu/buttons/down1.png', (304, 128)),
+                                   self.render(f'data/widgets/buildmenu/buttons/down2.png', (304, 128))]}
 
     def render(self, address, size):
         size = size[0] * self.resizer, size[1] * self.resizer
