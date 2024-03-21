@@ -67,9 +67,20 @@ class BuildMenu:
 
 class Online:
     def __init__(self, xoy, textures=Textures.Textures()):
+        r = textures.resizer
         self.background = BackGround(textures.main_menu['background'][0], xoy)
         self.interact = InteractLabel(textures.main_menu['label_online'][0], (xoy[0], xoy[1]))
 
     def create_surface(self):
         return Surface(self.background, self.interact)
+
+
+class ChoiceGame:
+    def __init__(self, xoy, textures=Textures.Textures()):
+        r = textures.resizer
+        self.button_local = Button(textures.main_menu['button_local'], (xoy[0], xoy[1] - 40 * r))
+        self.button_online = Button(textures.main_menu['button_online'], (xoy[0], xoy[1] + 40 * r))
+
+    def create_surface(self):
+        return Surface(self.button_local, self.button_online)
 

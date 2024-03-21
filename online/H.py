@@ -1,4 +1,5 @@
 import socket
+import os
 
 
 class Host:
@@ -22,16 +23,27 @@ class Host:
         encodedAckText.decode('utf-8')
 
 
-host = Host(5050)
+host = Host(2020)
 while True:
     try:
-        host.sock.listen()
-        client, adr = host.sock.accept()
-        if adr not in host.array_clients:
-            host.array_clients.append(adr)
-            print(host.array_clients)
-            with open('Protocols', mode='rt') as file:
+        if len(host.array_clients) < 4:
+            host.sock.listen()
+            client, adr = host.sock.accept()
+            if client not in host.array_clients:
+                host.array_clients.append(client)
+                with open(rf'{os.getcwd()}\online\Protocols', mode='rt') as file:
+                    file = file.read().split('-0-')
+                    host.send_to(file[0], file[1].split('\n'), client)
+            if len(host.array_clients) == 1:
+                print("HOST:", adr)
+            if len(host.array_clients) == 4:
+                with open(rf'{os.getcwd()}\online\Protocols', mode='w') as file:
+                    file.write('\0')
+        else:
+            with open(rf'{os.getcwd()}\online\Protocols', mode='rt') as file:
                 file = file.read().split('-0-')
-                host.send_to(file[0], file[1].split('\n'), client)
+                if len(file) > 1:
+                    for client in host.array_clients:
+                        host.send_to(file[0], file[1], client)
     except Exception:
         pass

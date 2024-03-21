@@ -10,7 +10,7 @@ class Generation:
         self.textures = Textures()
         self.font = pygame.font.SysFont('Futura book C', 30)
         self.translate = {0: 'water', 1: 'sand', 2: 'flower', 3: 'ground', 4: 'stone', 5: 'snow'}
-        self.masbiom = [[['null', 'null', (0, 0)] for _ in range(massive)] for _ in range(massive)]  # Первый биом второй структура
+        self.masbiom = [[['null', 'null'] for _ in range(massive)] for _ in range(massive)]  # Первый биом второй структура
         self.masive = massive
         self.win = screen
         self.centre = centre
@@ -57,4 +57,3 @@ class Generation:
         for i in range(self.masive):
             for j in range(self.masive):
                 self.masbiom[i][j][0] = self.translate[landscale[i][j]]
-                self.masbiom[i][j][2] = (i, j)

@@ -12,7 +12,8 @@ class Textures:
 
         self.font = pygame.font.SysFont('progresspixel-bold', 30)
 
-        self.loading = pygame.transform.scale(pygame.image.load('data/loading/logo.png').convert_alpha(), (1920, 1080))
+        self.loading = self.render('data/loading/logo.png', (1920, 1080))
+        self.connecting = self.render('data/loading/connecting.png', (1920, 1080))
 
         self.label = self.render('data/ground/label.png', (400, 30))
 
@@ -58,6 +59,8 @@ class Textures:
                                              self.render(f'data/widgets/menu/buttons/button4t.png', (400, 70))],
                           'button_exit': [self.render(f'data/widgets/menu/buttons/button5.png', (400, 70)),
                                           self.render(f'data/widgets/menu/buttons/button5t.png', (400, 70))],
+                          'button_local': [self.render(f'data/widgets/menu/buttons/button8.png', (400, 70)),
+                                           self.render(f'data/widgets/menu/buttons/button8t.png', (400, 70))],
                           'label_online': [self.render(f'data/widgets/menu/labels/ipv4_port.png', (1100, 66))]}
         self.pause = {'background': [self.render(f'data/widgets/menu/labels/background.png', (1920, 1080))],
                       'button_menu': [self.render(f'data/widgets/menu/buttons/button6.png', (400, 70)),

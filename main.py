@@ -1,3 +1,5 @@
+import pygame.display
+from tkinter.filedialog import askopenfilename
 import Player
 import Interfaces
 from Textures import Textures
@@ -55,6 +57,8 @@ class EventHandler:
         self.player.setup(self.screen_world.great_world[self.player.start_point[0]][self.player.start_point[1]])
 
     def init_world(self, matr=None):
+        self.open_some = False
+        self.interfaces = dict()
         if not matr:
             self.generation(200)
             matr = self.matr
@@ -90,7 +94,8 @@ class EventHandler:
 
     def show_menu(self, centre):
         menu = Interfaces.Menu(centre, self.textures)
-        menu.button_start.connect(self.close, 'menu', False, self.init_world)
+        menu.button_start.connect(self.show_choicegame, self.centre)
+        menu.button_load.connect(self.open_save)
         menu.button_online.connect(self.show_online, self.centre)
         menu.button_exit.connect(sys.exit)
         self.interfaces['menu'] = menu
@@ -104,29 +109,10 @@ class EventHandler:
         if 'popup_menu' in self.interfaces: self.interfaces.pop('popup_menu')
         self.interfaces['buildmenu'] = build
 
-    def connecting(self):
-        adress = self.interfaces['online'].interact.text[:-1]
-        with open('online/Connect', mode='w') as file:
-            file.write(adress)
-        os.startfile(rf'{os.getcwd()}\online\C.py')
-        self.close('online', False, None)
-        self.interfaces = dict()
-        time.sleep(1)
-        with open('online/Data', mode='rt') as file:
-            file = [[k.split('|') for k in i.split('\t')] for i in (file.read().split('\n'))[1:]]
-            self.world_coord = (len(file) + 20) // 2
-            if file: self.init_world(file)
-
     def show_online(self, centre):
         label = Interfaces.Online(centre, self.textures)
         label.interact.connect(self.connecting)
         self.interfaces['online'] = label
-
-    def place_structure(self, ground):
-        ground.structure = ClassicStructure(self.textures.animations_structures[self.structures[self.now_str]][0], (
-        ground.rect[0] + ground.rect[2] // 2, ground.rect[1] + ground.rect[3] // 2), self.structures[self.now_str], self.textures)
-        ground.biom[1] = self.structures[self.now_str]
-        if 'buildmenu' in self.interfaces: self.interfaces.pop('buildmenu')
 
     def show_pause(self, centre):
         pause = Interfaces.Pause(centre, self.textures)
@@ -137,6 +123,54 @@ class EventHandler:
         popup = Interfaces.PopupMenu(centre, self.textures)
         popup.button_build.connect(self.show_buildmenu, self.centre, ground)
         self.interfaces['popup_menu'] = popup
+
+    def show_choicegame(self, centre, matr=None):
+        choice = Interfaces.ChoiceGame(centre, self.textures)
+        choice.button_local.connect(self.init_world, matr)
+        choice.button_online.connect(self.host_game, matr)
+        self.interfaces['choicegame'] = choice
+
+    def host_game(self, matr):
+        if not matr:
+            self.generation(200)
+            matr = self.matr
+        with open(rf'{os.getcwd()}\online\Protocols', mode='w') as file:
+            w = '\n'.join('\t'.join('|'.join(k) for k in i) for i in matr)
+            file.write(f'm-0-{w}')
+        os.startfile(rf'{os.getcwd()}\online\H.py')
+        os.startfile(rf'{os.getcwd()}\online\C.py')
+        self.init_world(matr)
+
+    def connecting(self):
+        self.screen.blit(self.textures.connecting, (0, 0))
+        pygame.display.flip()
+        adress = self.interfaces['online'].interact.text[:-1]
+        with open('online/Connect', mode='w') as file:
+            file.write(adress)
+        os.startfile(rf'{os.getcwd()}\online\C.py')
+        time.sleep(2.5)
+        self.close('online', False, None)
+        with open('online/Cache', mode='rt') as file:
+            file = [[k.split('|') for k in i.split('\t')] for i in (file.read().split('\n'))[1:]]
+            self.world_coord = (len(file) + 20) // 2
+            if file:
+                self.init_world(file)
+
+    def open_save(self):
+        filename = askopenfilename()
+        with open(filename, mode='rt') as file:
+            file = [[k.split('|') for k in i.split('\t')] for i in file.read().split('\n')]
+            self.world_coord = (len(file) + 20) // 2
+            try:
+                if file[0][0][0] == 'barrier':
+                    self.show_choicegame(self.centre, file)
+            except:
+                pass
+
+    def place_structure(self, ground):
+        ground.structure = ClassicStructure(self.textures.animations_structures[self.structures[self.now_str]][0], (ground.rect[0] + ground.rect[2] // 2, ground.rect[1] + ground.rect[3] // 2), self.structures[self.now_str], self.textures)
+        ground.biom[1] = self.structures[self.now_str]
+        if 'buildmenu' in self.interfaces: self.interfaces.pop('buildmenu')
 
     def update(self):
         self.screen.fill((233, 217, 202))
@@ -150,6 +184,7 @@ class EventHandler:
                     self.show_pause(self.centre) if 'pause' not in self.interfaces else self.close('pause', False, None)
                 if 'popup_menu' in self.interfaces: self.interfaces.pop('popup_menu')
                 if 'buildmenu' in self.interfaces: self.interfaces.pop('buildmenu')
+                if 'choicegame' in self.interfaces: self.interfaces.pop('choicegame')
             if i.type == pygame.QUIT:
                 sys.exit()
         if self.screen_world:
