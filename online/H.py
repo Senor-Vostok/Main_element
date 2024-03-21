@@ -14,7 +14,6 @@ class Host:
             message = ['<start> read_array'] + message + ['<end> read_array']
         for i in range(len(message)):
             self.encode(message[i], client)
-            print(f'{int((i / len(message)) * 100) + 1}%')
 
     def encode(self, message, sock):
         encodedMessage = bytes(message, 'utf-8')

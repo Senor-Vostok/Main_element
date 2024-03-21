@@ -5,6 +5,8 @@ from Machine import World
 from Generation import Generation
 from Cam_class import Cam
 import sys
+import os
+import time
 from win32api import GetSystemMetrics
 from Structures import *
 
@@ -16,7 +18,7 @@ class EventHandler:
         self.size = GetSystemMetrics(0), GetSystemMetrics(1)
         self.centre = (GetSystemMetrics(0) // 2, GetSystemMetrics(1) // 2)
         self.clock = pygame.time.Clock()
-        self.screen = pygame.display.set_mode(self.size, pygame.FULLSCREEN, vsync=1)
+        self.screen = pygame.display.set_mode(self.size)
         pygame.mouse.set_visible(False)
 
         self.matr = None
@@ -52,9 +54,11 @@ class EventHandler:
         self.player.start_point = (self.screen_world.sq2 // 2, self.screen_world.sq1 // 2)
         self.player.setup(self.screen_world.great_world[self.player.start_point[0]][self.player.start_point[1]])
 
-    def init_world(self):
-        self.generation(200)
-        self.screen_world = World(self.screen, self.centre, [self.world_coord, self.world_coord], self.matr, self)
+    def init_world(self, matr=None):
+        if not matr:
+            self.generation(200)
+            matr = self.matr
+        self.screen_world = World(self.screen, self.centre, [self.world_coord, self.world_coord], matr, self)  # создание динамической сетки
         self.screen_world.create()
         self.show_ingame(self.centre)
 
@@ -87,6 +91,7 @@ class EventHandler:
     def show_menu(self, centre):
         menu = Interfaces.Menu(centre, self.textures)
         menu.button_start.connect(self.close, 'menu', False, self.init_world)
+        menu.button_online.connect(self.show_online, self.centre)
         menu.button_exit.connect(sys.exit)
         self.interfaces['menu'] = menu
 
@@ -98,6 +103,24 @@ class EventHandler:
         build.button_project.connect(self.place_structure, ground)
         if 'popup_menu' in self.interfaces: self.interfaces.pop('popup_menu')
         self.interfaces['buildmenu'] = build
+
+    def connecting(self):
+        adress = self.interfaces['online'].interact.text[:-1]
+        with open('online/Connect', mode='w') as file:
+            file.write(adress)
+        os.startfile(rf'{os.getcwd()}\online\C.py')
+        self.close('online', False, None)
+        self.interfaces = dict()
+        time.sleep(1)
+        with open('online/Data', mode='rt') as file:
+            file = [[k.split('|') for k in i.split('\t')] for i in (file.read().split('\n'))[1:]]
+            self.world_coord = (len(file) + 20) // 2
+            if file: self.init_world(file)
+
+    def show_online(self, centre):
+        label = Interfaces.Online(centre, self.textures)
+        label.interact.connect(self.connecting)
+        self.interfaces['online'] = label
 
     def place_structure(self, ground):
         ground.structure = ClassicStructure(self.textures.animations_structures[self.structures[self.now_str]][0], (

@@ -57,7 +57,8 @@ class Textures:
                           'button_setting': [self.render(f'data/widgets/menu/buttons/button4.png', (400, 70)),
                                              self.render(f'data/widgets/menu/buttons/button4t.png', (400, 70))],
                           'button_exit': [self.render(f'data/widgets/menu/buttons/button5.png', (400, 70)),
-                                          self.render(f'data/widgets/menu/buttons/button5t.png', (400, 70))]}
+                                          self.render(f'data/widgets/menu/buttons/button5t.png', (400, 70))],
+                          'label_online': [self.render(f'data/widgets/menu/labels/ipv4_port.png', (1100, 66))]}
         self.pause = {'background': [self.render(f'data/widgets/menu/labels/background.png', (1920, 1080))],
                       'button_menu': [self.render(f'data/widgets/menu/buttons/button6.png', (400, 70)),
                                       self.render(f'data/widgets/menu/buttons/button6t.png', (400, 70))],

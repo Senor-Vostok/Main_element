@@ -64,3 +64,12 @@ class BuildMenu:
     def create_surface(self):
         return Surface(self.background, self.button_project, self.down, self.up, self.structure)
 
+
+class Online:
+    def __init__(self, xoy, textures=Textures.Textures()):
+        self.background = BackGround(textures.main_menu['background'][0], xoy)
+        self.interact = InteractLabel(textures.main_menu['label_online'][0], (xoy[0], xoy[1]))
+
+    def create_surface(self):
+        return Surface(self.background, self.interact)
+
