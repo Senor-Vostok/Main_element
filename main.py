@@ -47,7 +47,7 @@ class EventHandler:
 
     def generation(self, size=200, barrier=20):
         gen = Generation(size, self.screen, self.centre)
-        self.world_coord = (size + barrier) // 2
+        self.world_coord = (size + barrier * 2) // 2
         gen.generation()
         self.matr = gen.add_barrier(barrier)
 
@@ -66,7 +66,20 @@ class EventHandler:
         self.screen_world.create()
         self.show_ingame(self.centre)
 
+    def decode_message(self, message):
+        message = message.split('-0-')
+        if message[0] == 'change':
+            i, j = int(message[1].split('|')[2]), int(message[1].split('|')[3])
+            if self.screen_world.biomes[i][j][1] != message[1].split('|')[1]:
+                self.place_structure(self.screen_world.great_world[i - self.screen_world.world_cord[0]][j - self.screen_world.world_cord[1]], message[1].split('|')[1], False)
+            self.screen_world.biomes[i][j][1] = message[1].split('|')[1]
+
     def machine(self):
+        try:
+            with open('online/Cache', mode='rt') as file:
+                self.decode_message(file.read())
+        except Exception:
+            pass
         self.camera.inter()
         self.camera.speed = self.camera.const_for_speed / (self.clock.get_fps() + 1)
         self.screen_world.draw(self.camera.i, self.camera.move, self.open_some)  # Вырисовываем картинку
@@ -138,7 +151,6 @@ class EventHandler:
             w = '\n'.join('\t'.join('|'.join(k) for k in i) for i in matr)
             file.write(f'm-0-{w}')
         os.startfile(rf'{os.getcwd()}\online\H.py')
-        os.startfile(rf'{os.getcwd()}\online\C.py')
         self.init_world(matr)
 
     def connecting(self):
@@ -148,11 +160,11 @@ class EventHandler:
         with open('online/Connect', mode='w') as file:
             file.write(adress)
         os.startfile(rf'{os.getcwd()}\online\C.py')
-        time.sleep(2.5)
+        time.sleep(5)
         self.close('online', False, None)
-        with open('online/Cache', mode='rt') as file:
-            file = [[k.split('|') for k in i.split('\t')] for i in (file.read().split('\n'))[1:]]
-            self.world_coord = (len(file) + 20) // 2
+        with open('online/Save', mode='rt') as file:
+            file = [[k.split('|') for k in i.split('\t')] for i in file.read().split('\n')]
+            self.world_coord = len(file) // 2
             if file:
                 self.init_world(file)
 
@@ -167,10 +179,16 @@ class EventHandler:
             except:
                 pass
 
-    def place_structure(self, ground):
-        ground.structure = ClassicStructure(self.textures.animations_structures[self.structures[self.now_str]][0], (ground.rect[0] + ground.rect[2] // 2, ground.rect[1] + ground.rect[3] // 2), self.structures[self.now_str], self.textures)
-        ground.biom[1] = self.structures[self.now_str]
+    def place_structure(self, ground, structure=None, info=True):
+        if not structure:
+            structure = self.structures[self.now_str]
+        ground.structure = ClassicStructure(self.textures.animations_structures[structure][0], (ground.rect[0] + ground.rect[2] // 2, ground.rect[1] + ground.rect[3] // 2), structure, self.textures)
+        ground.biom[1] = structure
         if 'buildmenu' in self.interfaces: self.interfaces.pop('buildmenu')
+        if info:
+            with open('online/Protocols', mode='w') as file:
+                file.write(f'change-0-' + '|'.join(ground.biom))
+                print(f'change-0-' + '|'.join(ground.biom))
 
     def update(self):
         self.screen.fill((233, 217, 202))

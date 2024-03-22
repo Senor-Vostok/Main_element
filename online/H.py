@@ -1,5 +1,8 @@
 import socket
+import select
 import os
+
+ACK_TEXT = 'text_received'
 
 
 class Host:
@@ -9,41 +12,53 @@ class Host:
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.sock.bind((self.HOST, self.PORT))
         self.array_clients = list()
+        self.update = list()
 
-    def send_to(self, tipe, message, client):
-        if tipe == 'm':
-            message = ['<start> read_array'] + message + ['<end> read_array']
-        for i in range(len(message)):
-            self.encode(message[i], client)
+    def send_to(self, message, client):
+        self.encode(message, client)
 
     def encode(self, message, sock):
         encodedMessage = bytes(message, 'utf-8')
         sock.sendall(encodedMessage)
-        encodedAckText = sock.recv(10000)
-        encodedAckText.decode('utf-8')
+
+    def encoding(self, sock):
+        encode = sock.recv(10**10)
+        return encode.decode('utf-8')
 
 
-host = Host(2020)
+host = Host(8080)
+host.sock.listen()
 while True:
-    try:
-        if len(host.array_clients) < 4:
-            host.sock.listen()
-            client, adr = host.sock.accept()
-            if client not in host.array_clients:
-                host.array_clients.append(client)
-                with open(rf'{os.getcwd()}\online\Protocols', mode='rt') as file:
-                    file = file.read().split('-0-')
-                    host.send_to(file[0], file[1].split('\n'), client)
-            if len(host.array_clients) == 1:
-                print("HOST:", adr)
-            if len(host.array_clients) == 4:
-                with open(rf'{os.getcwd()}\online\Protocols', mode='w') as file:
-                    file.write('\0')
-        else:
+    if len(host.array_clients) < 1:
+        print("wait")
+        client, adr = host.sock.accept()
+        if client not in host.array_clients:
+            host.array_clients.append(client)
             with open(rf'{os.getcwd()}\online\Protocols', mode='rt') as file:
                 file = file.read().split('-0-')
-                if len(file) > 1:
-                    for client in host.array_clients:
-                        host.send_to(file[0], file[1], client)
-    except Exception:
-        pass
+                host.send_to(file[1], client)
+        if len(host.array_clients) == 1:
+            with open(rf'{os.getcwd()}\online\Protocols', mode='w') as file:
+                file.write('')
+                print('protocol cleaned')
+        print("CLIENT:", client)
+    else:
+        ready_socks, _, _ = select.select(host.array_clients, [], [], 0)
+        for sock in ready_socks:
+            message = host.encoding(sock)
+            if len(message.split('-0-')) > 1:
+                message = ''.join(message.split(' '))
+                with open(rf'{os.getcwd()}\online\Cache', mode='w') as file:
+                    print('catch', message)
+                    file.write(message)
+                for c in host.array_clients:
+                    host.send_to(message, c)
+        with open(rf'{os.getcwd()}\online\Protocols', mode='rt') as file:
+            file = file.read()
+            if len(file.split('-0-')) > 1:
+                file = ''.join(file.split(' '))
+                print('send all', str(file))
+                for client in host.array_clients:
+                    host.send_to(file, client)
+        with open(rf'{os.getcwd()}\online\Protocols', mode='w') as file:
+                file.write('')
