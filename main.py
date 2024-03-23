@@ -72,7 +72,7 @@ class EventHandler:
         if message[0] == 'change':
             i, j = int(message[1].split('|')[2]), int(message[1].split('|')[3])
             self.screen_world.biomes[i][j][1] = message[1].split('|')[1]
-            self.screen_world.create('static')
+            self.place_structure(self.screen_world.great_world[i - self.screen_world.world_cord[0]][j - self.screen_world.world_cord[1]], message[1].split('|')[1], False)
 
     def machine(self):
         try:

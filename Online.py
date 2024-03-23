@@ -40,7 +40,7 @@ class Client:
         self.sock.sendall(bytes(message, 'utf-8'))
 
     def __encoding(self, code):
-        encode = code.recv(10 ** 10)
+        encode = code.recv(8192)
         message = encode.decode('utf-8')
         code.sendall(bytes('get it', 'utf-8'))
         return message
@@ -87,7 +87,7 @@ class Host:
         return None
 
     def __encoding(self, code):
-        encode = code.recv(10 ** 10)
+        encode = code.recv(8192)
         message = encode.decode('utf-8')
         return message
 
