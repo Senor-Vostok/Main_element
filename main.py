@@ -7,8 +7,7 @@ from Machine import World
 from Generation import Generation
 from Cam_class import Cam
 import sys
-import os
-import time
+from Online import *
 from win32api import GetSystemMetrics
 from Structures import *
 
@@ -31,6 +30,8 @@ class EventHandler:
 
         self.open_some = True
         self.flag = True
+
+        self.contact = Unknown()
 
         self.player = None
 
@@ -70,14 +71,13 @@ class EventHandler:
         message = message.split('-0-')
         if message[0] == 'change':
             i, j = int(message[1].split('|')[2]), int(message[1].split('|')[3])
-            if self.screen_world.biomes[i][j][1] != message[1].split('|')[1]:
-                self.place_structure(self.screen_world.great_world[i - self.screen_world.world_cord[0]][j - self.screen_world.world_cord[1]], message[1].split('|')[1], False)
             self.screen_world.biomes[i][j][1] = message[1].split('|')[1]
+            self.screen_world.create('static')
 
     def machine(self):
         try:
-            with open('online/Cache', mode='rt') as file:
-                self.decode_message(file.read())
+            if self.contact.protocol == 'host': self.decode_message(self.contact.hosting())
+            if self.contact.protocol == 'client': self.decode_message(self.contact.check_message())
         except Exception:
             pass
         self.camera.inter()
@@ -147,32 +147,27 @@ class EventHandler:
         if not matr:
             self.generation(200)
             matr = self.matr
-        with open(rf'{os.getcwd()}\online\Protocols', mode='w') as file:
-            w = '\n'.join('\t'.join('|'.join(k) for k in i) for i in matr)
-            file.write(f'm-0-{w}')
-        os.startfile(rf'{os.getcwd()}\online\H.py')
+        print(len('\n'.join('\t'.join('|'.join(k) for k in i) for i in matr)))
+        self.contact = Host('0.0.0.0', 8080, '\n'.join('\t'.join('|'.join(k) for k in i) for i in matr), 1)
         self.init_world(matr)
 
     def connecting(self):
         self.screen.blit(self.textures.connecting, (0, 0))
         pygame.display.flip()
-        adress = self.interfaces['online'].interact.text[:-1]
-        with open('online/Connect', mode='w') as file:
-            file.write(adress)
-        os.startfile(rf'{os.getcwd()}\online\C.py')
-        time.sleep(5)
+        host, port = (self.interfaces['online'].interact.text[:-1]).split(':')
+        self.contact = Client(host, port)
         self.close('online', False, None)
-        with open('online/Save', mode='rt') as file:
-            file = [[k.split('|') for k in i.split('\t')] for i in file.read().split('\n')]
-            self.world_coord = len(file) // 2
-            if file:
-                self.init_world(file)
+        if self.contact.connecting():
+            while not self.contact.gen:
+                self.contact.check_message()
+            self.world_coord = len(self.contact.gen.split('\n')) // 2
+            self.init_world([[k.split('|') for k in i.split('\t')] for i in self.contact.gen.split('\n')])
 
     def open_save(self):
         filename = askopenfilename()
         with open(filename, mode='rt') as file:
             file = [[k.split('|') for k in i.split('\t')] for i in file.read().split('\n')]
-            self.world_coord = (len(file) + 20) // 2
+            self.world_coord = len(file) // 2
             try:
                 if file[0][0][0] == 'barrier':
                     self.show_choicegame(self.centre, file)
@@ -184,11 +179,10 @@ class EventHandler:
             structure = self.structures[self.now_str]
         ground.structure = ClassicStructure(self.textures.animations_structures[structure][0], (ground.rect[0] + ground.rect[2] // 2, ground.rect[1] + ground.rect[3] // 2), structure, self.textures)
         ground.biom[1] = structure
-        if 'buildmenu' in self.interfaces: self.interfaces.pop('buildmenu')
+        if 'buildmenu' in self.interfaces:
+            self.interfaces.pop('buildmenu')
         if info:
-            with open('online/Protocols', mode='w') as file:
-                file.write(f'change-0-' + '|'.join(ground.biom))
-                print(f'change-0-' + '|'.join(ground.biom))
+            self.contact.send(f'change-0-' + '|'.join(ground.biom))
 
     def update(self):
         self.screen.fill((233, 217, 202))
