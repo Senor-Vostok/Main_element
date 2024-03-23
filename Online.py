@@ -1,4 +1,5 @@
 import socket
+
 import select
 import threading
 
@@ -9,7 +10,9 @@ class Client:
         self.host, self.port = host, int(port)
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.loaded_map = False
-        self.gen = None
+        self.state = 0
+        self.prom = list()
+        self.gen = ''
 
     def connecting(self):
         try:
@@ -23,9 +26,11 @@ class Client:
         for info in ready_socks:
             message = self.__encoding(info)
             if not self.loaded_map:
-                self.gen = message
-                self.loaded_map = True
-                print('loaded')
+                self.gen += message
+                if '<>' in message:
+                    self.loaded_map = True
+                    self.gen = self.gen[:-2]
+                    print('loaded')
             else:
                 print('catch', message)
                 return ''.join(message.split(' '))
@@ -35,7 +40,7 @@ class Client:
         self.sock.sendall(bytes(message, 'utf-8'))
 
     def __encoding(self, code):
-        encode = code.recv(10 ** 7)
+        encode = code.recv(10 ** 10)
         message = encode.decode('utf-8')
         code.sendall(bytes('get it', 'utf-8'))
         return message
@@ -59,7 +64,7 @@ class Host:
         client, adr = self.sock.accept()
         if client not in self.array_clients:
             self.array_clients.append(client)
-            self.send(self.gen, client)
+            self.send(self.gen + '<>', client)
 
     def send(self, message, client=None):
         if not client:
@@ -82,7 +87,7 @@ class Host:
         return None
 
     def __encoding(self, code):
-        encode = code.recv(10 ** 7)
+        encode = code.recv(10 ** 10)
         message = encode.decode('utf-8')
         return message
 

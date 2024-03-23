@@ -158,7 +158,7 @@ class EventHandler:
         self.contact = Client(host, port)
         self.close('online', False, None)
         if self.contact.connecting():
-            while not self.contact.gen:
+            while not self.contact.loaded_map:
                 self.contact.check_message()
             self.world_coord = len(self.contact.gen.split('\n')) // 2
             self.init_world([[k.split('|') for k in i.split('\t')] for i in self.contact.gen.split('\n')])
