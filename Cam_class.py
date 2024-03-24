@@ -60,6 +60,3 @@ class Cam(pygame.sprite.Sprite):
             self.i = (i.pos[0], i.pos[1], True, i.button)
         elif i.type == pygame.MOUSEBUTTONUP:
             self.i = (i.pos[0], i.pos[1], False, i.button)
-
-    def update(self):
-        pass

@@ -25,7 +25,7 @@ class Generation:
                 self.masbiom[i] = [['barrier', 'null', '0', '0']] * size + self.masbiom[i] + [['barrier', 'null', '0', '0']] * size
         return self.masbiom
 
-    def get_key(self, z):
+    def __get_key(self, z):
         if z < -6:
             return 0
         elif z in range(-6, -5):
@@ -47,7 +47,7 @@ class Generation:
         for x in range(self.masive):
             for z in range(self.masive):
                 y = floor(noise([x / period, z / period]) * amp)
-                landscale[int(x)][int(z)] = self.get_key(int(y))
+                landscale[int(x)][int(z)] = self.__get_key(int(y))
 
             procent = int(((x / self.masive) * 100) // 1)
             self.win.blit(self.textures.loading, (self.centre[0] - 960, self.centre[1] - 540))

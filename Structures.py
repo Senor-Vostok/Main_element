@@ -12,7 +12,7 @@ class ClassicStructure(pygame.sprite.Sprite):
         self.second_animation = 0
         self.speed_animation = 15
 
-    def start_animation(self):
+    def __start_animation(self):
         self.second_animation += 1
         stadia = self.second_animation // self.speed_animation
         if stadia >= len(self.animation):
@@ -24,7 +24,7 @@ class ClassicStructure(pygame.sprite.Sprite):
         screen.blit(self.image, (self.rect.x, self.rect.y))
 
     def update(self, move, y_n):
-        self.start_animation()
+        self.__start_animation()
         if y_n:
             self.rect.x += move[0]
             self.rect.y += move[1]

@@ -18,8 +18,6 @@ class Ground(pygame.sprite.Sprite):
         self.units_count = 0
         self.fraction = None
 
-        self.border_fraction = None
-
         self.tile_image = image  # изначальная текстура клетки
         self.image = image  # текущая текстура клетки
 
@@ -40,7 +38,7 @@ class Ground(pygame.sprite.Sprite):
         self.second_animation = 0
         self.speed_animation = 80
 
-    def self_animation(self, stadia):
+    def __self_animation(self, stadia):
         self.image = self.animation[stadia - 1]
 
     def draw(self, screen, there, handler):
@@ -48,21 +46,21 @@ class Ground(pygame.sprite.Sprite):
         if self.rect.colliderect(there[0], there[1], 1, 1) and self.name != 'barrier':
             screen.blit(self.select_image, (self.rect.x, self.rect.y))
         if self.structure:
-            self.draw_structure(screen)
+            self.__draw_structure(screen)
         if self.rect.colliderect(there[0], there[1], 1, 1):
             handler.check_ground_please(self)
 
     def update(self, synchronous, move, y_n):  # synchronous - для синхронизации анимации у разных объектов земли
         if self.animation:
             stadia = (synchronous // self.speed_animation + 1) % len(self.animation)
-            self.self_animation(stadia)
+            self.__self_animation(stadia)
 
         if y_n:
             if self.structure: self.structure.update(move, y_n)
             self.rect.y += move[1]
             self.rect.x += move[0]
 
-    def draw_structure(self, screen):
+    def __draw_structure(self, screen):
         if self.biom[1] and self.biom[0] in self.biome_permissions[self.biom[1]]:
             self.image = self.textures.land['barrier'][0]
             self.structure.draw(screen)

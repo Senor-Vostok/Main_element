@@ -1,5 +1,5 @@
 import pygame.display
-from tkinter.filedialog import askopenfilename
+from tkinter.filedialog import askopenfilename, asksaveasfile
 import Player
 import Interfaces
 from Textures import Textures
@@ -80,7 +80,7 @@ class EventHandler:
             self.camera.speed = self.camera.const_for_speed / (self.clock.get_fps() + 1)
             self.screen_world.draw(self.camera.i, self.camera.move, self.open_some)  # Вырисовываем картинку
         else:
-            self.screen.blit(self.textures.font.render(f'{len(self.contact.users)}/{self.contact.maxclient + 1}', False, (99, 73, 47)), (960, 540))
+            self.screen.blit(self.textures.font.render(f'{len(self.contact.users)}/{self.contact.maxclient + 1}', False, (99, 73, 47)), self.centre)
             if 'ingame' in self.interfaces: self.close('ingame', False)
 
     def close(self, name, open_some, func=None):
@@ -168,6 +168,10 @@ class EventHandler:
             self.world_coord = len(self.contact.gen.split('\n')) // 2
             self.init_world([[k.split('|') for k in i.split('\t')] for i in self.contact.gen.split('\n')])
 
+    def make_save(self):
+        filename = asksaveasfile(defaultextension=".mainel")
+        print(self.matr)
+
     def open_save(self):
         filename = askopenfilename()
         with open(filename, mode='rt') as file:
@@ -198,7 +202,8 @@ class EventHandler:
             if i.type == pygame.KEYDOWN:
                 c = i
                 if i.key == pygame.K_ESCAPE and len(self.interfaces) >= 2:
-                    self.interfaces.pop(self.end)
+                    try: self.interfaces.pop(self.end)
+                    except Exception: pass
                 if i.key == pygame.K_ESCAPE and not self.open_some:
                     self.show_pause(self.centre) if 'pause' not in self.interfaces else self.close('pause', False, None)
                 if 'popup_menu' in self.interfaces: self.interfaces.pop('popup_menu')
