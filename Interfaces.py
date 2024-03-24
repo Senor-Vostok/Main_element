@@ -1,5 +1,4 @@
 import pygame.transform
-
 from Widgets import *
 import Textures
 
