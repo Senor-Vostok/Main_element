@@ -65,7 +65,7 @@ class BuildMenu:
         return Surface(self.background, self.button_project, self.down, self.up, self.structure)
 
 
-class Online:
+class Online_connect:
     def __init__(self, xoy, textures=Textures.Textures()):
         r = textures.resizer
         self.background = BackGround(textures.main_menu['background'][0], xoy)
@@ -73,6 +73,17 @@ class Online:
 
     def create_surface(self):
         return Surface(self.background, self.interact)
+
+
+class Online_create:
+    def __init__(self, xoy, textures=Textures.Textures()):
+        r = textures.resizer
+        self.background = BackGround(textures.main_menu['background'][0], xoy)
+        self.count = InteractLabel(textures.main_menu['label_count_users'][0], (xoy[0] - 280 * r, xoy[1]))
+        self.port = InteractLabel(textures.main_menu['label_port'][0], (xoy[0] + 280 * r, xoy[1]))
+
+    def create_surface(self):
+        return Surface(self.background, self.count, self.port)
 
 
 class ChoiceGame:

@@ -21,22 +21,14 @@ class EventHandler:
         self.clock = pygame.time.Clock()
         self.screen = pygame.display.set_mode(self.size)
         pygame.mouse.set_visible(False)
-
         self.matr = None
         self.world_coord = 0
         self.screen_world = None
-
         self.camera = Cam()
-
         self.open_some = True
-        self.flag = True
-
         self.contact = Unknown()
-
         self.player = None
-
         self.interfaces = dict()
-
         self.structures = [i for i in self.textures.animations_structures]
         self.now_str = 0
 
@@ -73,6 +65,8 @@ class EventHandler:
             i, j = int(message[1].split('|')[2]), int(message[1].split('|')[3])
             self.screen_world.biomes[i][j][1] = message[1].split('|')[1]
             self.place_structure(self.screen_world.great_world[i - self.screen_world.world_cord[0]][j - self.screen_world.world_cord[1]], message[1].split('|')[1], False)
+        if message[0] == 'join':
+            self.contact.users += message[1].split('|')
 
     def machine(self):
         try:
@@ -80,9 +74,14 @@ class EventHandler:
             if self.contact.protocol == 'client': self.decode_message(self.contact.check_message())
         except Exception:
             pass
-        self.camera.inter()
-        self.camera.speed = self.camera.const_for_speed / (self.clock.get_fps() + 1)
-        self.screen_world.draw(self.camera.i, self.camera.move, self.open_some)  # Вырисовываем картинку
+        if len(self.contact.users) == self.contact.maxclient + 1:
+            if 'ingame' not in self.interfaces: self.show_ingame(self.centre)
+            self.camera.inter()
+            self.camera.speed = self.camera.const_for_speed / (self.clock.get_fps() + 1)
+            self.screen_world.draw(self.camera.i, self.camera.move, self.open_some)  # Вырисовываем картинку
+        else:
+            self.screen.blit(self.textures.font.render(f'{len(self.contact.users)}/{self.contact.maxclient + 1}', False, (99, 73, 47)), (960, 540))
+            if 'ingame' in self.interfaces: self.close('ingame', False)
 
     def close(self, name, open_some, func=None):
         self.open_some = open_some
@@ -95,8 +94,7 @@ class EventHandler:
         self.screen_world = None
 
     def next_struct(self, ind):
-        self.now_str = (self.now_str + ind) % len(self.structures) if self.now_str + ind >= 0 else len(
-            self.structures) - 1
+        self.now_str = (self.now_str + ind) % len(self.structures) if self.now_str + ind >= 0 else len(self.structures) - 1
         self.interfaces['buildmenu'].structure.image = pygame.transform.scale(
             self.textures.animations_structures[self.structures[self.now_str]][0],
             (360 * self.textures.resizer, 540 * self.textures.resizer))
@@ -122,10 +120,16 @@ class EventHandler:
         if 'popup_menu' in self.interfaces: self.interfaces.pop('popup_menu')
         self.interfaces['buildmenu'] = build
 
-    def show_online(self, centre):
-        label = Interfaces.Online(centre, self.textures)
-        label.interact.connect(self.connecting)
-        self.interfaces['online'] = label
+    def show_online(self, centre, t='connect', matr=None):
+        if t == 'connect':
+            label = Interfaces.Online_connect(centre, self.textures)
+            label.interact.connect(self.connecting)
+            self.interfaces['online'] = label
+        elif t == 'create':
+            label = Interfaces.Online_create(centre, self.textures)
+            label.count.connect(self.host_game, matr)
+            label.port.connect(self.host_game, matr)
+            self.interfaces['online'] = label
 
     def show_pause(self, centre):
         pause = Interfaces.Pause(centre, self.textures)
@@ -140,26 +144,27 @@ class EventHandler:
     def show_choicegame(self, centre, matr=None):
         choice = Interfaces.ChoiceGame(centre, self.textures)
         choice.button_local.connect(self.init_world, matr)
-        choice.button_online.connect(self.host_game, matr)
+        choice.button_online.connect(self.show_online, self.centre, 'create', matr)
         self.interfaces['choicegame'] = choice
 
     def host_game(self, matr):
         if not matr:
             self.generation(200)
             matr = self.matr
-        print(len('\n'.join('\t'.join('|'.join(k) for k in i) for i in matr)))
-        self.contact = Host('0.0.0.0', 8080, '\n'.join('\t'.join('|'.join(k) for k in i) for i in matr), 1)
+        self.contact = Host('0.0.0.0', int(self.interfaces['online'].port.text[:-1]), '\n'.join('\t'.join('|'.join(k) for k in i) for i in matr), int(self.interfaces['online'].count.text[:-1]) - 1)
         self.init_world(matr)
 
     def connecting(self):
-        self.screen.blit(self.textures.connecting, (0, 0))
+        self.screen.blit(self.textures.connecting, (self.centre[0] - 960 * self.textures.resizer, self.centre[1] - 540 * self.textures.resizer))
         pygame.display.flip()
         host, port = (self.interfaces['online'].interact.text[:-1]).split(':')
         self.contact = Client(host, port)
         self.close('online', False, None)
         if self.contact.connecting():
+            users = ''
             while not self.contact.loaded_map:
-                self.contact.check_message()
+                users = self.contact.check_message()
+            self.contact.users = users.split('|')
             self.world_coord = len(self.contact.gen.split('\n')) // 2
             self.init_world([[k.split('|') for k in i.split('\t')] for i in self.contact.gen.split('\n')])
 
@@ -192,6 +197,8 @@ class EventHandler:
             self.camera.event(i)
             if i.type == pygame.KEYDOWN:
                 c = i
+                if i.key == pygame.K_ESCAPE and len(self.interfaces) >= 2:
+                    self.interfaces.pop(self.end)
                 if i.key == pygame.K_ESCAPE and not self.open_some:
                     self.show_pause(self.centre) if 'pause' not in self.interfaces else self.close('pause', False, None)
                 if 'popup_menu' in self.interfaces: self.interfaces.pop('popup_menu')
@@ -203,6 +210,7 @@ class EventHandler:
             self.machine()
         try:
             for i in self.interfaces:
+                self.end = i
                 self.interfaces[i].create_surface().update(self.camera.i, self.screen, c)
         except Exception:
             pass

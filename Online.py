@@ -1,5 +1,5 @@
 import socket
-
+import random
 import select
 import threading
 
@@ -7,12 +7,13 @@ import threading
 class Client:
     def __init__(self, host, port):
         self.protocol = 'client'
+        self.nickname = str(random.randint(1, 100))
         self.host, self.port = host, int(port)
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.loaded_map = False
-        self.state = 0
-        self.prom = list()
         self.gen = ''
+        self.users = []
+        self.maxclient = None
 
     def connecting(self):
         try:
@@ -29,8 +30,11 @@ class Client:
                 self.gen += message
                 if '<>' in message:
                     self.loaded_map = True
-                    self.gen = self.gen[:-2]
+                    self.gen += message.split('<>')[0]
+                    self.send('join-0-' + self.nickname)
+                    self.maxclient = int(message.split('<>')[1][0])
                     print('loaded')
+                    return message.split('<>')[1][2:]
             else:
                 print('catch', message)
                 return ''.join(message.split(' '))
@@ -42,7 +46,7 @@ class Client:
     def __encoding(self, code):
         encode = code.recv(8192)
         message = encode.decode('utf-8')
-        code.sendall(bytes('get it', 'utf-8'))
+        code.sendall(bytes(' ', 'utf-8'))
         return message
 
 
@@ -55,16 +59,17 @@ class Host:
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.sock.bind((self.host, self.port))
         self.sock.listen()
-        self.thread = threading.Thread(target=self.send_map)
-        self.thread.start()
-        self.in_other_thread = True
+        self.thread = None
+        self.in_other_thread = False
         self.array_clients = list()
+        self.users = ['0']
 
     def send_map(self):
         client, adr = self.sock.accept()
         if client not in self.array_clients:
             self.array_clients.append(client)
-            self.send(self.gen + '<>', client)
+            self.send(self.gen + '<>' + '|'.join([str(self.maxclient)] + self.users), client)
+            self.in_other_thread = False
 
     def send(self, message, client=None):
         if not client:
@@ -74,16 +79,16 @@ class Host:
             client.sendall(bytes(message, 'utf-8'))
 
     def hosting(self):
-        if len(self.array_clients) == self.maxclient and self.in_other_thread:
-            self.thread.join()
-            self.in_other_thread = False
-        elif len(self.array_clients) == self.maxclient and not self.in_other_thread:
-            ready_socks, _, _ = select.select(self.array_clients, [], [], 0)
-            for info in ready_socks:
-                message = self.__encoding(info)
-                if len(message.split('-0-')) > 1:
-                    self.send(''.join(message.split(' ')))
-                    return ''.join(message.split(' '))
+        if len(self.array_clients) < self.maxclient and not self.in_other_thread:
+            self.in_other_thread = True
+            self.thread = threading.Thread(target=self.send_map)
+            self.thread.start()
+        ready_socks, _, _ = select.select(self.array_clients, [], [], 0)
+        for info in ready_socks:
+            message = self.__encoding(info)
+            if len(message.split('-0-')) > 1:
+                self.send(''.join(message.split(' ')))
+                return ''.join(message.split(' '))
         return None
 
     def __encoding(self, code):
@@ -95,6 +100,8 @@ class Host:
 class Unknown:
     def __init__(self):
         self.protocol = 'unknown'
+        self.users = ['i']
+        self.maxclient = 0
 
     def send(self, *args):
         pass
