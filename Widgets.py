@@ -42,7 +42,9 @@ class Button(pygame.sprite.Sprite):
 class InteractLabel(pygame.sprite.Sprite):
     def __init__(self, image, xoy):
         pygame.sprite.Sprite.__init__(self)
-        self.image = image
+        self.state = image[0]
+        self.flex = image[1]
+        self.image = self.state
         self.text = "_"
         self.func = None
         self.args = None
@@ -66,14 +68,18 @@ class InteractLabel(pygame.sprite.Sprite):
     def update(self, there, command=None):
         if not self.rect.colliderect(there[0], there[1], 1, 1) and there[2] and there[3] == 1:
             self.can_write = False
+            self.image = self.state
         elif self.rect.colliderect(there[0], there[1], 1, 1) and there[2] and there[3] == 1:
             self.can_write = True
+            self.image = self.flex
         elif self.can_write:
             self.go_write(command)
 
     def go_write(self, command):
         if command:
-            if command.key == pygame.K_BACKSPACE:
+            if (command.key == pygame.K_v) and (command.mod & pygame.KMOD_CTRL):
+                self.text = self.text[:-1] + ("".join(str(pygame.scrap.get(pygame.SCRAP_TEXT))[2:].split(r"\x00")))[:-1] + "_"
+            elif command.key == pygame.K_BACKSPACE:
                 self.text = self.text[:-2] + "_"
             elif int(command.key) == 13:
                 if self.func:
@@ -87,7 +93,6 @@ class InteractLabel(pygame.sprite.Sprite):
                         return self.func(self.args[0], self.args[1], self.args[2])
             elif len(str(command.unicode)) > 0:
                 self.text = self.text[:-1] + command.unicode + "_"
-
 
 class Surface:
     def __init__(self, *args):

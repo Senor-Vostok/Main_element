@@ -11,6 +11,8 @@ from Online import *
 from win32api import GetSystemMetrics
 from Structures import *
 
+pygame.scrap.init()
+pygame.scrap.set_mode(pygame.SCRAP_CLIPBOARD)
 
 class EventHandler:
     def __init__(self):
