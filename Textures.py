@@ -36,6 +36,11 @@ class Textures:
             'mill': [self.render(f'data/structures/mill/anim{i}.png', (120, 180)) for i in range(1, 4)],
             'mine': [self.render(f'data/structures/mine/anim{i}.png', (120, 180)) for i in range(1, 8)]}
 
+        self.animation_main_structures = {'water': [self.render(f'data/structures/centres/water/anim{i}.png', (120, 180)) for i in range(1, 4)],
+                                          'fire': [self.render(f'data/structures/centres/fire/anim{i}.png', (120, 180)) for i in range(1, 4)],
+                                          'earth': [self.render(f'data/structures/centres/earth/anim{i}.png', (120, 180)) for i in range(1, 4)],
+                                          'air': [self.render(f'data/structures/centres/air/anim{i}.png', (120, 180)) for i in range(1, 4)]}
+
         self.popup_menu = {'button_information': [self.render('data/widgets/popupmenu/buttons/button1.png', (250, 50)),
                                                   self.render('data/widgets/popupmenu/buttons/button1t.png', (250, 50))],
                            'button_build': [self.render('data/widgets/popupmenu/buttons/button2.png', (250, 50)),

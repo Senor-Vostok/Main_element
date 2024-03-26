@@ -28,3 +28,6 @@ class ClassicStructure(pygame.sprite.Sprite):
         if y_n:
             self.rect.x += move[0]
             self.rect.y += move[1]
+
+class MainStructure(ClassicStructure):
+    pass

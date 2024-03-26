@@ -186,7 +186,7 @@ class EventHandler:
     def place_structure(self, ground, structure=None, info=True):
         if not structure:
             structure = self.structures[self.now_str]
-        ground.structure = ClassicStructure(self.textures.animations_structures[structure][0], (ground.rect[0] + ground.rect[2] // 2, ground.rect[1] + ground.rect[3] // 2), structure, self.textures)
+        ground.structure = MainStructure(self.textures.animations_structures[structure][0], (ground.rect[0] + ground.rect[2] // 2, ground.rect[1] + ground.rect[3] // 2), structure, self.textures)
         ground.biom[1] = structure
         if 'buildmenu' in self.interfaces:
             self.interfaces.pop('buildmenu')
