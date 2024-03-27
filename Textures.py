@@ -10,7 +10,7 @@ class Textures:
         self.resizer = GetSystemMetrics(0) / 1920
         self.priority = ['water', 'sand', 'flower', 'ground', 'stone', 'snow', 'barrier']
 
-        self.font = pygame.font.SysFont('progresspixel-bold', 30)
+        self.font = pygame.font.SysFont('progresspixel-bold', 20)
 
         self.loading = self.render('data/loading/logo.png', (1920, 1080))
         self.connecting = self.render('data/loading/connecting.png', (1920, 1080))
@@ -36,7 +36,7 @@ class Textures:
             'mill': [self.render(f'data/structures/mill/anim{i}.png', (120, 180)) for i in range(1, 4)],
             'mine': [self.render(f'data/structures/mine/anim{i}.png', (120, 180)) for i in range(1, 8)]}
 
-        self.animation_main_structures = {'water': [self.render(f'data/structures/centres/water/anim{i}.png', (120, 180)) for i in range(1, 4)],
+        self.animations_main_structures = {'water': [self.render(f'data/structures/centres/water/anim{i}.png', (120, 180)) for i in range(1, 4)],
                                           'fire': [self.render(f'data/structures/centres/fire/anim{i}.png', (120, 180)) for i in range(1, 4)],
                                           'earth': [self.render(f'data/structures/centres/earth/anim{i}.png', (120, 180)) for i in range(1, 4)],
                                           'air': [self.render(f'data/structures/centres/air/anim{i}.png', (120, 180)) for i in range(1, 4)]}
@@ -67,13 +67,17 @@ class Textures:
                           'button_local': [self.render(f'data/widgets/menu/buttons/button8.png', (400, 70)),
                                            self.render(f'data/widgets/menu/buttons/button8t.png', (400, 70))],
                           'label_online': [self.render(f'data/widgets/menu/labels/ipv4_port.png', (1100, 66)),
-                                           self.render(f'data/widgets/menu/labels/ipv4_port1.png', (1100, 66))],
-                          'label_count_users': [self.render(f'data/widgets/menu/labels/count_player.png', (550, 66))],
-                          'label_port': [self.render(f'data/widgets/menu/labels/port.png', (550, 66))]}
+                                           self.render(f'data/widgets/menu/labels/ipv4_portt.png', (1100, 66))],
+                          'label_count_users': [self.render(f'data/widgets/menu/labels/count_player.png', (550, 66)),
+                                                self.render(f'data/widgets/menu/labels/count_playert.png', (550, 66))],
+                          'label_port': [self.render(f'data/widgets/menu/labels/port.png', (550, 66)),
+                                         self.render(f'data/widgets/menu/labels/portt.png', (550, 66))]}
         self.pause = {'background': [self.render(f'data/widgets/menu/labels/background.png', (1920, 1080))],
                       'button_menu': [self.render(f'data/widgets/menu/buttons/button6.png', (400, 70)),
                                       self.render(f'data/widgets/menu/buttons/button6t.png', (400, 70))],
-                      'button_setting': self.main_menu['button_setting']}
+                      'button_setting': self.main_menu['button_setting'],
+                      'button_save': [self.render(f'data/widgets/menu/buttons/button9.png', (400, 70)),
+                                      self.render(f'data/widgets/menu/buttons/button9t.png', (400, 70))]}
 
         self.ingame = {'button_end': [self.render(f'data/widgets/menu/buttons/button7.png', (400, 50)),
                                       self.render(f'data/widgets/menu/buttons/button7t.png', (400, 50))]}
@@ -85,6 +89,16 @@ class Textures:
                                  self.render(f'data/widgets/buildmenu/buttons/up2.png', (304, 128))],
                           'down': [self.render(f'data/widgets/buildmenu/buttons/down1.png', (304, 128)),
                                    self.render(f'data/widgets/buildmenu/buttons/down2.png', (304, 128))]}
+
+        self.save_menu = {'background': [self.render(f'data/widgets/save menu/labels/background.png', (600, 600))],
+                          'variant_save': [self.render(f'data/widgets/save menu/buttons/button3.png', (480, 100)),
+                                           self.render(f'data/widgets/save menu/buttons/button3t.png', (480, 100))],
+                          'button_play': [self.render(f'data/widgets/save menu/buttons/button1.png', (50, 50)),
+                                          self.render(f'data/widgets/save menu/buttons/button1t.png', (50, 50))],
+                          'button_delete': [self.render(f'data/widgets/save menu/buttons/button2.png', (50, 50)),
+                                            self.render(f'data/widgets/save menu/buttons/button2t.png', (50, 50))],
+                          'label_save': [self.render(f'data/widgets/menu/labels/name_of_save.png', (1100, 66)),
+                                         self.render(f'data/widgets/menu/labels/name_of_savet.png', (1100, 66))]}
 
     def render(self, address, size):
         size = size[0] * self.resizer, size[1] * self.resizer

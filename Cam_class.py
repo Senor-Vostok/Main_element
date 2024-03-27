@@ -6,7 +6,7 @@ class Cam(pygame.sprite.Sprite):
     def __init__(self):
         pygame.sprite.Sprite.__init__(self)
         self.move = [0, 0]
-        self.normal_fps = 144
+        self.normal_fps = 60
         self.speed = 1  # не ставить связанные со степенью 3 и нечетные числа
         self.const_for_speed = self.normal_fps * self.speed
         self.i = (0, 0, None, None)
@@ -26,14 +26,15 @@ class Cam(pygame.sprite.Sprite):
                 self.move[1] = self.speed * (abs(self.move[1]) // self.move[1])
 
     def inter(self):
+        x = 1.05
         if self.smooth_x:
-            self.move[0] = self.move[0] * 1.1 if abs(self.move[0] * 1.1) < self.speed * 10 else self.move[0]
+            self.move[0] = self.move[0] * 2 * x if abs(self.move[0] * 2 * x) < self.speed * 10 else self.move[0]
         else:
-            self.move[0] = self.move[0] / 1.1 if abs(self.move[0]) / 1.1 > 1 else 0
+            self.move[0] = self.move[0] / x if abs(self.move[0]) / x > 1 else 0
         if self.smooth_y:
-            self.move[1] = self.move[1] * 1.1 if abs(self.move[1] * 1.1) < self.speed * 10 else self.move[1]
+            self.move[1] = self.move[1] * 2 * x if abs(self.move[1] * 2 * x) < self.speed * 10 else self.move[1]
         else:
-            self.move[1] = self.move[1] / 1.1 if abs(self.move[1]) / 1.1 > 1 else 0
+            self.move[1] = self.move[1] / x if abs(self.move[1]) / x > 1 else 0
 
     def event(self, i):
         if i.type == pygame.KEYDOWN:

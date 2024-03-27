@@ -45,21 +45,22 @@ class InteractLabel(pygame.sprite.Sprite):
         self.state = image[0]
         self.flex = image[1]
         self.image = self.state
-        self.text = "_"
+        self.text = "/"
         self.func = None
         self.args = None
+        self.clear = False
         self.rect = self.image.get_rect(center=xoy)
-        self.font = pygame.font.SysFont("Futura book C", self.rect[3] + self.rect[3] // 4)
+        self.font = pygame.font.SysFont("progresspixel-bold", self.rect[3] - self.rect[3] // 3)
         self.can_write = False
 
     def draw(self, screen):
         screen.blit(self.image, (self.rect.x, self.rect.y))
-        image = self.font.render(self.text, False, (99, 73, 47))
+        image = self.font.render(self.text[-1:], False, (99, 73, 47))
         i = 1
-        while image.get_rect()[2] > self.rect[2] - 5:
-            image = self.font.render("." + self.text[i:], False, (99, 73, 47))
+        while image.get_rect()[2] < self.rect[2] - 50 and i < len(self.text):
+            image = self.font.render(self.text[-i:], False, (99, 73, 47))
             i += 1
-        screen.blit(image, (self.rect.x + 2, self.rect.y + 2))
+        screen.blit(image, (self.rect[0] + 10, self.rect[1] + 6))
 
     def connect(self, func, *args):
         self.func = func
@@ -78,9 +79,9 @@ class InteractLabel(pygame.sprite.Sprite):
     def go_write(self, command):
         if command:
             if (command.key == pygame.K_v) and (command.mod & pygame.KMOD_CTRL):
-                self.text = self.text[:-1] + ("".join(str(pygame.scrap.get(pygame.SCRAP_TEXT))[2:].split(r"\x00")))[:-1] + "_"
+                self.text = self.text[:-1] + ("".join(str(pygame.scrap.get(pygame.SCRAP_TEXT))[2:].split(r"\x00")))[:-1] + "/"
             elif command.key == pygame.K_BACKSPACE:
-                self.text = self.text[:-2] + "_"
+                self.text = self.text[:-2] + "/"
             elif int(command.key) == 13:
                 if self.func:
                     if len(self.args) == 0:
@@ -91,14 +92,17 @@ class InteractLabel(pygame.sprite.Sprite):
                         return self.func(self.args[0], self.args[1])
                     elif len(self.args) == 3:
                         return self.func(self.args[0], self.args[1], self.args[2])
-            elif len(str(command.unicode)) > 0:
-                self.text = self.text[:-1] + command.unicode + "_"
+            elif len(str(command.unicode)) > 0 and command.type == pygame.KEYDOWN:
+                self.text = self.text[:-1] + command.unicode + "/"
 
 class Surface:
     def __init__(self, *args):
         self.widgets = list()
         for i in args:
             self.widgets.append(i)
+
+    def add(self, widget):
+        self.widgets.append(widget)
 
     def update(self, there, screen, command=None):
         for i in self.widgets:
@@ -110,7 +114,7 @@ class Label(pygame.sprite.Sprite):
     def __init__(self, text, xoy, size):
         pygame.sprite.Sprite.__init__(self)
         self.text = text
-        self.font = pygame.font.SysFont("Futura book C", size)
+        self.font = pygame.font.SysFont("progresspixel-bold", size)
         self.label = self.font.render(self.text, 1, (99, 73, 47))
         self.rect = self.label.get_rect(center=xoy)
 

@@ -1,3 +1,5 @@
+import os
+
 import pygame.display
 from tkinter.filedialog import askopenfilename, asksaveasfile
 import Player
@@ -13,6 +15,7 @@ from Structures import *
 
 pygame.scrap.init()
 pygame.scrap.set_mode(pygame.SCRAP_CLIPBOARD)
+
 
 class EventHandler:
     def __init__(self):
@@ -30,6 +33,7 @@ class EventHandler:
         self.open_some = True
         self.contact = Unknown()
         self.player = None
+        self.end = None
         self.interfaces = dict()
         self.structures = [i for i in self.textures.animations_structures]
         self.now_str = 0
@@ -91,7 +95,8 @@ class EventHandler:
         if func: func()
 
     def go_back_to_menu(self):
-        self.close('pause', True)
+        self.open_some = True
+        self.interfaces = dict()
         self.show_menu(self.centre)
         self.screen_world = None
 
@@ -105,9 +110,14 @@ class EventHandler:
         game = Interfaces.InGame(centre, self.textures)
         self.interfaces['ingame'] = game
 
+    def show_create_save(self, centre):
+        name = Interfaces.CreateSave(centre, self.textures)
+        name.name.connect(self.show_choicegame, (centre[0], centre[1] + 150 * self.textures.resizer))
+        self.interfaces['create_save'] = name
+
     def show_menu(self, centre):
         menu = Interfaces.Menu(centre, self.textures)
-        menu.button_start.connect(self.show_choicegame, self.centre)
+        menu.button_start.connect(self.show_create_save, self.centre)
         menu.button_load.connect(self.open_save)
         menu.button_online.connect(self.show_online, self.centre)
         menu.button_exit.connect(sys.exit)
@@ -123,6 +133,7 @@ class EventHandler:
         self.interfaces['buildmenu'] = build
 
     def show_online(self, centre, t='connect', matr=None):
+        if 'choicegame' in self.interfaces: self.close('choicegame', True)
         if t == 'connect':
             label = Interfaces.Online_connect(centre, self.textures)
             label.interact.connect(self.connecting)
@@ -136,6 +147,7 @@ class EventHandler:
     def show_pause(self, centre):
         pause = Interfaces.Pause(centre, self.textures)
         pause.button_menu.connect(self.go_back_to_menu)
+        pause.button_save.connect(self.make_save)
         self.interfaces['pause'] = pause
 
     def show_popup_menu(self, centre, ground=None):
@@ -171,19 +183,14 @@ class EventHandler:
             self.init_world([[k.split('|') for k in i.split('\t')] for i in self.contact.gen.split('\n')])
 
     def make_save(self):
-        filename = asksaveasfile(defaultextension=".mainel")
-        print(self.matr)
+        filename = asksaveasfile('save', defaultextension=".mainel")
+        print(filename)
 
     def open_save(self):
-        filename = askopenfilename()
-        with open(filename, mode='rt') as file:
-            file = [[k.split('|') for k in i.split('\t')] for i in file.read().split('\n')]
-            self.world_coord = len(file) // 2
-            try:
-                if file[0][0][0] == 'barrier':
-                    self.show_choicegame(self.centre, file)
-            except:
-                pass
+        saves = Interfaces.Save_menu(self.centre, self.textures)
+        files = [i for i in os.listdir('saves') if len(i.split('.maiso')) > 1]
+        saves.add_saves(files)
+        self.interfaces['save_menu'] = saves
 
     def place_structure(self, ground, structure=None, info=True):
         if not structure:
@@ -206,7 +213,7 @@ class EventHandler:
                 if i.key == pygame.K_ESCAPE and len(self.interfaces) >= 2:
                     try: self.interfaces.pop(self.end)
                     except Exception: pass
-                if i.key == pygame.K_ESCAPE and not self.open_some:
+                elif i.key == pygame.K_ESCAPE and not self.open_some:
                     self.show_pause(self.centre) if 'pause' not in self.interfaces else self.close('pause', False, None)
                 if 'popup_menu' in self.interfaces: self.interfaces.pop('popup_menu')
                 if 'buildmenu' in self.interfaces: self.interfaces.pop('buildmenu')
@@ -218,11 +225,11 @@ class EventHandler:
         try:
             for i in self.interfaces:
                 self.end = i
-                self.interfaces[i].create_surface().update(self.camera.i, self.screen, c)
+                self.interfaces[i].surface.update(self.camera.i, self.screen, c)
         except Exception:
             pass
         self.screen.blit(self.textures.point, (self.camera.i[0] - 10, self.camera.i[1] - 10))
-        self.screen.blit(self.textures.font.render(f'fps: {self.clock.get_fps() // 1}', False, (99, 73, 47)), (30, 30))
+        self.screen.blit(self.textures.font.render(f'fps: {int(self.clock.get_fps())}', False, (99, 73, 47)), (30, 30))
 
 
 if __name__ == '__main__':
