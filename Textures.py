@@ -36,7 +36,7 @@ class Textures:
             'mill': [self.render(f'data/structures/mill/anim{i}.png', (120, 180)) for i in range(1, 4)],
             'mine': [self.render(f'data/structures/mine/anim{i}.png', (120, 180)) for i in range(1, 8)]}
 
-        self.animation_main_structures = {'water': [self.render(f'data/structures/centres/water/anim{i}.png', (120, 180)) for i in range(1, 4)],
+        self.animations_main_structures = {'water': [self.render(f'data/structures/centres/water/anim{i}.png', (120, 180)) for i in range(1, 4)],
                                           'fire': [self.render(f'data/structures/centres/fire/anim{i}.png', (120, 180)) for i in range(1, 4)],
                                           'earth': [self.render(f'data/structures/centres/earth/anim{i}.png', (120, 180)) for i in range(1, 4)],
                                           'air': [self.render(f'data/structures/centres/air/anim{i}.png', (120, 180)) for i in range(1, 4)]}
