@@ -1,5 +1,5 @@
 import pygame
-from Structures import ClassicStructure
+from Structures import ClassicStructure, MainStructure
 
 
 class Ground(pygame.sprite.Sprite):
@@ -25,13 +25,10 @@ class Ground(pygame.sprite.Sprite):
         self.rect = self.image.get_rect(center=xoy)
         self.select = False
 
-        # списки размещаемых структур для каждого биома
-        self.biome_permissions = {'tower': ['sand', 'flower', 'ground'],
-                                  'mill': ['sand', 'flower'],
-                                  'mine': ['stone', 'snow']}
-
         if biom[1] in textures.animations_structures:
             self.structure = ClassicStructure(textures.animations_structures[biom[1]][0], (self.rect[0] + self.rect[2] // 2, self.rect[1] + self.rect[3] // 2), biom[1], self.textures)
+        elif biom[1] in textures.animations_main_structures:
+            self.structure = MainStructure(textures.animations_main_structures[biom[1]][0], (self.rect[0] + self.rect[2] // 2, self.rect[1] + self.rect[3] // 2), biom[1], self.textures)
         else:
             self.structure = None
 
@@ -61,6 +58,5 @@ class Ground(pygame.sprite.Sprite):
             self.rect.x += move[0]
 
     def __draw_structure(self, screen):
-        if self.biom[1] and self.biom[0] in self.biome_permissions[self.biom[1]]:
-            self.image = self.textures.land['barrier'][0]
-            self.structure.draw(screen)
+        self.image = self.textures.land['barrier'][0] #пофиксить
+        self.structure.draw(screen)

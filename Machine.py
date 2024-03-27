@@ -65,6 +65,9 @@ class World:
 
     def draw(self, there, move=(0, 0), open_some=False):  # Отображение на экране спрайтов
         flag = self.check_barrier(move, self.centre)
+        if not flag:
+            move[0] *= -1
+            move[1] *= -1
         self.update_object(move, flag, open_some)  # Обновление оставшихся спрайтов и динамической сетки
         sorted_by_priority = list()
         for i in range(len(self.great_world)):
@@ -100,10 +103,8 @@ class World:
             for j in range(self.sq1 // 2 - 1, self.sq1 // 2 + 2):
                 res = self.now_dr[0] + j * self.gr_main <= point[0] - 2 * move[0] <= self.now_dr[0] + j * self.gr_main + self.gr_main and \
                       self.now_dr[1] + i * self.gr_main <= point[1] - 2 * move[1] <= self.now_dr[1] + i * self.gr_main + self.gr_main
-                if res:
-                    if self.biomes[self.world_cord[0] + i][self.world_cord[1] + j][0] == 'barrier':
-                        move[0], move[1] = -move[0], -move[1]
-                        return False
+                if res and self.biomes[self.world_cord[0] + i][self.world_cord[1] + j][0] == 'barrier':
+                    return False
         return True
 
     def update_object(self, move, flag, open_some):

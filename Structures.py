@@ -6,7 +6,10 @@ class ClassicStructure(pygame.sprite.Sprite):
         pygame.sprite.Sprite.__init__(self)
         self.image = image
         self.name = name
-        self.animation = textures.animations_structures[name]
+        try:
+            self.animation = textures.animations_structures[name]
+        except:
+            pass
         self.rect = self.image.get_rect(center=xoy)
 
         self.second_animation = 0
@@ -29,5 +32,11 @@ class ClassicStructure(pygame.sprite.Sprite):
             self.rect.x += move[0]
             self.rect.y += move[1]
 
-class MainStructure(ClassicStructure):
+
+class CenterStructure(ClassicStructure):
     pass
+
+class MainStructure(ClassicStructure):
+    def __init__(self, image, xoy, name, textures):
+        ClassicStructure.__init__(self, image, xoy, name, textures)
+        self.animation = textures.animations_main_structures[name]

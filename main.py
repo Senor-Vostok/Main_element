@@ -18,8 +18,11 @@ pygame.scrap.set_mode(pygame.SCRAP_CLIPBOARD)
 
 
 class EventHandler:
-    def __init__(self):
+    def __init__(self, id, fraction, start_point):
         pygame.init()
+        self.me = Player.Player(id)
+        self.init_player(fraction, start_point)
+
         self.textures = Textures()
         self.size = GetSystemMetrics(0), GetSystemMetrics(1)
         self.centre = (GetSystemMetrics(0) // 2, GetSystemMetrics(1) // 2)
@@ -29,14 +32,35 @@ class EventHandler:
         self.matr = None
         self.world_coord = 0
         self.screen_world = None
+        self.matr = None
         self.camera = Cam()
         self.open_some = True
+        self.flag = True
+
+        self.ids = [1, 2, 3, 4] #id игроков
+        self.players = []
+        self.fractions = ['fire', 'water', 'air', 'earth'] #TODO: добавить выбор фракций
+        self.start_points = [(30, 30), (210, 30), (30, 210), (210, 210)] #TODO: добавить выбор стартовой позиции
+
+        self.turn = None #Чей ход
+
         self.contact = Unknown()
         self.player = None
         self.end = None
         self.interfaces = dict()
         self.structures = [i for i in self.textures.animations_structures]
         self.now_str = 0
+
+        self.rules = dict()
+        with open('game_rules', 'rt') as file:
+            for rule in file.read().split('\n'):
+                props = rule.split(':')
+                self.rules[props[0]] = dict()
+                for arg in props[1].split(','):
+                    x = arg.split('_')
+                    self.rules[props[0]][x[0]] = []
+                    for i in x[1:]:
+                        self.rules[props[0]][x[0]].append(i)
 
     def check_ground_please(self, ground):
         if self.camera.i[3] == 3:
@@ -50,10 +74,27 @@ class EventHandler:
         gen.generation()
         self.matr = gen.add_barrier(barrier)
 
-    def player(self, id):
-        self.player = Player.Player(id)
-        self.player.start_point = (self.screen_world.sq2 // 2, self.screen_world.sq1 // 2)
-        self.player.setup(self.screen_world.great_world[self.player.start_point[0]][self.player.start_point[1]])
+    def init_player(self, fraction, start_point):
+        self.me.fraction_name = fraction
+        self.me.units_count = 100
+        self.me.action_pts = 2
+        self.me.resources = 15
+        self.me.start_point = start_point
+
+    def init_players(self, ids): #перенести в серверную часть (???)
+        for id in ids:
+            new_player = Player.Player(id)
+            fraction = random.choice(self.fractions) #назначение фракции игроку
+            new_player.fraction_name = fraction
+            self.fractions.remove(new_player.fraction_name)
+            new_player.units_count = 100 #стартовое кол-во людей в поселении
+            new_player.resources = 15 #стартовый капитал
+            new_player.action_pts = 2
+            new_player.start_point = random.choice(self.start_points) #спавн в угле мира
+            self.start_points.remove(new_player.start_point)
+            self.players.append(new_player)
+            self.matr[new_player.start_point[0]][new_player.start_point[1]][1] = fraction #спавн центральной структуры
+
 
     def init_world(self, matr=None):
         self.open_some = False
@@ -64,6 +105,7 @@ class EventHandler:
         self.screen_world = World(self.screen, self.centre, [self.world_coord, self.world_coord], matr, self)  # создание динамической сетки
         self.screen_world.create()
         self.show_ingame(self.centre)
+        self.init_players(self.ids)
 
     def decode_message(self, message):
         message = message.split('-0-')
@@ -144,6 +186,13 @@ class EventHandler:
             label.port.connect(self.host_game, matr)
             self.interfaces['online'] = label
 
+    def attack(self, ground):
+        if self.me.action_pts > 1:
+            pass
+        else:
+            # написать, что мало очков действий
+            pass
+
     def show_pause(self, centre):
         pause = Interfaces.Pause(centre, self.textures)
         pause.button_menu.connect(self.go_back_to_menu)
@@ -195,8 +244,22 @@ class EventHandler:
     def place_structure(self, ground, structure=None, info=True):
         if not structure:
             structure = self.structures[self.now_str]
-        ground.structure = MainStructure(self.textures.animations_structures[structure][0], (ground.rect[0] + ground.rect[2] // 2, ground.rect[1] + ground.rect[3] // 2), structure, self.textures)
-        ground.biom[1] = structure
+        if ground.name not in self.rules['StructuresPermissions'][structure]:
+            print('nelza tut stroit')
+        else:
+            struct_cost = int(self.rules['StructuresCosts'][self.structures[self.now_str]][0])
+            if self.me.action_pts >= 1 and self.me.resources >= struct_cost:  # 1 очко действий для постройки
+                structure = self.structures[self.now_str]
+                ground.structure = MainStructure(self.textures.animations_structures[structure][0], (ground.rect[0] + ground.rect[2] // 2, ground.rect[1] + ground.rect[3] // 2), structure, self.textures)
+                ground.biom[1] = structure
+                self.me.action_pts -= 1
+                self.me.resources -= struct_cost
+            elif self.me.action_pts < 1:
+                print("no points((9(")
+                #написать, что мало очков действий
+                pass
+            elif self.me.resources < struct_cost:
+                print('malo denyak')
         if 'buildmenu' in self.interfaces:
             self.interfaces.pop('buildmenu')
         if info:
@@ -208,7 +271,9 @@ class EventHandler:
         c = None
         for i in pygame.event.get():
             self.camera.event(i)
-            if i.type == pygame.KEYDOWN:
+            if i.type == pygame.QUIT:
+                sys.exit()
+            if i.type == pygame.KEYDOWN and self.decoding()[0] == self.me.id:
                 c = i
                 if i.key == pygame.K_ESCAPE and len(self.interfaces) >= 2:
                     try: self.interfaces.pop(self.end)
@@ -231,10 +296,16 @@ class EventHandler:
         self.screen.blit(self.textures.point, (self.camera.i[0] - 10, self.camera.i[1] - 10))
         self.screen.blit(self.textures.font.render(f'fps: {int(self.clock.get_fps())}', False, (99, 73, 47)), (30, 30))
 
+    def complete(self):
+        pass
+
+    def decoding(self): #возвращает название протокола и массив
+        return [1]
+
 
 if __name__ == '__main__':
     pygame.init()
-    handler = EventHandler()
+    handler = EventHandler(1, "fire", (30, 30))
     handler.show_menu(handler.centre)
     while True:
         handler.update()
