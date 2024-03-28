@@ -7,7 +7,7 @@ class Cam(pygame.sprite.Sprite):
         pygame.sprite.Sprite.__init__(self)
         self.move = [0, 0]
         self.normal_fps = 60
-        self.speed = 1  # не ставить связанные со степенью 3 и нечетные числа
+        self.speed = 1
         self.const_for_speed = self.normal_fps * self.speed
         self.i = (0, 0, None, None)
         self.smooth_x = False
@@ -34,11 +34,11 @@ class Cam(pygame.sprite.Sprite):
 
     def inter(self):
         if self.smooth_a or self.smooth_d:
-            self.move[0] = self.move[0] * 1.1 if abs(self.move[0] * 1.1) < self.speed * 10 else self.move[0]
+            self.move[0] = self.move[0] * 1.1 if abs(self.move[0] * 1.1) < self.speed * 20 else self.move[0]
         else:
             self.move[0] = self.move[0] / 1.1 if abs(self.move[0]) / 1.1 > 1 else 0
         if self.smooth_w or self.smooth_s:
-            self.move[1] = self.move[1] * 1.1 if abs(self.move[1] * 1.1) < self.speed * 10 else self.move[1]
+            self.move[1] = self.move[1] * 1.1 if abs(self.move[1] * 1.1) < self.speed * 20 else self.move[1]
         else:
             self.move[1] = self.move[1] / 1.1 if abs(self.move[1]) / 1.1 > 1 else 0
 

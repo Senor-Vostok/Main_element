@@ -109,14 +109,22 @@ class Save_menu:
     def delete(self, save):
         print(f'saves/{save}')
 
-    def add_saves(self, saves):
+    def __decode_world(self, name):
+        matr = None
+        with open(f'saves/{name}', mode='rt') as file:
+            matr = [[j.split('|') for j in i.split('\t')] for i in file.read().split('\n')]
+        return matr
+
+    def add_saves(self, saves, choice, centre):
         r = self.r
         y = 210
         for i in saves:
             spisok = [BackGround(self.t.save_menu['variant_save'][0], (self.xoy[0] - 30 * r, self.xoy[1] - y * r)),
+                      Label(i[:-6], (self.xoy[0] - 30 * r, self.xoy[1] - y * r), 30),
                       Button(self.t.save_menu['button_play'], (self.xoy[0] + 235 * r, self.xoy[1] - 25 * r - y * r)),
                       Button(self.t.save_menu['button_delete'], (self.xoy[0] + 235 * r, self.xoy[1] + 25 * r - y * r))]
-            spisok[2].connect(self.delete, i)
+            spisok[2].connect(choice, centre, self.__decode_world(i))
+            spisok[3].connect(self.delete, i)
             self.save[i] = spisok
             for s in spisok:
                 self.surface.add(s)

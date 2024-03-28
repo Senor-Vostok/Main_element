@@ -50,6 +50,7 @@ class EventHandler:
         self.interfaces = dict()
         self.structures = [i for i in self.textures.animations_structures]
         self.now_str = 0
+        self.name_save = None
 
         self.rules = dict()
         with open('game_rules', 'rt') as file:
@@ -95,13 +96,16 @@ class EventHandler:
             self.players.append(new_player)
             self.matr[new_player.start_point[0]][new_player.start_point[1]][1] = fraction #спавн центральной структуры
 
-
     def init_world(self, matr=None):
         self.open_some = False
         self.interfaces = dict()
         if not matr:
             self.generation(200)
             matr = self.matr
+        if self.name_save:
+            with open(f'saves/{self.name_save}.maiso', mode='w') as file:
+                file.write('\n'.join('\t'.join('|'.join(j) for j in i) for i in matr))
+        self.world_coord = len(matr) // 2
         self.screen_world = World(self.screen, self.centre, [self.world_coord, self.world_coord], matr, self)  # создание динамической сетки
         self.screen_world.create()
         self.show_ingame(self.centre)
@@ -112,7 +116,7 @@ class EventHandler:
         if message[0] == 'change':
             i, j = int(message[1].split('|')[2]), int(message[1].split('|')[3])
             self.screen_world.biomes[i][j][1] = message[1].split('|')[1]
-            self.place_structure(self.screen_world.great_world[i - self.screen_world.world_cord[0]][j - self.screen_world.world_cord[1]], message[1].split('|')[1], False)
+            self.place_structure(self.screen_world.great_world[i - self.screen_world.world_cord[0]][j - self.screen_world.world_cord[1]], message[1].split('|')[1], True)
         if message[0] == 'join':
             self.contact.users += message[1].split('|')
 
@@ -153,8 +157,10 @@ class EventHandler:
         self.interfaces['ingame'] = game
 
     def show_create_save(self, centre):
+        self.interfaces = dict()
+        self.show_menu(self.centre)
         name = Interfaces.CreateSave(centre, self.textures)
-        name.name.connect(self.show_choicegame, (centre[0], centre[1] + 150 * self.textures.resizer))
+        name.name.connect(self.show_choicegame, centre, None, True)
         self.interfaces['create_save'] = name
 
     def show_menu(self, centre):
@@ -175,6 +181,8 @@ class EventHandler:
         self.interfaces['buildmenu'] = build
 
     def show_online(self, centre, t='connect', matr=None):
+        self.interfaces = dict()
+        self.show_menu(self.centre)
         if 'choicegame' in self.interfaces: self.close('choicegame', True)
         if t == 'connect':
             label = Interfaces.Online_connect(centre, self.textures)
@@ -204,7 +212,14 @@ class EventHandler:
         popup.button_build.connect(self.show_buildmenu, self.centre, ground)
         self.interfaces['popup_menu'] = popup
 
-    def show_choicegame(self, centre, matr=None):
+    def show_choicegame(self, centre, matr=None, create_save=False):
+        if create_save and 'create_save' in self.interfaces:
+            name = self.interfaces['create_save'].name.text[:-1]
+            self.name_save = name
+            with open(f'saves/{name}.maiso', mode='w') as file:
+                file.write('')
+        self.interfaces = dict()
+        self.show_menu(self.centre)
         choice = Interfaces.ChoiceGame(centre, self.textures)
         choice.button_local.connect(self.init_world, matr)
         choice.button_online.connect(self.show_online, self.centre, 'create', matr)
@@ -232,34 +247,42 @@ class EventHandler:
             self.init_world([[k.split('|') for k in i.split('\t')] for i in self.contact.gen.split('\n')])
 
     def make_save(self):
-        filename = asksaveasfile('save', defaultextension=".mainel")
-        print(filename)
+        with open(f'saves/{self.name_save}.maiso', mode='w') as file:
+            file.write('\n'.join('\t'.join('|'.join(j) for j in i) for i in self.screen_world.biomes))
 
     def open_save(self):
+        self.interfaces = dict()
+        self.show_menu(self.centre)
         saves = Interfaces.Save_menu(self.centre, self.textures)
         files = [i for i in os.listdir('saves') if len(i.split('.maiso')) > 1]
-        saves.add_saves(files)
+        saves.add_saves(files, self.show_choicegame, self.centre)
         self.interfaces['save_menu'] = saves
 
     def place_structure(self, ground, structure=None, info=True):
         if not structure:
             structure = self.structures[self.now_str]
-        if ground.name not in self.rules['StructuresPermissions'][structure]:
-            print('nelza tut stroit')
-        else:
-            struct_cost = int(self.rules['StructuresCosts'][self.structures[self.now_str]][0])
-            if self.me.action_pts >= 1 and self.me.resources >= struct_cost:  # 1 очко действий для постройки
-                structure = self.structures[self.now_str]
-                ground.structure = MainStructure(self.textures.animations_structures[structure][0], (ground.rect[0] + ground.rect[2] // 2, ground.rect[1] + ground.rect[3] // 2), structure, self.textures)
-                ground.biom[1] = structure
-                self.me.action_pts -= 1
-                self.me.resources -= struct_cost
-            elif self.me.action_pts < 1:
-                print("no points((9(")
-                #написать, что мало очков действий
-                pass
-            elif self.me.resources < struct_cost:
-                print('malo denyak')
+        ground.structure = ClassicStructure(self.textures.animations_structures[structure][0], (
+        ground.rect[0] + ground.rect[2] // 2, ground.rect[1] + ground.rect[3] // 2), structure, self.textures)
+        # TODO: Это тут не надо делать, так как функция place structure только ставит структуру и не должна проверять
+        #  может ли игрок её поставить, так как она и должна вызываться если игрок может что-то поставить
+        #  Эта функция также вызывается если приходит уведомление от другого пользователя!
+        #  К примеру сделай функцию проверки
+        # if ground.name not in self.rules['StructuresPermissions'][structure]:
+        #     print('nelza tut stroit')
+        # else:
+        #     struct_cost = int(self.rules['StructuresCosts'][self.structures[self.now_str]][0])
+        #     if self.me.action_pts >= 1 and self.me.resources >= struct_cost:  # 1 очко действий для постройки
+        #         structure = self.structures[self.now_str]
+        #         ground.structure = ClassicStructure(self.textures.animations_structures[structure][0], (ground.rect[0] + ground.rect[2] // 2, ground.rect[1] + ground.rect[3] // 2), structure, self.textures)
+        #         ground.biom[1] = structure
+        #         self.me.action_pts -= 1
+        #         self.me.resources -= struct_cost
+        #     elif self.me.action_pts < 1:
+        #         print("no points((9(")
+        #         #написать, что мало очков действий
+        #         pass
+        #     elif self.me.resources < struct_cost:
+        #         print('malo denyak, vzuh, and ti bezdomni (ﾉ◕ヮ◕)ﾉ*:･ﾟ✧')
         if 'buildmenu' in self.interfaces:
             self.interfaces.pop('buildmenu')
         if info:

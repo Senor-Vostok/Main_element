@@ -57,7 +57,7 @@ class InteractLabel(pygame.sprite.Sprite):
         screen.blit(self.image, (self.rect.x, self.rect.y))
         image = self.font.render(self.text[-1:], False, (99, 73, 47))
         i = 1
-        while image.get_rect()[2] < self.rect[2] - 50 and i < len(self.text):
+        while image.get_rect()[2] < self.rect[2] - 50 and i <= len(self.text):
             image = self.font.render(self.text[-i:], False, (99, 73, 47))
             i += 1
         screen.blit(image, (self.rect[0] + 10, self.rect[1] + 6))
