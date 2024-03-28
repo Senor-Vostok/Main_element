@@ -8,7 +8,7 @@ from perlin_noise import PerlinNoise
 class Generation:
     def __init__(self, massive, screen, centre):
         self.textures = Textures()
-        self.font = pygame.font.SysFont('Futura book C', 30)
+        self.font = pygame.font.SysFont('progresspixel-bold', 30)
         self.translate = {0: 'water', 1: 'sand', 2: 'flower', 3: 'ground', 4: 'stone', 5: 'snow'}
         self.masbiom = [[['null', 'null', '0', '0'] for _ in range(massive)] for _ in range(massive)]  # Первый биом второй структура
         self.masive = massive
@@ -50,8 +50,8 @@ class Generation:
                 landscale[int(x)][int(z)] = self.__get_key(int(y))
 
             procent = int(((x / self.masive) * 100) // 1)
-            self.win.blit(self.textures.loading, (self.centre[0] - 960, self.centre[1] - 540))
-            self.win.blit(self.font.render(f'{procent}%', False, (99, 73, 47)), (self.centre[0], self.centre[1] + 200))
+            self.win.blit(self.textures.loading, (self.centre[0] - self.textures.loading.get_rect()[2] // 2, self.centre[1] - self.textures.loading.get_rect()[3] // 2))
+            self.win.blit(self.font.render(f'{procent}%', False, (99, 73, 47)), (self.centre[0], self.centre[1] + 200 * self.textures.resizer))
             pygame.display.update()
 
         for i in range(self.masive):

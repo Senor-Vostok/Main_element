@@ -10,8 +10,6 @@ class World:
         self.textures = Textures()
         self.land = self.textures.land
 
-        self.my_font = pygame.font.SysFont('Futura book C', 30)
-
         self.priority = self.textures.priority  # Приоритеты текстур
 
         self.biomes = biomes  # Получение данных о матрице мира

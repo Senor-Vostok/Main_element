@@ -1,7 +1,5 @@
 import os
-
 import pygame.display
-from tkinter.filedialog import askopenfilename, asksaveasfile
 import Player
 import Interfaces
 from Textures import Textures
@@ -12,9 +10,7 @@ import sys
 from Online import *
 from win32api import GetSystemMetrics
 from Structures import *
-
-pygame.scrap.init()
-pygame.scrap.set_mode(pygame.SCRAP_CLIPBOARD)
+from pygame.locals import *
 
 
 class EventHandler:
@@ -27,7 +23,8 @@ class EventHandler:
         self.size = GetSystemMetrics(0), GetSystemMetrics(1)
         self.centre = (GetSystemMetrics(0) // 2, GetSystemMetrics(1) // 2)
         self.clock = pygame.time.Clock()
-        self.screen = pygame.display.set_mode(self.size)
+        self.screen = pygame.display.set_mode(self.size, flags=FULLSCREEN | DOUBLEBUF, vsync=1)
+        self.screen.set_alpha(None)
         pygame.mouse.set_visible(False)
         self.matr = None
         self.world_coord = 0
@@ -37,12 +34,12 @@ class EventHandler:
         self.open_some = True
         self.flag = True
 
-        self.ids = [1, 2, 3, 4] #id игроков
+        self.ids = [1, 2, 3, 4]  # id игроков
         self.players = []
-        self.fractions = ['fire', 'water', 'air', 'earth'] #TODO: добавить выбор фракций
-        self.start_points = [(30, 30), (210, 30), (30, 210), (210, 210)] #TODO: добавить выбор стартовой позиции
+        self.fractions = ['fire', 'water', 'air', 'earth']  # TODO: добавить выбор фракций
+        self.start_points = [(30, 30), (210, 30), (30, 210), (210, 210)]  # TODO: добавить выбор стартовой позиции
 
-        self.turn = None #Чей ход
+        self.turn = None  # Чей ход
 
         self.contact = Unknown()
         self.player = None
@@ -82,19 +79,19 @@ class EventHandler:
         self.me.resources = 15
         self.me.start_point = start_point
 
-    def init_players(self, ids): #перенести в серверную часть (???)
+    def init_players(self, ids):  # перенести в серверную часть (???)
         for id in ids:
             new_player = Player.Player(id)
-            fraction = random.choice(self.fractions) #назначение фракции игроку
+            fraction = random.choice(self.fractions)  # назначение фракции игроку
             new_player.fraction_name = fraction
             self.fractions.remove(new_player.fraction_name)
-            new_player.units_count = 100 #стартовое кол-во людей в поселении
-            new_player.resources = 15 #стартовый капитал
+            new_player.units_count = 100  # стартовое кол-во людей в поселении
+            new_player.resources = 15  # стартовый капитал
             new_player.action_pts = 2
-            new_player.start_point = random.choice(self.start_points) #спавн в угле мира
+            new_player.start_point = random.choice(self.start_points)  # спавн в угле мира
             self.start_points.remove(new_player.start_point)
             self.players.append(new_player)
-            self.matr[new_player.start_point[0]][new_player.start_point[1]][1] = fraction #спавн центральной структуры
+            self.matr[new_player.start_point[0]][new_player.start_point[1]][1] = fraction  # спавн центральной структуры
 
     def init_world(self, matr=None):
         self.open_some = False
@@ -106,7 +103,8 @@ class EventHandler:
             with open(f'saves/{self.name_save}.maiso', mode='w') as file:
                 file.write('\n'.join('\t'.join('|'.join(j) for j in i) for i in matr))
         self.world_coord = len(matr) // 2
-        self.screen_world = World(self.screen, self.centre, [self.world_coord, self.world_coord], matr, self)  # создание динамической сетки
+        self.screen_world = World(self.screen, self.centre, [self.world_coord, self.world_coord], matr,
+                                  self)  # создание динамической сетки
         self.screen_world.create()
         self.show_ingame(self.centre)
         self.init_players(self.ids)
@@ -116,7 +114,9 @@ class EventHandler:
         if message[0] == 'change':
             i, j = int(message[1].split('|')[2]), int(message[1].split('|')[3])
             self.screen_world.biomes[i][j][1] = message[1].split('|')[1]
-            self.place_structure(self.screen_world.great_world[i - self.screen_world.world_cord[0]][j - self.screen_world.world_cord[1]], message[1].split('|')[1], True)
+            self.place_structure(
+                self.screen_world.great_world[i - self.screen_world.world_cord[0]][j - self.screen_world.world_cord[1]],
+                message[1].split('|')[1], True)
         if message[0] == 'join':
             self.contact.users += message[1].split('|')
 
@@ -132,7 +132,8 @@ class EventHandler:
             self.camera.speed = self.camera.const_for_speed / (self.clock.get_fps() + 1)
             self.screen_world.draw(self.camera.i, self.camera.move, self.open_some)  # Вырисовываем картинку
         else:
-            self.screen.blit(self.textures.font.render(f'{len(self.contact.users)}/{self.contact.maxclient + 1}', False, (99, 73, 47)), self.centre)
+            self.screen.blit(self.textures.font.render(f'{len(self.contact.users)}/{self.contact.maxclient + 1}', False,
+                                                       (99, 73, 47)), self.centre)
             if 'ingame' in self.interfaces: self.close('ingame', False)
 
     def close(self, name, open_some, func=None):
@@ -148,7 +149,8 @@ class EventHandler:
         self.screen_world = None
 
     def next_struct(self, ind):
-        self.now_str = (self.now_str + ind) % len(self.structures) if self.now_str + ind >= 0 else len(self.structures) - 1
+        self.now_str = (self.now_str + ind) % len(self.structures) if self.now_str + ind >= 0 else len(
+            self.structures) - 1
         self.interfaces['buildmenu'].structure.image = pygame.transform.scale(
             self.textures.animations_structures[self.structures[self.now_str]][0],
             (360 * self.textures.resizer, 540 * self.textures.resizer))
@@ -215,9 +217,6 @@ class EventHandler:
 
     def show_choicegame(self, centre, matr=None, n=None):
         self.name_save = self.interfaces['create_save'].name.text[:-1] if not n else n
-        if 'create_save' in self.interfaces:
-            with open(f'saves/{self.name_save}.maiso', mode='w') as file:
-                file.write('')
         self.interfaces = dict()
         self.show_menu(self.centre)
         choice = Interfaces.ChoiceGame(centre, self.textures)
@@ -229,11 +228,14 @@ class EventHandler:
         if not matr:
             self.generation(200)
             matr = self.matr
-        self.contact = Host('0.0.0.0', int(self.interfaces['online'].port.text[:-1]), '\n'.join('\t'.join('|'.join(k) for k in i) for i in matr), int(self.interfaces['online'].count.text[:-1]) - 1)
+        self.contact = Host('0.0.0.0', int(self.interfaces['online'].port.text[:-1]),
+                            '\n'.join('\t'.join('|'.join(k) for k in i) for i in matr),
+                            int(self.interfaces['online'].count.text[:-1]) - 1)
         self.init_world(matr)
 
     def connecting(self):
-        self.screen.blit(self.textures.connecting, (self.centre[0] - 960 * self.textures.resizer, self.centre[1] - 540 * self.textures.resizer))
+        self.screen.blit(self.textures.connecting,
+                         (self.centre[0] - 960 * self.textures.resizer, self.centre[1] - 540 * self.textures.resizer))
         pygame.display.flip()
         host, port = (self.interfaces['online'].interact.text[:-1]).split(':')
         self.contact = Client(host, port)
@@ -262,28 +264,9 @@ class EventHandler:
     def place_structure(self, ground, structure=None, info=True):
         if not structure:
             structure = self.structures[self.now_str]
-        ground.structure = ClassicStructure(self.textures.animations_structures[structure][0], (ground.rect[0] + ground.rect[2] // 2, ground.rect[1] + ground.rect[3] // 2), structure, self.textures)
+        ground.structure = ClassicStructure(self.textures.animations_structures[structure][0], (
+        ground.rect[0] + ground.rect[2] // 2, ground.rect[1] + ground.rect[3] // 2), structure, self.textures)
         ground.biom[1] = structure
-        # TODO: Это тут не надо делать, так как функция place structure только ставит структуру и не должна проверять
-        #  может ли игрок её поставить, так как она и должна вызываться если игрок может что-то поставить
-        #  Эта функция также вызывается если приходит уведомление от другого пользователя!
-        #  К примеру сделай функцию проверки
-        # if ground.name not in self.rules['StructuresPermissions'][structure]:
-        #     print('nelza tut stroit')
-        # else:
-        #     struct_cost = int(self.rules['StructuresCosts'][self.structures[self.now_str]][0])
-        #     if self.me.action_pts >= 1 and self.me.resources >= struct_cost:  # 1 очко действий для постройки
-        #         structure = self.structures[self.now_str]
-        #         ground.structure = ClassicStructure(self.textures.animations_structures[structure][0], (ground.rect[0] + ground.rect[2] // 2, ground.rect[1] + ground.rect[3] // 2), structure, self.textures)
-        #         ground.biom[1] = structure
-        #         self.me.action_pts -= 1
-        #         self.me.resources -= struct_cost
-        #     elif self.me.action_pts < 1:
-        #         print("no points((9(")
-        #         #написать, что мало очков действий
-        #         pass
-        #     elif self.me.resources < struct_cost:
-        #         print('malo denyak, vzuh, and ti bezdomni (ﾉ◕ヮ◕)ﾉ*:･ﾟ✧')
         if 'buildmenu' in self.interfaces:
             self.interfaces.pop('buildmenu')
         if info:
@@ -300,8 +283,10 @@ class EventHandler:
             if i.type == pygame.KEYDOWN and self.decoding()[0] == self.me.id:
                 c = i
                 if i.key == pygame.K_ESCAPE and len(self.interfaces) >= 2:
-                    try: self.interfaces.pop(self.end)
-                    except Exception: pass
+                    try:
+                        self.interfaces.pop(self.end)
+                    except Exception:
+                        pass
                 elif i.key == pygame.K_ESCAPE and not self.open_some:
                     self.show_pause(self.centre) if 'pause' not in self.interfaces else self.close('pause', False, None)
                 if 'popup_menu' in self.interfaces: self.interfaces.pop('popup_menu')
@@ -323,7 +308,7 @@ class EventHandler:
     def complete(self):
         pass
 
-    def decoding(self): #возвращает название протокола и массив
+    def decoding(self):  # возвращает название протокола и массив
         return [1]
 
 
