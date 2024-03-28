@@ -141,6 +141,7 @@ class EventHandler:
         if func: func()
 
     def go_back_to_menu(self):
+        self.make_save()
         self.open_some = True
         self.interfaces = dict()
         self.show_menu(self.centre)
@@ -160,7 +161,7 @@ class EventHandler:
         self.interfaces = dict()
         self.show_menu(self.centre)
         name = Interfaces.CreateSave(centre, self.textures)
-        name.name.connect(self.show_choicegame, centre, None, True)
+        name.name.connect(self.show_choicegame, centre, None)
         self.interfaces['create_save'] = name
 
     def show_menu(self, centre):
@@ -212,11 +213,10 @@ class EventHandler:
         popup.button_build.connect(self.show_buildmenu, self.centre, ground)
         self.interfaces['popup_menu'] = popup
 
-    def show_choicegame(self, centre, matr=None, create_save=False):
-        if create_save and 'create_save' in self.interfaces:
-            name = self.interfaces['create_save'].name.text[:-1]
-            self.name_save = name
-            with open(f'saves/{name}.maiso', mode='w') as file:
+    def show_choicegame(self, centre, matr=None, n=None):
+        self.name_save = self.interfaces['create_save'].name.text[:-1] if not n else n
+        if 'create_save' in self.interfaces:
+            with open(f'saves/{self.name_save}.maiso', mode='w') as file:
                 file.write('')
         self.interfaces = dict()
         self.show_menu(self.centre)
@@ -255,14 +255,15 @@ class EventHandler:
         self.show_menu(self.centre)
         saves = Interfaces.Save_menu(self.centre, self.textures)
         files = [i for i in os.listdir('saves') if len(i.split('.maiso')) > 1]
+        saves.handler = self
         saves.add_saves(files, self.show_choicegame, self.centre)
         self.interfaces['save_menu'] = saves
 
     def place_structure(self, ground, structure=None, info=True):
         if not structure:
             structure = self.structures[self.now_str]
-        ground.structure = ClassicStructure(self.textures.animations_structures[structure][0], (
-        ground.rect[0] + ground.rect[2] // 2, ground.rect[1] + ground.rect[3] // 2), structure, self.textures)
+        ground.structure = ClassicStructure(self.textures.animations_structures[structure][0], (ground.rect[0] + ground.rect[2] // 2, ground.rect[1] + ground.rect[3] // 2), structure, self.textures)
+        ground.biom[1] = structure
         # TODO: Это тут не надо делать, так как функция place structure только ставит структуру и не должна проверять
         #  может ли игрок её поставить, так как она и должна вызываться если игрок может что-то поставить
         #  Эта функция также вызывается если приходит уведомление от другого пользователя!

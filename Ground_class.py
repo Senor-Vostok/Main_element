@@ -12,8 +12,6 @@ class Ground(pygame.sprite.Sprite):
             self.animation = None
 
         self.biom = biom
-        self.name = biom[0]
-        self.name_struct = biom[1]
 
         self.units_count = 0
         self.fraction = None
@@ -40,7 +38,7 @@ class Ground(pygame.sprite.Sprite):
 
     def draw(self, screen, there, handler):
         screen.blit(self.image, (self.rect.x, self.rect.y))
-        if self.rect.colliderect(there[0], there[1], 1, 1) and self.name != 'barrier':
+        if self.rect.colliderect(there[0], there[1], 1, 1) and self.biom[0] != 'barrier':
             screen.blit(self.select_image, (self.rect.x, self.rect.y))
         if self.structure:
             self.__draw_structure(screen)
