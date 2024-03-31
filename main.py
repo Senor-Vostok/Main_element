@@ -1,16 +1,16 @@
 import os
 import pygame.display
-import Player
-import Interfaces
-from Textures import Textures
-from Machine import World
-from Generation import Generation
-from Cam_class import Cam
-import sys
-from Online import *
+import obb.Objects.Player as Player
+from obb.Image_rendering.Textures import Textures
+from obb.Image_rendering.Machine import World
+from obb.Generation import Generation
+from obb.Objects.Cam_class import Cam
+from obb.Online import *
 from win32api import GetSystemMetrics
-from Structures import *
+from obb.Objects.Structures import *
 from pygame.locals import *
+from obb.Image_rendering.Efffect import Effect
+from obb.Interface.Handler_show import *
 
 
 class EventHandler:
@@ -18,7 +18,6 @@ class EventHandler:
         pygame.init()
         self.me = Player.Player(id)
         self.init_player(fraction, start_point)
-
         self.textures = Textures()
         self.size = GetSystemMetrics(0), GetSystemMetrics(1)
         self.centre = (GetSystemMetrics(0) // 2, GetSystemMetrics(1) // 2)
@@ -26,30 +25,27 @@ class EventHandler:
         self.screen = pygame.display.set_mode(self.size, flags=FULLSCREEN | DOUBLEBUF, vsync=1)
         self.screen.set_alpha(None)
         pygame.mouse.set_visible(False)
-        self.matr = None
+        self.matr, self.screen_world, self.name_save = None, None, None
         self.world_coord = 0
-        self.screen_world = None
-        self.matr = None
         self.camera = Cam()
-        self.open_some = True
-        self.flag = True
-
+        self.open_some, self.flag = True, True
         self.ids = [1, 2, 3, 4]  # id игроков
         self.players = []
         self.fractions = ['fire', 'water', 'air', 'earth']  # TODO: добавить выбор фракций
         self.start_points = [(30, 30), (210, 30), (30, 210), (210, 210)]  # TODO: добавить выбор стартовой позиции
-
         self.turn = None  # Чей ход
-
         self.contact = Unknown()
         self.player = None
         self.end = None
         self.interfaces = dict()
+        self.effects = list()
+        self.pressed = False
         self.structures = [i for i in self.textures.animations_structures]
         self.now_str = 0
-        self.name_save = None
-
         self.rules = dict()
+        self.read_rules()
+
+    def read_rules(self):
         with open('game_rules', 'rt') as file:
             for rule in file.read().split('\n'):
                 props = rule.split(':')
@@ -64,7 +60,7 @@ class EventHandler:
         if self.camera.i[3] == 3:
             if 'popup_menu' in self.interfaces:
                 self.interfaces.pop('popup_menu')
-            self.show_popup_menu((ground.rect[0] + ground.rect[2], ground.rect[1] + ground.rect[3]), ground)
+            show_popup_menu(self, (ground.rect[0] + ground.rect[2], ground.rect[1] + ground.rect[3]), ground)
 
     def generation(self, size=200, barrier=20):
         gen = Generation(size, self.screen, self.centre)
@@ -97,7 +93,7 @@ class EventHandler:
         self.open_some = False
         self.interfaces = dict()
         if not matr:
-            self.generation(200)
+            self.generation(500)
             matr = self.matr
         if self.name_save:
             with open(f'saves/{self.name_save}.maiso', mode='w') as file:
@@ -106,7 +102,7 @@ class EventHandler:
         self.screen_world = World(self.screen, self.centre, [self.world_coord, self.world_coord], matr,
                                   self)  # создание динамической сетки
         self.screen_world.create()
-        self.show_ingame(self.centre)
+        show_ingame(self, self.centre)
         self.init_players(self.ids)
 
     def decode_message(self, message):
@@ -127,7 +123,7 @@ class EventHandler:
         except Exception:
             pass
         if len(self.contact.users) == self.contact.maxclient + 1:
-            if 'ingame' not in self.interfaces: self.show_ingame(self.centre)
+            if 'ingame' not in self.interfaces: show_ingame(self, self.centre)
             self.camera.inter()
             self.camera.speed = self.camera.const_for_speed / (self.clock.get_fps() + 1)
             self.screen_world.draw(self.camera.i, self.camera.move, self.open_some)  # Вырисовываем картинку
@@ -145,7 +141,7 @@ class EventHandler:
         self.make_save()
         self.open_some = True
         self.interfaces = dict()
-        self.show_menu(self.centre)
+        show_menu(self, self.centre)
         self.screen_world = None
 
     def next_struct(self, ind):
@@ -155,74 +151,12 @@ class EventHandler:
             self.textures.animations_structures[self.structures[self.now_str]][0],
             (360 * self.textures.resizer, 540 * self.textures.resizer))
 
-    def show_ingame(self, centre):
-        game = Interfaces.InGame(centre, self.textures)
-        self.interfaces['ingame'] = game
-
-    def show_create_save(self, centre):
-        self.interfaces = dict()
-        self.show_menu(self.centre)
-        name = Interfaces.CreateSave(centre, self.textures)
-        name.name.connect(self.show_choicegame, centre, None)
-        self.interfaces['create_save'] = name
-
-    def show_menu(self, centre):
-        menu = Interfaces.Menu(centre, self.textures)
-        menu.button_start.connect(self.show_create_save, self.centre)
-        menu.button_load.connect(self.open_save)
-        menu.button_online.connect(self.show_online, self.centre)
-        menu.button_exit.connect(sys.exit)
-        self.interfaces['menu'] = menu
-
-    def show_buildmenu(self, centre, ground=None):
-        build = Interfaces.BuildMenu(centre, self.textures)
-        build.down.connect(self.next_struct, -1)
-        build.up.connect(self.next_struct, 1)
-        self.now_str = 0
-        build.button_project.connect(self.place_structure, ground)
-        if 'popup_menu' in self.interfaces: self.interfaces.pop('popup_menu')
-        self.interfaces['buildmenu'] = build
-
-    def show_online(self, centre, t='connect', matr=None):
-        self.interfaces = dict()
-        self.show_menu(self.centre)
-        if 'choicegame' in self.interfaces: self.close('choicegame', True)
-        if t == 'connect':
-            label = Interfaces.Online_connect(centre, self.textures)
-            label.interact.connect(self.connecting)
-            self.interfaces['online'] = label
-        elif t == 'create':
-            label = Interfaces.Online_create(centre, self.textures)
-            label.count.connect(self.host_game, matr)
-            label.port.connect(self.host_game, matr)
-            self.interfaces['online'] = label
-
     def attack(self, ground):
         if self.me.action_pts > 1:
             pass
         else:
             # написать, что мало очков действий
             pass
-
-    def show_pause(self, centre):
-        pause = Interfaces.Pause(centre, self.textures)
-        pause.button_menu.connect(self.go_back_to_menu)
-        pause.button_save.connect(self.make_save)
-        self.interfaces['pause'] = pause
-
-    def show_popup_menu(self, centre, ground=None):
-        popup = Interfaces.PopupMenu(centre, self.textures)
-        popup.button_build.connect(self.show_buildmenu, self.centre, ground)
-        self.interfaces['popup_menu'] = popup
-
-    def show_choicegame(self, centre, matr=None, n=None):
-        self.name_save = self.interfaces['create_save'].name.text[:-1] if not n else n
-        self.interfaces = dict()
-        self.show_menu(self.centre)
-        choice = Interfaces.ChoiceGame(centre, self.textures)
-        choice.button_local.connect(self.init_world, matr)
-        choice.button_online.connect(self.show_online, self.centre, 'create', matr)
-        self.interfaces['choicegame'] = choice
 
     def host_game(self, matr):
         if not matr:
@@ -254,27 +188,39 @@ class EventHandler:
 
     def open_save(self):
         self.interfaces = dict()
-        self.show_menu(self.centre)
+        show_menu(self, self.centre)
         saves = Interfaces.Save_menu(self.centre, self.textures)
         files = [i for i in os.listdir('saves') if len(i.split('.maiso')) > 1]
         saves.handler = self
-        saves.add_saves(files, self.show_choicegame, self.centre)
+        saves.add_saves(files, show_choicegame, self)
         self.interfaces['save_menu'] = saves
 
     def place_structure(self, ground, structure=None, info=True):
         if not structure:
             structure = self.structures[self.now_str]
-        ground.structure = ClassicStructure(self.textures.animations_structures[structure][0], (
-        ground.rect[0] + ground.rect[2] // 2, ground.rect[1] + ground.rect[3] // 2), structure, self.textures)
+        if structure != 'null':
+            ground.structure = ClassicStructure(self.textures.animations_structures[structure][0], (ground.rect[0] + ground.rect[2] // 2, ground.rect[1] + ground.rect[3] // 2), structure, self.textures)
+        else:
+            ground.structure = None
         ground.biom[1] = structure
         if 'buildmenu' in self.interfaces:
             self.interfaces.pop('buildmenu')
         if info:
             self.contact.send(f'change-0-' + '|'.join(ground.biom))
 
-    def update(self):
-        self.screen.fill((233, 217, 202))
-        self.clock.tick()
+    def update_efffects(self):
+        if self.camera.i[2] and int(self.camera.i[3]) == 1:
+            if not self.pressed:
+                self.pressed = True
+                self.effects.append(Effect((self.camera.i[0], self.camera.i[1]), self.textures.effects['mouse1']))
+        else:
+            self.pressed = False
+        for i in self.effects:
+            i.draw(self.screen)
+            if not i.update():
+                self.effects.remove(i)
+
+    def click_handler(self):
         c = None
         for i in pygame.event.get():
             self.camera.event(i)
@@ -288,12 +234,18 @@ class EventHandler:
                     except Exception:
                         pass
                 elif i.key == pygame.K_ESCAPE and not self.open_some:
-                    self.show_pause(self.centre) if 'pause' not in self.interfaces else self.close('pause', False, None)
+                    show_pause(self, self.centre) if 'pause' not in self.interfaces else self.close('pause', False, None)
                 if 'popup_menu' in self.interfaces: self.interfaces.pop('popup_menu')
                 if 'buildmenu' in self.interfaces: self.interfaces.pop('buildmenu')
                 if 'choicegame' in self.interfaces: self.interfaces.pop('choicegame')
             if i.type == pygame.QUIT:
                 sys.exit()
+        return c
+
+    def update(self):
+        self.screen.fill((233, 217, 202))
+        self.clock.tick()
+        c = self.click_handler()
         if self.screen_world:
             self.machine()
         try:
@@ -304,6 +256,7 @@ class EventHandler:
             pass
         self.screen.blit(self.textures.point, (self.camera.i[0] - 10, self.camera.i[1] - 10))
         self.screen.blit(self.textures.font.render(f'fps: {int(self.clock.get_fps())}', False, (99, 73, 47)), (30, 30))
+        self.update_efffects()
 
     def complete(self):
         pass
@@ -315,7 +268,7 @@ class EventHandler:
 if __name__ == '__main__':
     pygame.init()
     handler = EventHandler(1, "fire", (30, 30))
-    handler.show_menu(handler.centre)
+    show_menu(handler, handler.centre)
     while True:
         handler.update()
         pygame.display.flip()
