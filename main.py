@@ -22,7 +22,7 @@ class EventHandler:
         self.size = GetSystemMetrics(0), GetSystemMetrics(1)
         self.centre = (GetSystemMetrics(0) // 2, GetSystemMetrics(1) // 2)
         self.clock = pygame.time.Clock()
-        self.screen = pygame.display.set_mode(self.size, flags=FULLSCREEN | DOUBLEBUF, vsync=1)
+        self.screen = pygame.display.set_mode(self.size, vsync=1)
         self.screen.set_alpha(None)
         pygame.mouse.set_visible(False)
         self.matr, self.screen_world, self.name_save = None, None, None
