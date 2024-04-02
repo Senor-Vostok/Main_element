@@ -1,2 +1,5 @@
+StructuresList:mill,mine,tower
 StructuresCosts:mill_10,tower_20,mine_15
 StructuresPermissions:mill_sand_flower,tower_sand_flower_ground,mine_stone_snow
+StructuresActionPoints:mill_1,tower_1,mine_1
+GroundsCosts:ground_2,flower_2,sand_2,snow_3,stone_3,water_3

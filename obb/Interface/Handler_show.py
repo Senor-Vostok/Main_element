@@ -50,16 +50,16 @@ def show_online(self, centre, t='connect', matr=None):
 
 
 def show_pause(self, centre):
-    self.open_some = True
     pause = Interfaces.Pause(centre, self.name_save, self.textures)
     pause.button_menu.connect(self.go_back_to_menu)
     self.interfaces['pause'] = pause
 
 
-def show_popup_menu(self, centre, ground=None):
+def show_popup_menu(self, centre, ground=None, fraction=None):
     popup = Interfaces.PopupMenu(centre, self.textures)
     popup.button_build.connect(show_buildmenu, self, self.centre, ground)
     popup.button_destroy.connect(self.place_structure, ground, 'null', True)
+    popup.button_buy.connect(self.buy_ground, (int(ground.biom[2]), int(ground.biom[3])), fraction, self.me)
     self.interfaces['popup_menu'] = popup
 
 

@@ -1,7 +1,6 @@
 class Player:
     def __init__(self, id):
         self.id = id
-        self.is_bot = False
 
         self.fraction_name = None
         self.units_count = 0

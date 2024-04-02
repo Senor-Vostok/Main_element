@@ -41,8 +41,9 @@ class PopupMenu:
         self.button_destroy = Button(textures.popup_menu['button_destroy'], (xoy[0] + 130 * r, xoy[1] + 4 * r))
         self.button_fight = Button(textures.popup_menu['button_fight'], (xoy[0] + 130 * r, xoy[1] + 56 * r))
         self.button_cancel = Button(textures.popup_menu['button_cancel'], (xoy[0] + 130 * r, xoy[1] + 108 * r))
+        self.button_buy = Button(textures.popup_menu['button_cancel'], (xoy[0] + 130 * r, xoy[1] + 160 * r))
         self.surface = Surface(self.button_information, self.button_build, self.button_destroy, self.button_fight,
-                               self.button_cancel)
+                               self.button_cancel, self.button_buy)
 
 
 class InGame:

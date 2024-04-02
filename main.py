@@ -1,6 +1,7 @@
 import os
 import pygame.display
 import obb.Objects.Player as Player
+import obb.Objects.Bot as Bot
 from obb.Image_rendering.Textures import Textures
 from obb.Image_rendering.Machine import World
 from obb.Generation import Generation
@@ -14,10 +15,10 @@ from obb.Interface.Handler_show import *
 
 
 class EventHandler:
-    def __init__(self, id, fraction, start_point):
+    def __init__(self, bot_id, id, bot_fraction, fraction, bot_start_point, start_point): #TODO: исправить присваивание bot_id и id
         pygame.init()
+        self.bot = Bot.Bot(bot_id)
         self.me = Player.Player(id)
-        self.init_player(fraction, start_point)
         self.textures = Textures()
         self.size = GetSystemMetrics(0), GetSystemMetrics(1)
         self.centre = (GetSystemMetrics(0) // 2, GetSystemMetrics(1) // 2)
@@ -26,13 +27,15 @@ class EventHandler:
         self.screen.set_alpha(None)
         pygame.mouse.set_visible(False)
         self.matr, self.screen_world, self.name_save = None, None, None
+        self.bot_fraction = bot_fraction
+        self.bot_start_point = bot_start_point
         self.world_coord = 0
         self.camera = Cam()
         self.open_some, self.flag = True, True
-        self.ids = [1, 2, 3, 4]  # id игроков
+        self.ids = [3, 4]  # id игроков
         self.players = []
-        self.fractions = ['fire', 'water', 'air', 'earth']  # TODO: добавить выбор фракций
-        self.start_points = [(30, 30), (210, 30), (30, 210), (210, 210)]  # TODO: добавить выбор стартовой позиции
+        self.fractions = ['water', 'fire']  # TODO: добавить выбор фракций
+        self.start_points = [(210, 30), (30, 30)]  # TODO: добавить выбор стартовой позиции
         self.turn = None  # Чей ход
         self.contact = Unknown()
         self.player = None
@@ -44,6 +47,7 @@ class EventHandler:
         self.now_str = 0
         self.rules = dict()
         self.read_rules()
+        self.init_player(fraction, start_point)
 
     def read_rules(self):
         with open('game_rules', 'rt') as file:
@@ -60,7 +64,8 @@ class EventHandler:
         if self.camera.i[3] == 3:
             if 'popup_menu' in self.interfaces:
                 self.interfaces.pop('popup_menu')
-            show_popup_menu(self, (ground.rect[0] + ground.rect[2], ground.rect[1] + ground.rect[3]), ground)
+            if ground.biom[0] != 'barrier':
+                show_popup_menu(self, (ground.rect[0] + ground.rect[2], ground.rect[1] + ground.rect[3]), ground, self.me.fraction_name)
 
     def generation(self, size=200, barrier=20):
         gen = Generation(size, self.screen, self.centre)
@@ -75,35 +80,49 @@ class EventHandler:
         self.me.resources = 15
         self.me.start_point = start_point
 
-    def init_players(self, ids):  # перенести в серверную часть (???)
-        for id in ids:
-            new_player = Player.Player(id)
-            fraction = random.choice(self.fractions)  # назначение фракции игроку
-            new_player.fraction_name = fraction
-            self.fractions.remove(new_player.fraction_name)
-            new_player.units_count = 100  # стартовое кол-во людей в поселении
-            new_player.resources = 15  # стартовый капитал
-            new_player.action_pts = 2
-            new_player.start_point = random.choice(self.start_points)  # спавн в угле мира
-            self.start_points.remove(new_player.start_point)
-            self.players.append(new_player)
-            self.matr[new_player.start_point[0]][new_player.start_point[1]][1] = fraction  # спавн центральной структуры
+    def init_bot(self, fraction, start_point):
+        self.bot.fraction_name = fraction
+        self.bot.units_count = 100
+        self.bot.action_pts = 2e10
+        self.bot.resources = 15e10
+        self.bot.start_point = start_point
+        self.run_bot()
+
+    def run_bot(self):
+        self.bot.buy_smth(self)
+        # self.bot.build_smth(self, 0)
+
+    def init_players(self):
+        for i in range(len(self.fractions)):
+            # (soon) перенести в серверную часть:
+            # new_player = Player.Player(id)
+            # fraction = random.choice(self.fractions)  # назначение фракции игроку
+            # new_player.fraction_name = fraction
+            # self.fractions.remove(new_player.fraction_name)
+            # new_player.units_count = 100  # стартовое кол-во людей в поселении
+            # new_player.resources = 15  # стартовый капитал
+            # new_player.action_pts = 2
+            # new_player.start_point = random.choice(self.start_points)  # спавн в угле мира
+            # self.start_points.remove(new_player.start_point)
+            # self.players.append(new_player)
+            self.matr[self.start_points[i][0]][self.start_points[i][1]][1] = self.fractions[i]  # спавн центральной структуры
 
     def init_world(self, matr=None):
         self.open_some = False
         self.interfaces = dict()
         if not matr:
-            self.generation(500)
+            self.generation(200)
             matr = self.matr
         if self.name_save:
             with open(f'saves/{self.name_save}.maiso', mode='w') as file:
                 file.write('\n'.join('\t'.join('|'.join(j) for j in i) for i in matr))
         self.world_coord = len(matr) // 2
-        self.screen_world = World(self.screen, self.centre, [self.world_coord, self.world_coord], matr,
-                                  self)  # создание динамической сетки
+        self.screen_world = World(self.screen, self.centre, [self.world_coord, self.world_coord], matr, self)  # создание динамической сетки
         self.screen_world.create()
         show_ingame(self, self.centre)
-        self.init_players(self.ids)
+        self.init_players()
+        if self.contact.protocol == 'unknown':
+            self.init_bot(self.bot_fraction, self.bot_start_point)
 
     def decode_message(self, message):
         message = message.split('-0-')
@@ -195,6 +214,27 @@ class EventHandler:
         saves.add_saves(files, show_choicegame, self)
         self.interfaces['save_menu'] = saves
 
+    def check_structure_placement(self, ground, structure):
+        if ground.biom[0] not in self.rules['StructuresPermissions'][structure]:
+            print('nelza tut stroit')
+            # сообщить во всплывающем окошке, что нельзя строить
+            return False
+        struct_cost = int(self.rules['StructuresCosts'][self.structures[self.now_str]][0])
+        struct_action_pts = int(self.rules['StructuresActionPoints'][self.structures[self.now_str]][0])
+        if self.me.action_pts < struct_action_pts:
+            print("no points((9(")
+            return False
+        if self.me.resources < struct_cost:
+            print('malo denyak, vzuh, and ti bezdomni (ﾉ◕ヮ◕)ﾉ*:･ﾟ✧')
+            return False
+        self.update_placement_state(ground, structure, struct_cost, struct_action_pts)
+        return True
+
+    def update_placement_state(self, ground, structure, struct_cost, struct_action_pts):
+        ground.biom[1] = structure
+        self.me.action_pts -= struct_action_pts
+        self.me.resources -= struct_cost
+
     def place_structure(self, ground, structure=None, info=True):
         if not structure:
             structure = self.structures[self.now_str]
@@ -202,11 +242,22 @@ class EventHandler:
             ground.structure = ClassicStructure(self.textures.animations_structures[structure][0], (ground.rect[0] + ground.rect[2] // 2, ground.rect[1] + ground.rect[3] // 2), structure, self.textures)
         else:
             ground.structure = None
-        ground.biom[1] = structure
         if 'buildmenu' in self.interfaces:
             self.interfaces.pop('buildmenu')
         if info:
             self.contact.send(f'change-0-' + '|'.join(ground.biom))
+
+    def check_resources(self, ground_cost, buyer):
+        return buyer.resources >= ground_cost
+
+    def buy_ground(self, xoy, fraction, buyer):
+        biome = self.screen_world.biomes[xoy[0]][xoy[1]][0]
+        ground_cost = int(self.rules['GroundsCosts'][biome][0])
+        if self.check_resources(ground_cost, buyer):
+            self.screen_world.biomes[xoy[0]][xoy[1]][4] = fraction
+            buyer.resources -= ground_cost
+        else:
+            print('no mani')
 
     def update_efffects(self):
         if self.camera.i[2] and int(self.camera.i[3]) == 1:
@@ -267,7 +318,7 @@ class EventHandler:
 
 if __name__ == '__main__':
     pygame.init()
-    handler = EventHandler(1, "fire", (30, 30))
+    handler = EventHandler(0, 1, "water", "fire", (210, 30), (30, 30))
     show_menu(handler, handler.centre)
     while True:
         handler.update()

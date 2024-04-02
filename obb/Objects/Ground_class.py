@@ -42,6 +42,8 @@ class Ground(pygame.sprite.Sprite):
             screen.blit(self.select_image, (self.rect.x, self.rect.y))
         if self.structure:
             self.__draw_structure(screen)
+        if self.biom[4] != 'null':
+            self.draw_border(screen)
         if self.rect.colliderect(there[0], there[1], 1, 1):
             handler.check_ground_please(self)
 
@@ -57,3 +59,6 @@ class Ground(pygame.sprite.Sprite):
 
     def __draw_structure(self, screen):
         self.structure.draw(screen)
+
+    def draw_border(self, screen):
+        screen.blit(self.textures.border_fractions[self.biom[4]][0], (self.rect.x, self.rect.y))

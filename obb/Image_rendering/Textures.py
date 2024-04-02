@@ -33,6 +33,11 @@ class Textures:
                      'sand': [self.render('data/ground/sand.png', (60, 60))],
                      'snow': [self.render('data/ground/snow.png', (60, 60))]}
 
+        self.border_fractions = {'water': [self.render('data/border_fractions/blue.png', (60, 60))],
+                                 'earth': [self.render('data/border_fractions/green.png', (60, 60))],
+                                 'fire': [self.render('data/border_fractions/red.png', (60, 60))],
+                                 'air': [self.render('data/border_fractions/yellow.png', (60, 60))]}
+
         self.animations_structures = {
             'tower': [self.render(f'data/structures/tower/anim{i}.png', (120, 180)) for i in range(1, 6)],
             'mill': [self.render(f'data/structures/mill/anim{i}.png', (120, 180)) for i in range(1, 4)],
