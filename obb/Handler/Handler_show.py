@@ -28,7 +28,7 @@ def show_buildmenu(self, centre, ground=None):
     build = Interfaces.BuildMenu(centre, self.textures)
     build.down.connect(self.next_struct, -1)
     build.up.connect(self.next_struct, 1)
-    self.now_str = 0
+    self.now_structure = 0
     build.button_project.connect(self.place_structure, ground)
     if 'popup_menu' in self.interfaces: self.interfaces.pop('popup_menu')
     self.interfaces['buildmenu'] = build
@@ -59,7 +59,7 @@ def show_popup_menu(self, centre, ground=None, fraction=None):
     popup = Interfaces.PopupMenu(centre, self.textures)
     popup.button_build.connect(show_buildmenu, self, self.centre, ground)
     popup.button_destroy.connect(self.place_structure, ground, 'null', True)
-    popup.button_buy.connect(self.buy_ground, (int(ground.biom[2]), int(ground.biom[3])), fraction, self.me)
+    popup.button_buy.connect(self.buy_ground, (int(ground.biome[2]), int(ground.biome[3])), fraction, self.me)
     self.interfaces['popup_menu'] = popup
 
 

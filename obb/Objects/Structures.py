@@ -1,4 +1,5 @@
 import pygame
+from obb.Constants import ANIMATION_SLOWDOWN_STRUCTURES
 
 
 class ClassicStructure(pygame.sprite.Sprite):
@@ -13,15 +14,14 @@ class ClassicStructure(pygame.sprite.Sprite):
         self.rect = self.image.get_rect(center=xoy)
 
         self.second_animation = 0
-        self.speed_animation = 15
 
     def __start_animation(self):
         self.second_animation += 1
-        stadia = self.second_animation // self.speed_animation
-        if stadia >= len(self.animation):
+        stage = self.second_animation // ANIMATION_SLOWDOWN_STRUCTURES
+        if stage >= len(self.animation):
             self.second_animation = 0
-            stadia = 0
-        self.image = self.animation[stadia]
+            stage = 0
+        self.image = self.animation[stage]
 
     def draw(self, screen):
         screen.blit(self.image, (self.rect.x, self.rect.y))

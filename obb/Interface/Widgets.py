@@ -1,4 +1,5 @@
 import pygame
+from obb.Constants import DEFAULT_COLOR
 
 
 class Button(pygame.sprite.Sprite):
@@ -19,10 +20,10 @@ class Button(pygame.sprite.Sprite):
         self.func = func
         self.args = args
 
-    def update(self, there, command=None):
-        if self.rect.colliderect(there[0], there[1], 1, 1):
+    def update(self, mouse_click, command=None):
+        if self.rect.colliderect(mouse_click[0], mouse_click[1], 1, 1):
             self.image = self.trigger
-            if there[2] and there[3] == 1 and self.func:
+            if mouse_click[2] and mouse_click[3] == 1 and self.func:
                 if self.one_press:
                     self.one_press = False
                     if len(self.args) == 0:
@@ -57,10 +58,10 @@ class InteractLabel(pygame.sprite.Sprite):
 
     def draw(self, screen):
         screen.blit(self.image, (self.rect.x, self.rect.y))
-        image = self.font.render(self.text[-1:], False, (99, 73, 47))
+        image = self.font.render(self.text[-1:], False, DEFAULT_COLOR)
         i = 1
         while image.get_rect()[2] < self.rect[2] - 50 and i <= len(self.text):
-            image = self.font.render(self.text[-i:], False, (99, 73, 47))
+            image = self.font.render(self.text[-i:], False, DEFAULT_COLOR)
             i += 1
         screen.blit(image, (self.rect[0] + 10, self.rect[1] + 6))
 
@@ -68,11 +69,11 @@ class InteractLabel(pygame.sprite.Sprite):
         self.func = func
         self.args = args
 
-    def update(self, there, command=None):
-        if not self.rect.colliderect(there[0], there[1], 1, 1) and there[2] and there[3] == 1:
+    def update(self, mouse_click, command=None):
+        if not self.rect.colliderect(mouse_click[0], mouse_click[1], 1, 1) and mouse_click[2] and mouse_click[3] == 1:
             self.can_write = False
             self.image = self.state
-        elif self.rect.colliderect(there[0], there[1], 1, 1) and there[2] and there[3] == 1:
+        elif self.rect.colliderect(mouse_click[0], mouse_click[1], 1, 1) and mouse_click[2] and mouse_click[3] == 1:
             self.can_write = True
             self.image = self.flex
         elif self.can_write:
@@ -110,14 +111,14 @@ class Surface:
     def add(self, widget):
         self.widgets.append(widget)
 
-    def update(self, there, screen, command=None):
+    def update(self, mouse_click, screen, command=None):
         for i in self.widgets:
-            i.update(there, command)
+            i.update(mouse_click, command)
             i.draw(screen)
 
 
 class Label(pygame.sprite.Sprite):
-    def __init__(self, text, xoy, size, color=(99, 73, 47)):
+    def __init__(self, text, xoy, size, color=DEFAULT_COLOR):
         pygame.sprite.Sprite.__init__(self)
         self.text = text
         self.font = pygame.font.SysFont("progresspixel-bold", size)
@@ -127,7 +128,7 @@ class Label(pygame.sprite.Sprite):
     def draw(self, screen):
         screen.blit(self.label, (self.rect.x, self.rect.y))
 
-    def update(self, there, command):
+    def update(self, mouse_click, command):
         pass
 
 
@@ -140,5 +141,5 @@ class BackGround(pygame.sprite.Sprite):
     def draw(self, screen):
         screen.blit(self.image, (self.rect.x, self.rect.y))
 
-    def update(self, there, command):
+    def update(self, mouse_click, command):
         pass

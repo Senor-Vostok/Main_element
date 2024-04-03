@@ -2,13 +2,10 @@ import pygame
 
 
 class Effect(pygame.sprite.Sprite):
-    def __init__(self, xoy, animation, more_main=False):
+    def __init__(self, xoy, animation):
         pygame.sprite.Sprite.__init__(self)
-
         self.second_animation = 0
         self.speed_animation = 15
-        self.mm = more_main
-
         self.image = animation[0]
         self.effect = animation
         self.rect = self.image.get_rect(center=xoy)
