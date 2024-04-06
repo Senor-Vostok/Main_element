@@ -1,4 +1,6 @@
 import os
+import random
+
 import pygame.display
 import obb.Objects.Player as Player
 import obb.Objects.Bot as Bot
@@ -10,16 +12,16 @@ from obb.Online import *
 from win32api import GetSystemMetrics, EnumDisplaySettings, EnumDisplayDevices
 from obb.Objects.Structures import *
 from obb.Handler.Handler_show import *
-from obb.Constants import DEFAULT_COLOR, BACKGROUND_COLOR
+from obb.Constants import DEFAULT_COLOR, BACKGROUND_COLOR, BARRIER_SIZE
 from obb.Handler.Handler_render import rendering
 
 
 class EventHandler:
-    def __init__(self, bot_id, id, bot_fraction, fraction, bot_start_point, start_point):  # TODO: исправить присваивание bot_id и id
+    def __init__(self):  # TODO: исправить присваивание bot_id и id
         pygame.init()
         settings = EnumDisplaySettings(EnumDisplayDevices().DeviceName, -1)
         self.vsync_fps = int(getattr(settings, 'DisplayFrequency'))
-        self.bot = Bot.Bot(bot_id)  # TODO: убрать
+        # self.bot = Bot.Bot(bot_id)  # TODO: убрать
         self.me = Player.Player(id)
         self.textures = Textures()
         self.size = GetSystemMetrics(0), GetSystemMetrics(1)
@@ -29,12 +31,12 @@ class EventHandler:
         self.screen.set_alpha(None)
         pygame.mouse.set_visible(False)
         self.matr, self.screen_world, self.name_save = None, None, None
-        self.bot_fraction = bot_fraction  # TODO: убрать
-        self.bot_start_point = bot_start_point  # TODO: убрать
+#        self.bot_fraction = bot_fraction  # TODO: убрать
+    #    self.bot_start_point = bot_start_point  # TODO: убрать
         self.world_coord = 0
         self.camera = Cam()
         self.open_some, self.flag = True, True
-        self.ids = [3, 4]  # id игроков
+        self.ids = []  # id игроков
         self.players = []
         self.fractions = ['water', 'fire']  # TODO: добавить выбор фракций  # TODO: убрать
         self.start_points = [(210, 30), (30, 30)]
@@ -49,7 +51,6 @@ class EventHandler:
         self.now_structure = 0
         self.rules = dict()
         self.read_rules()
-        self.init_player(fraction, start_point)
 
     def read_rules(self):
         with open('game_rules', 'rt') as file:
@@ -75,7 +76,8 @@ class EventHandler:
         gen.generation()
         self.matr = gen.add_barrier(barrier)
 
-    def init_player(self, fraction, start_point):
+    def init_player(self, fraction, start_point, id):
+        self.me.id = id
         self.me.fraction_name = fraction
         self.me.units_count = 100
         self.me.action_pts = 2
@@ -94,20 +96,36 @@ class EventHandler:
         self.bot.buy_smth(self)
         # self.bot.build_smth(self, 0)
 
-    def init_players(self):
-        for i in range(len(self.fractions)):
-            # (soon) перенести в серверную часть:
-            # new_player = Player.Player(id)
-            # fraction = random.choice(self.fractions)  # назначение фракции игроку
-            # new_player.fraction_name = fraction
-            # self.fractions.remove(new_player.fraction_name)
-            # new_player.units_count = 100  # стартовое кол-во людей в поселении
-            # new_player.resources = 15  # стартовый капитал
-            # new_player.action_pts = 2
-            # new_player.start_point = random.choice(self.start_points)  # спавн в угле мира
-            # self.start_points.remove(new_player.start_point)
-            # self.players.append(new_player)
-            self.matr[self.start_points[i][0]][self.start_points[i][1]][1] = self.fractions[i]  # спавн центральной структуры
+    def init_players(self, count_players):
+        whitelist = list()
+        for c in range(count_players):
+            fraction = random.choice(self.fractions) # создание фракции
+            while fraction in whitelist:
+                fraction = random.choice(self.fractions)
+            whitelist.append(fraction)
+            id = random.randint(1, 4)
+            while id in self.ids: # присваиваем id
+                id = random.randint(1, 4)
+            self.ids.append(id)
+            start_point = (random.randint(BARRIER_SIZE, len(self.screen_world.biomes) - BARRIER_SIZE),
+                           random.randint(BARRIER_SIZE, len(self.screen_world.biomes) - BARRIER_SIZE))
+            while start_point in self.start_points:
+                start_point = (random.randint(BARRIER_SIZE, len(self.screen_world.biomes) - BARRIER_SIZE),
+                               random.randint(BARRIER_SIZE, len(self.screen_world.biomes) - BARRIER_SIZE))
+            self.start_points.append(start_point)
+            self.matr[start_point[0]][start_point[1]][1] = fraction
+            for i in range(-2, 3):
+                for j in range(-2, 3):
+                    if self.screen_world.biomes[start_point[0] + i][start_point[1] + j][4] != fraction:
+                        self.screen_world.biomes[start_point[0] + i][start_point[1] + j][4] = fraction
+            print("ну че отрисовался", start_point, "я из ", fraction, "района")# спавн центральной структуры
+            try:
+                self.contact.send(f"uid-0-{fraction}|{'_'.join(map(str, start_point))}|{id}", self.contact.users[c - 1])
+            except Exception:
+                pass
+        self.init_player(whitelist[0], self.start_points[0], self.ids[0])
+        self.ids.pop(0)
+        print("чиф киф вечер в хату мой номер:", self.me.id)
 
     def init_world(self, matr=None):
         self.open_some = False
@@ -122,9 +140,6 @@ class EventHandler:
         self.screen_world = World(self.screen, self.centre, [self.world_coord, self.world_coord], matr, self)  # создание динамической сетки
         self.screen_world.create()
         show_ingame(self, self.centre)
-        self.init_players()
-        if self.contact.protocol == 'unknown':
-            self.init_bot(self.bot_fraction, self.bot_start_point)
 
     def decode_message(self, message):
         message = message.split('-0-')
@@ -134,6 +149,10 @@ class EventHandler:
             self.place_structure(self.screen_world.great_world[i - self.screen_world.world_cord[0]][j - self.screen_world.world_cord[1]], message[1].split('|')[1], False)
         if message[0] == 'join':
             self.contact.users += message[1].split('|')
+        if message[0] == 'uid':
+            fraction = message[1].split('|')[0]
+            coord = map(int, (message[1].split('|')[1]).split('_'))
+            id = int(message[1].split('|')[2])
 
     def machine(self):
         try:
@@ -143,6 +162,8 @@ class EventHandler:
             pass
         if len(self.contact.users) == self.contact.maxclient + 1:
             if 'ingame' not in self.interfaces: show_ingame(self, self.centre)
+            if self.contact.protocol == 'unknown' or self.contact.protocol == 'host':
+                self.init_players(self.contact.maxclient + 1)
             self.screen_world.rendering = True
             self.camera.speed = (self.camera.normal_fps + 1) / (self.clock.get_fps() + 1)
             self.camera.inter()
@@ -226,26 +247,29 @@ class EventHandler:
         self.me.action_pts -= struct_action_pts
         self.me.resources -= struct_cost
 
-    def place_structure(self, ground, structure=None, info=True):
+    def place_structure(self, ground, structure=None, info=True, me=False):
         if not structure:
             structure = self.structures[self.now_structure]
-        if structure != 'null':
-            ground.structure = ClassicStructure(self.textures.animations_structures[structure][0][0], (ground.rect[0] + ground.rect[2] // 2, ground.rect[1] + ground.rect[3] // 2), structure, self.textures)
+        if structure != 'null': # я могу строить?
+            if self.me.fraction_name == ground.fraction and me or not me:
+                ground.biome[1] = structure
+                ground.structure = ClassicStructure(self.textures.animations_structures[structure][0][0], (ground.rect[0] + ground.rect[2] // 2, ground.rect[1] + ground.rect[3] // 2), structure, self.textures)
         else:
             ground.structure = None
-        ground.biome[1] = structure
+            ground.biome[1] = "null"
         if 'buildmenu' in self.interfaces:
             self.interfaces.pop('buildmenu')
         if info:
             self.contact.send(f'change-0-' + '|'.join(ground.biome))
 
-    def check_resources(self, ground_cost, buyer):  # TODO убрать
-        return buyer.resources >= ground_cost
-
     def buy_ground(self, xoy, fraction, buyer):
         biome = self.screen_world.biomes[xoy[0]][xoy[1]][0]
         ground_cost = int(self.rules['GroundsCosts'][biome][0])
-        if self.check_resources(ground_cost, buyer):
+        if buyer.resources >= ground_cost:
+            x = xoy[0] - self.screen_world.world_coord[0]
+            y = xoy[1] - self.screen_world.world_coord[1]
+            if x >= 0 and y >= 0:
+                self.screen_world.great_world[x][y].fraction = fraction
             self.screen_world.biomes[xoy[0]][xoy[1]][4] = fraction
             buyer.resources -= ground_cost
         else:
@@ -257,7 +281,7 @@ class EventHandler:
             self.camera.event(i)
             if i.type == pygame.QUIT:
                 sys.exit()
-            if i.type == pygame.KEYDOWN and self.decoding()[0] == self.me.id:
+            if i.type == pygame.KEYDOWN:
                 c = i
                 if i.key == pygame.K_ESCAPE and not self.open_some:
                     show_pause(self, self.centre) if 'pause' not in self.interfaces else close(self, 'pause', False, None)
@@ -269,6 +293,7 @@ class EventHandler:
         return c
 
     def update(self):
+        self.screen.fill(BACKGROUND_COLOR)
         self.clock.tick()
         rendering(self, self.screen_world)
 

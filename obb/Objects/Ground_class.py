@@ -13,7 +13,7 @@ class Ground(pygame.sprite.Sprite):
             self.animation = None
         self.biome = biome
         self.units_count = 0
-        self.fraction = None
+        self.fraction = biome[4]
         self.tile_image = image  # изначальная текстура клетки
         self.image = image  # текущая текстура клетки
         self.select_image = textures.select

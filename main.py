@@ -8,7 +8,7 @@ if __name__ == '__main__':
     with open('data/user/information', mode='rt') as file:
         file = file.read()
         id = int(file)
-    handler = EventHandler(0, 1, "water", "fire", (210, 30), (30, 30))
+    handler = EventHandler()
     show_menu(handler, handler.centre)
     while 1:
         handler.update()
