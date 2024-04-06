@@ -1,6 +1,6 @@
 import pygame.sprite
 from obb.Objects.Structures import ClassicStructure, MainStructure
-from obb.Constants import ANIMATION_SLOWDOWN
+from obb.Constants import ANIMATION_SLOWDOWN, TILE_SIZE
 
 
 class Ground(pygame.sprite.Sprite):
@@ -20,7 +20,7 @@ class Ground(pygame.sprite.Sprite):
         self.rect = self.image.get_rect(center=xoy)
         self.select = False
         if biome[1] in textures.animations_structures:
-            self.structure = ClassicStructure(textures.animations_structures[biome[1]][0], (self.rect[0] + self.rect[2] // 2, self.rect[1] + self.rect[3] // 2), biome[1], self.textures)
+            self.structure = ClassicStructure(textures.animations_structures[biome[1]][0][0], (self.rect[0] + self.rect[2] // 2, self.rect[1] + self.rect[3] // 2), biome[1], self.textures)
         elif biome[1] in textures.animations_main_structures:
             self.structure = MainStructure(textures.animations_main_structures[biome[1]][0], (self.rect[0] + self.rect[2] // 2, self.rect[1] + self.rect[3] // 2), biome[1], self.textures)
         else:
@@ -32,12 +32,12 @@ class Ground(pygame.sprite.Sprite):
 
     def draw(self, screen, mouse_click, handler):
         screen.blit(self.image, (self.rect.x, self.rect.y))
+        if self.biome[4] != 'null':
+            screen.blit(self.textures.border_fractions[self.biome[4]][0], (self.rect.x, self.rect.y))
         if self.rect.colliderect(mouse_click[0], mouse_click[1], 1, 1) and self.biome[0] != 'barrier':
             screen.blit(self.select_image, (self.rect.x, self.rect.y))
         if self.structure:
             self.__draw_structure(screen)
-        if self.biome[4] != 'null':
-            self.draw_border(screen)
         if self.rect.colliderect(mouse_click[0], mouse_click[1], 1, 1):
             handler.check_ground_please(self)
 
@@ -52,6 +52,3 @@ class Ground(pygame.sprite.Sprite):
 
     def __draw_structure(self, screen):
         self.structure.draw(screen)
-
-    def draw_border(self, screen):
-        screen.blit(self.textures.border_fractions[self.biome[4]][0], (self.rect.x, self.rect.y))

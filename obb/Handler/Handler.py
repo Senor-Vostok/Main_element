@@ -144,6 +144,7 @@ class EventHandler:
         if len(self.contact.users) == self.contact.maxclient + 1:
             if 'ingame' not in self.interfaces: show_ingame(self, self.centre)
             self.screen_world.rendering = True
+            self.camera.speed = (self.camera.normal_fps + 1) / (self.clock.get_fps() + 1)
             self.camera.inter()
         else:
             self.screen.blit(self.textures.font.render(f'{len(self.contact.users)}/{self.contact.maxclient + 1}', False, DEFAULT_COLOR), self.centre)
@@ -159,7 +160,7 @@ class EventHandler:
     def next_struct(self, ind):
         self.now_structure = (self.now_structure + ind) % len(self.structures) if self.now_structure + ind >= 0 else len(
             self.structures) - 1
-        self.interfaces['buildmenu'].structure.image = pygame.transform.scale(self.textures.animations_structures[self.structures[self.now_structure]][0], (360 * self.textures.resizer, 540 * self.textures.resizer))
+        self.interfaces['buildmenu'].structure.image = pygame.transform.scale(self.textures.animations_structures[self.structures[self.now_structure]][0][0], (360 * self.textures.resizer, 540 * self.textures.resizer))
 
     def attack(self, ground):
         if self.me.action_pts > 1:
@@ -229,7 +230,7 @@ class EventHandler:
         if not structure:
             structure = self.structures[self.now_structure]
         if structure != 'null':
-            ground.structure = ClassicStructure(self.textures.animations_structures[structure][0], (ground.rect[0] + ground.rect[2] // 2, ground.rect[1] + ground.rect[3] // 2), structure, self.textures)
+            ground.structure = ClassicStructure(self.textures.animations_structures[structure][0][0], (ground.rect[0] + ground.rect[2] // 2, ground.rect[1] + ground.rect[3] // 2), structure, self.textures)
         else:
             ground.structure = None
         ground.biome[1] = structure

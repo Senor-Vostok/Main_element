@@ -38,9 +38,12 @@ class Textures:
                                  'air': [self.render('data/border_fractions/yellow.png', (60, 60))]}
 
         self.animations_structures = {
-            'tower': [self.render(f'data/structures/tower/anim{i}.png', (120, 180)) for i in range(1, 6)],
-            'mill': [self.render(f'data/structures/mill/anim{i}.png', (120, 180)) for i in range(1, 4)],
-            'mine': [self.render(f'data/structures/mine/anim{i}.png', (120, 180)) for i in range(1, 8)]}
+            'tower': [[self.render(f'data/structures/tower/anim{i}.png', (120, 180)) for i in range(1, 6)]],
+            'mill': [[self.render(f'data/structures/mill/anim{i}.png', (120, 180)) for i in range(1, 4)]],
+            'mine': [[self.render(f'data/structures/mine/anim{i}.png', (120, 180)) for i in range(1, 8)]],
+            'homes': [[self.render(f'data/structures/homes/home1_{i}.png', (120, 180)) for i in range(1, 4)],
+                      [self.render(f'data/structures/homes/home2_{i}.png', (120, 180)) for i in range(1, 4)],
+                      [self.render(f'data/structures/homes/home3_{i}.png', (120, 180)) for i in range(1, 4)]]}
 
         self.animations_main_structures = {'water': [self.render(f'data/structures/centres/water/anim{i}.png', (120, 180)) for i in range(1, 4)],
                                            'fire': [self.render(f'data/structures/centres/fire/anim{i}.png', (120, 180)) for i in range(1, 4)],

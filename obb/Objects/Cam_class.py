@@ -7,6 +7,7 @@ class Cam(pygame.sprite.Sprite):
         pygame.sprite.Sprite.__init__(self)
         self.move = [0, 0]
         self.speed = 1
+        self.normal_fps = 75
         self.mouse_click = (0, 0, None, None)
         self.smooth_w = False
         self.smooth_s = False

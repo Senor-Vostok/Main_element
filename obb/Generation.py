@@ -30,9 +30,9 @@ class Generation:
             return 0
         elif z in range(-6, -5):
             return 1
-        elif z in range(-5, -2):
+        elif z in range(-5, 0):
             return 2
-        elif z in range(-2, 5):
+        elif z in range(0, 5):
             return 3
         elif z in range(5, 7):
             return 4

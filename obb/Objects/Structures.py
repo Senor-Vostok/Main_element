@@ -1,3 +1,5 @@
+import random
+
 import pygame
 from obb.Constants import ANIMATION_SLOWDOWN_STRUCTURES
 
@@ -8,7 +10,7 @@ class ClassicStructure(pygame.sprite.Sprite):
         self.image = image
         self.name = name
         try:
-            self.animation = textures.animations_structures[name]
+            self.animation = random.choice(textures.animations_structures[name])
         except:
             pass
         self.rect = self.image.get_rect(center=xoy)

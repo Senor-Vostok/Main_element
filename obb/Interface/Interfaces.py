@@ -61,7 +61,7 @@ class BuildMenu:
         self.down = Button(textures.buildmenu['down'], (xoy[0] + 705 * r, xoy[1] + 361 * r))
         self.up = Button(textures.buildmenu['up'], (xoy[0] + 705 * r, xoy[1] - 381 * r))
         self.structure = BackGround(
-            pygame.transform.scale(textures.animations_structures['tower'][0], (360 * r, 540 * r)),
+            pygame.transform.scale(textures.animations_structures['tower'][0][0], (360 * r, 540 * r)),
             (xoy[0] + 705 * r, xoy[1]))
         self.surface = Surface(self.background, self.button_project, self.down, self.up, self.structure)
 
