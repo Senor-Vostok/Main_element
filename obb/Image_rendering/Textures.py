@@ -107,6 +107,10 @@ class Textures:
                           'label_save': [self.render(f'data/widgets/menu/labels/name_of_save.png', (1100, 66)),
                                          self.render(f'data/widgets/menu/labels/name_of_savet.png', (1100, 66))]}
 
+        self.setting = {"background": self.save_menu['background'],
+                        'nickname': [self.render(f'data/widgets/setting/labels/nickname.png', (560, 50)),
+                                     self.render(f'data/widgets/setting/labels/nicknamet.png', (560, 50))]}
+
     def render(self, address, size):
         size = size[0] * self.resizer, size[1] * self.resizer
         return pygame.transform.scale(pygame.image.load(address), size).convert_alpha()

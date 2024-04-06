@@ -1,4 +1,4 @@
-import pygame
+import pygame.sprite
 from obb.Objects.Structures import ClassicStructure, MainStructure
 from obb.Constants import ANIMATION_SLOWDOWN
 

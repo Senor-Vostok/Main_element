@@ -7,34 +7,36 @@ from obb.Image_rendering.Machine import World
 from obb.Generation import Generation
 from obb.Objects.Cam_class import Cam
 from obb.Online import *
-from win32api import GetSystemMetrics
+from win32api import GetSystemMetrics, EnumDisplaySettings, EnumDisplayDevices
 from obb.Objects.Structures import *
-from obb.Image_rendering.Efffect import Effect
 from obb.Handler.Handler_show import *
 from obb.Constants import DEFAULT_COLOR, BACKGROUND_COLOR
+from obb.Handler.Handler_render import rendering
 
 
 class EventHandler:
     def __init__(self, bot_id, id, bot_fraction, fraction, bot_start_point, start_point):  # TODO: исправить присваивание bot_id и id
         pygame.init()
-        self.bot = Bot.Bot(bot_id)
+        settings = EnumDisplaySettings(EnumDisplayDevices().DeviceName, -1)
+        self.vsync_fps = int(getattr(settings, 'DisplayFrequency'))
+        self.bot = Bot.Bot(bot_id)  # TODO: убрать
         self.me = Player.Player(id)
         self.textures = Textures()
         self.size = GetSystemMetrics(0), GetSystemMetrics(1)
-        self.centre = (GetSystemMetrics(0) // 2, GetSystemMetrics(1) // 2)
+        self.centre = (self.size[0] // 2, self.size[1] // 2)
         self.clock = pygame.time.Clock()
-        self.screen = pygame.display.set_mode(self.size, vsync=1)
+        self.screen = pygame.display.set_mode(self.size)
         self.screen.set_alpha(None)
         pygame.mouse.set_visible(False)
         self.matr, self.screen_world, self.name_save = None, None, None
-        self.bot_fraction = bot_fraction
-        self.bot_start_point = bot_start_point
+        self.bot_fraction = bot_fraction  # TODO: убрать
+        self.bot_start_point = bot_start_point  # TODO: убрать
         self.world_coord = 0
         self.camera = Cam()
         self.open_some, self.flag = True, True
         self.ids = [3, 4]  # id игроков
         self.players = []
-        self.fractions = ['water', 'fire']  # TODO: добавить выбор фракций
+        self.fractions = ['water', 'fire']  # TODO: добавить выбор фракций  # TODO: убрать
         self.start_points = [(210, 30), (30, 30)]
         self.turn = None  # Чей ход
         self.contact = Unknown()
@@ -141,17 +143,11 @@ class EventHandler:
             pass
         if len(self.contact.users) == self.contact.maxclient + 1:
             if 'ingame' not in self.interfaces: show_ingame(self, self.centre)
+            self.screen_world.rendering = True
             self.camera.inter()
-            self.screen_world.draw(self.camera.mouse_click, self.camera.move, self.open_some)  # Вырисовываем картинку
         else:
-            self.screen.blit(self.textures.font.render(f'{len(self.contact.users)}/{self.contact.maxclient + 1}', False,
-                                                       DEFAULT_COLOR), self.centre)
-            if 'ingame' in self.interfaces: self.close('ingame', False)
-
-    def close(self, name, open_some, func=None):
-        self.open_some = open_some
-        self.interfaces.pop(name)
-        if func: func()
+            self.screen.blit(self.textures.font.render(f'{len(self.contact.users)}/{self.contact.maxclient + 1}', False, DEFAULT_COLOR), self.centre)
+            if 'ingame' in self.interfaces: close(self, 'ingame', False)
 
     def go_back_to_menu(self):
         self.make_save()
@@ -163,8 +159,7 @@ class EventHandler:
     def next_struct(self, ind):
         self.now_structure = (self.now_structure + ind) % len(self.structures) if self.now_structure + ind >= 0 else len(
             self.structures) - 1
-        self.interfaces['buildmenu'].structure.image = pygame.transform.scale(
-            self.textures.animations_structures[self.structures[self.now_structure]][0],(360 * self.textures.resizer, 540 * self.textures.resizer))
+        self.interfaces['buildmenu'].structure.image = pygame.transform.scale(self.textures.animations_structures[self.structures[self.now_structure]][0], (360 * self.textures.resizer, 540 * self.textures.resizer))
 
     def attack(self, ground):
         if self.me.action_pts > 1:
@@ -183,11 +178,11 @@ class EventHandler:
         self.init_world(matr)
 
     def connecting(self):
-        self.screen.blit(self.textures.connecting, (self.centre[0] - self.textures.connecting.get_rect()[2] // 2 * self.textures.resizer, self.centre[1] - self.textures.connecting.get_rect()[3] // 2 * self.textures.resizer))
+        self.screen.blit(self.textures.connecting, (self.centre[0] - self.textures.connecting.get_rect()[2] // 2, self.centre[1] - self.textures.connecting.get_rect()[3] // 2))
         pygame.display.update()
         host, port = (self.interfaces['online'].interact.text[:-1]).split(':')
         self.contact = Client(host, port)
-        self.close('online', False, None)
+        close(self, 'online', False, None)
         if self.contact.connecting():
             users = ''
             while not self.contact.loaded_map:
@@ -243,7 +238,7 @@ class EventHandler:
         if info:
             self.contact.send(f'change-0-' + '|'.join(ground.biome))
 
-    def check_resources(self, ground_cost, buyer):
+    def check_resources(self, ground_cost, buyer):  # TODO убрать
         return buyer.resources >= ground_cost
 
     def buy_ground(self, xoy, fraction, buyer):
@@ -254,18 +249,6 @@ class EventHandler:
             buyer.resources -= ground_cost
         else:
             print('no mani')
-
-    def update_efffects(self):
-        if self.camera.mouse_click[2] and int(self.camera.mouse_click[3]) == 1:
-            if not self.pressed:
-                self.pressed = True
-                self.effects.append(Effect((self.camera.mouse_click[0], self.camera.mouse_click[1]), self.textures.effects['mouse1']))
-        else:
-            self.pressed = False
-        for i in self.effects:
-            i.draw(self.screen)
-            if not i.update():
-                self.effects.remove(i)
 
     def click_handler(self):
         c = None
@@ -281,7 +264,7 @@ class EventHandler:
                     except Exception:
                         pass
                 elif i.key == pygame.K_ESCAPE and not self.open_some:
-                    show_pause(self, self.centre) if 'pause' not in self.interfaces else self.close('pause', False, None)
+                    show_pause(self, self.centre) if 'pause' not in self.interfaces else close(self, 'pause', False, None)
                 if 'popup_menu' in self.interfaces: self.interfaces.pop('popup_menu')
                 if 'buildmenu' in self.interfaces: self.interfaces.pop('buildmenu')
                 if 'choicegame' in self.interfaces: self.interfaces.pop('choicegame')
@@ -291,19 +274,8 @@ class EventHandler:
 
     def update(self):
         self.screen.fill(BACKGROUND_COLOR)
-        self.clock.tick()
-        c = self.click_handler()
-        if self.screen_world:
-            self.machine()
-        try:
-            for i in self.interfaces:
-                self.end = i
-                self.interfaces[i].surface.update(self.camera.mouse_click, self.screen, c)
-        except Exception:
-            pass
-        self.screen.blit(self.textures.point, (self.camera.mouse_click[0] - 10, self.camera.mouse_click[1] - 10))
-        self.screen.blit(self.textures.font.render(f'fps: {int(self.clock.get_fps())}', False, DEFAULT_COLOR), (30, 30))
-        self.update_efffects()
+        self.clock.tick(self.vsync_fps)
+        rendering(self, self.screen_world)
 
     def complete(self):
         pass

@@ -5,8 +5,10 @@ import pygame
 
 if __name__ == '__main__':
     pygame.init()
-    handler = EventHandler(0, 1, "water", "fire", (210, 30), (30, 30))
+    with open('data/user/information', mode='rt') as file:
+        file = file.read()
+        id = int(file)
+    handler = EventHandler(0, id, "water", "fire", (210, 30), (30, 30))
     show_menu(handler, handler.centre)
-    while True:
+    while 1:
         handler.update()
-        pygame.display.flip()

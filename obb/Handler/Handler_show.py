@@ -2,6 +2,12 @@ import obb.Interface.Interfaces as Interfaces
 import sys
 
 
+def close(self, name, open_some, func=None):
+    self.open_some = open_some
+    self.interfaces.pop(name)
+    if func: func()
+
+
 def show_ingame(self, centre):
     game = Interfaces.InGame(centre, self.textures)
     self.interfaces['ingame'] = game
@@ -20,6 +26,7 @@ def show_menu(self, centre):
     menu.button_start.connect(show_create_save, self, self.centre)
     menu.button_load.connect(self.open_save)
     menu.button_online.connect(show_online, self, self.centre)
+    menu.button_setting.connect(show_settings, self, self.centre)
     menu.button_exit.connect(sys.exit)
     self.interfaces['menu'] = menu
 
@@ -37,7 +44,7 @@ def show_buildmenu(self, centre, ground=None):
 def show_online(self, centre, t='connect', matr=None):
     self.interfaces = dict()
     show_menu(self, self.centre)
-    if 'choicegame' in self.interfaces: self.close('choicegame', True)
+    if 'choicegame' in self.interfaces: close(self, 'choicegame', True)
     if t == 'connect':
         label = Interfaces.Online_connect(centre, self.textures)
         label.interact.connect(self.connecting)
@@ -71,3 +78,11 @@ def show_choicegame(self, centre, matr=None, n=None):
     choice.button_local.connect(self.init_world, matr)
     choice.button_online.connect(show_online, self, self.centre, 'create', matr)
     self.interfaces['choicegame'] = choice
+
+
+def show_settings(self, centre):
+    self.interfaces = dict()
+    show_menu(self, self.centre)
+    setting = Interfaces.Setting(centre, self.textures)
+    setting.nickname.text = "ТЫ ЛОХ/"
+    self.interfaces['setting'] = setting

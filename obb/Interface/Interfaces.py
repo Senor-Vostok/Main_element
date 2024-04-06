@@ -128,3 +128,11 @@ class Save_menu:
             for s in spisok:
                 self.surface.add(s)
             y -= 105
+
+
+class Setting:
+    def __init__(self, xoy, textures):
+        r = textures.resizer
+        self.background = BackGround(textures.setting['background'][0], xoy)
+        self.nickname = InteractLabel(textures.setting['nickname'], (xoy[0], xoy[1] - 255 * r))
+        self.surface = Surface(self.background, self.nickname)
