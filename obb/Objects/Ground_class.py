@@ -32,8 +32,8 @@ class Ground(pygame.sprite.Sprite):
 
     def draw(self, screen, mouse_click, handler):
         screen.blit(self.image, (self.rect.x, self.rect.y))
-        if self.biome[4] != 'null':
-            screen.blit(self.textures.border_fractions[self.biome[4]][0], (self.rect.x, self.rect.y))
+        if self.fraction != 'null':
+            screen.blit(self.textures.border_fractions[self.fraction][0], (self.rect.x, self.rect.y))
         if self.rect.colliderect(mouse_click[0], mouse_click[1], 1, 1) and self.biome[0] != 'barrier':
             screen.blit(self.select_image, (self.rect.x, self.rect.y))
         if self.structure:

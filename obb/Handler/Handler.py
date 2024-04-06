@@ -84,27 +84,27 @@ class EventHandler:
         self.me.resources = 15
         self.me.start_point = start_point
 
-    def init_bot(self, fraction, start_point):
-        self.bot.fraction_name = fraction
-        self.bot.units_count = 100
-        self.bot.action_pts = 2e10
-        self.bot.resources = 15e10
-        self.bot.start_point = start_point
-        self.run_bot()
-
-    def run_bot(self):
-        self.bot.buy_smth(self)
-        # self.bot.build_smth(self, 0)
+    # def init_bot(self, fraction, start_point):
+    #     self.bot.fraction_name = fraction
+    #     self.bot.units_count = 100
+    #     self.bot.action_pts = 2e10
+    #     self.bot.resources = 15e10
+    #     self.bot.start_point = start_point
+    #     self.run_bot()
+    #
+    # def run_bot(self):
+    #     self.bot.buy_smth(self)
+    #     # self.bot.build_smth(self, 0)
 
     def init_players(self, count_players):
         whitelist = list()
         for c in range(count_players):
-            fraction = random.choice(self.fractions) # создание фракции
+            fraction = random.choice(self.fractions)  # создание фракции
             while fraction in whitelist:
                 fraction = random.choice(self.fractions)
             whitelist.append(fraction)
             id = random.randint(1, 4)
-            while id in self.ids: # присваиваем id
+            while id in self.ids:  # присваиваем id
                 id = random.randint(1, 4)
             self.ids.append(id)
             start_point = (random.randint(BARRIER_SIZE, len(self.screen_world.biomes) - BARRIER_SIZE),
@@ -118,11 +118,11 @@ class EventHandler:
                 for j in range(-2, 3):
                     if self.screen_world.biomes[start_point[0] + i][start_point[1] + j][4] != fraction:
                         self.screen_world.biomes[start_point[0] + i][start_point[1] + j][4] = fraction
-            print("ну че отрисовался", start_point, "я из ", fraction, "района")# спавн центральной структуры
-            try:
-                self.contact.send(f"uid-0-{fraction}|{'_'.join(map(str, start_point))}|{id}", self.contact.users[c - 1])
-            except Exception:
-                pass
+                        if self.contact.protocol == 'host':
+                            self.contact.send(f'change-0-{"|".join(self.screen_world.biomes[start_point[0] + i][start_point[1] + j])}-end-')
+            print("ну че отрисовался", start_point, "я из ", fraction, "района")  # спавн центральной структуры
+            if c > 0 and self.contact.protocol == 'host':
+                self.contact.send(f"uid-0-{fraction}|{'_'.join(map(str, start_point))}|{id}", self.contact.array_clients[c - 1])
         self.init_player(whitelist[0], self.start_points[0], self.ids[0])
         self.ids.pop(0)
         print("чиф киф вечер в хату мой номер:", self.me.id)
@@ -142,17 +142,22 @@ class EventHandler:
         show_ingame(self, self.centre)
 
     def decode_message(self, message):
-        message = message.split('-0-')
-        if message[0] == 'change':
-            i, j = int(message[1].split('|')[2]), int(message[1].split('|')[3])
-            self.screen_world.biomes[i][j][1] = message[1].split('|')[1]
-            self.place_structure(self.screen_world.great_world[i - self.screen_world.world_cord[0]][j - self.screen_world.world_cord[1]], message[1].split('|')[1], False)
-        if message[0] == 'join':
-            self.contact.users += message[1].split('|')
-        if message[0] == 'uid':
-            fraction = message[1].split('|')[0]
-            coord = map(int, (message[1].split('|')[1]).split('_'))
-            id = int(message[1].split('|')[2])
+        for message in message.split('-end-'):
+            mess = message.split('-0-')
+            if mess[0] == 'change':
+                i, j = int(mess[1].split('|')[2]), int(mess[1].split('|')[3])
+                self.screen_world.biomes[i][j] = mess[1].split('|')
+                i, j = i - self.screen_world.world_coord[0], j - self.screen_world.world_coord[1]
+                if self.screen_world.sq1 > i >= 0 and self.screen_world.sq2 > j >= 0:
+                    self.screen_world.great_world[i][j].fraction = mess[1].split('|')[4]
+                    self.place_structure(self.screen_world.great_world[i][j], mess[1].split('|')[1], False)
+            if mess[0] == 'join':
+                self.contact.users += mess[1].split('|')
+            if mess[0] == 'uid':
+                fraction = mess[1].split('|')[0]
+                coord = [int(i) for i in (mess[1].split('|')[1]).split('_')]
+                id = int(mess[1].split('|')[2])
+                self.init_player(fraction, coord, id)
 
     def machine(self):
         try:
@@ -162,7 +167,7 @@ class EventHandler:
             pass
         if len(self.contact.users) == self.contact.maxclient + 1:
             if 'ingame' not in self.interfaces: show_ingame(self, self.centre)
-            if self.contact.protocol == 'unknown' or self.contact.protocol == 'host':
+            if (self.contact.protocol == 'unknown' or self.contact.protocol == 'host') and not self.screen_world.rendering:
                 self.init_players(self.contact.maxclient + 1)
             self.screen_world.rendering = True
             self.camera.speed = (self.camera.normal_fps + 1) / (self.clock.get_fps() + 1)
@@ -226,21 +231,21 @@ class EventHandler:
         saves.add_saves(files, show_choicegame, self)
         self.interfaces['save_menu'] = saves
 
-    def check_structure_placement(self, ground, structure):
-        if ground.biome[0] not in self.rules['StructuresPermissions'][structure]:
-            print('nelza tut stroit')
-            # сообщить во всплывающем окошке, что нельзя строить
-            return False
-        struct_cost = int(self.rules['StructuresCosts'][self.structures[self.now_structure]][0])
-        struct_action_pts = int(self.rules['StructuresActionPoints'][self.structures[self.now_structure]][0])
-        if self.me.action_pts < struct_action_pts:
-            print("no points((9(")
-            return False
-        if self.me.resources < struct_cost:
-            print('malo denyak, vzuh, and ti bezdomni (ﾉ◕ヮ◕)ﾉ*:･ﾟ✧')
-            return False
-        self.update_placement_state(ground, structure, struct_cost, struct_action_pts)
-        return True
+    # def check_structure_placement(self, ground, structure):
+    #     if ground.biome[0] not in self.rules['StructuresPermissions'][structure]:
+    #         print('nelza tut stroit')
+    #         # сообщить во всплывающем окошке, что нельзя строить
+    #         return False
+    #     struct_cost = int(self.rules['StructuresCosts'][self.structures[self.now_structure]][0])
+    #     struct_action_pts = int(self.rules['StructuresActionPoints'][self.structures[self.now_structure]][0])
+    #     if self.me.action_pts < struct_action_pts:
+    #         print("no points((9(")
+    #         return False
+    #     if self.me.resources < struct_cost:
+    #         print('malo denyak, vzuh, and ti bezdomni (ﾉ◕ヮ◕)ﾉ*:･ﾟ✧')
+    #         return False
+    #     self.update_placement_state(ground, structure, struct_cost, struct_action_pts)
+    #     return True
 
     def update_placement_state(self, ground, structure, struct_cost, struct_action_pts):
         ground.biome[1] = structure
@@ -251,16 +256,19 @@ class EventHandler:
         if not structure:
             structure = self.structures[self.now_structure]
         if structure != 'null': # я могу строить?
-            if self.me.fraction_name == ground.fraction and me or not me:
+            if (self.me.fraction_name == ground.fraction and me) or not me:
                 ground.biome[1] = structure
-                ground.structure = ClassicStructure(self.textures.animations_structures[structure][0][0], (ground.rect[0] + ground.rect[2] // 2, ground.rect[1] + ground.rect[3] // 2), structure, self.textures)
+                try:
+                    ground.structure = ClassicStructure(self.textures.animations_structures[structure][0][0], (ground.rect[0] + ground.rect[2] // 2, ground.rect[1] + ground.rect[3] // 2), structure, self.textures)
+                except Exception:
+                    ground.structure = MainStructure(self.textures.animations_structures[structure][0], (ground.rect[0] + ground.rect[2] // 2, ground.rect[1] + ground.rect[3] // 2), structure, self.textures)
         else:
             ground.structure = None
             ground.biome[1] = "null"
         if 'buildmenu' in self.interfaces:
             self.interfaces.pop('buildmenu')
         if info:
-            self.contact.send(f'change-0-' + '|'.join(ground.biome))
+            self.contact.send(f'change-0-' + '|'.join(ground.biome) + '-end-')
 
     def buy_ground(self, xoy, fraction, buyer):
         biome = self.screen_world.biomes[xoy[0]][xoy[1]][0]
@@ -268,10 +276,11 @@ class EventHandler:
         if buyer.resources >= ground_cost:
             x = xoy[0] - self.screen_world.world_coord[0]
             y = xoy[1] - self.screen_world.world_coord[1]
-            if x >= 0 and y >= 0:
+            if self.screen_world.sq1 > x >= 0 and self.screen_world.sq2 > y >= 0:
                 self.screen_world.great_world[x][y].fraction = fraction
             self.screen_world.biomes[xoy[0]][xoy[1]][4] = fraction
             buyer.resources -= ground_cost
+            self.contact.send(f'change-0-' + '|'.join(self.screen_world.biomes[xoy[0]][xoy[1]]) + '-end-')
         else:
             print('no mani')
 

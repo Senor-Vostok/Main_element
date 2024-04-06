@@ -31,13 +31,12 @@ class Client:
                 if '<>' in message:
                     self.loaded_map = True
                     self.gen += message.split('<>')[0]
-                    self.send('join-0-' + self.nickname)
+                    self.send('join-0-' + self.nickname + '-end-')
                     self.maxclient = int(message.split('<>')[1][0])
                     print('loaded')
                     return message.split('<>')[1][2:]
             else:
-                print('catch', message)
-                return ''.join(message.split(' '))
+                return message
         return None
 
     def send(self, message):
@@ -102,6 +101,7 @@ class Unknown:
         self.protocol = 'unknown'
         self.users = ['i']
         self.maxclient = 0
+        self.array_clients = list()
 
     def send(self, *args):
         pass
