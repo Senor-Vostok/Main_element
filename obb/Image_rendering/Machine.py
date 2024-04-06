@@ -1,15 +1,13 @@
 import random
 from obb.Objects.Ground_class import Ground
-from obb.Image_rendering.Textures import Textures
 from obb.Constants import TILE_SIZE, OFFSET_X, OFFSET_Y
 
 
 class World:
     def __init__(self, win, centre, coord, biomes, handler):
         self.handler = handler
-        self.textures = Textures()
+        self.textures = handler.textures
         self.land = self.textures.land
-        self.priority = self.textures.priority  # Приоритеты текстур
         self.biomes = biomes  # Получение данных о матрице мира
         self.gr_main = int(TILE_SIZE * self.textures.resizer)
         self.sq1 = centre[0] * 2 // self.gr_main + OFFSET_X[0] if centre[0] * 2 // self.gr_main % 2 == 0 else centre[0] * 2 // self.gr_main + OFFSET_X[1]  # Разбиение экрана на секторы, с помощью которых строится динамическая сетка

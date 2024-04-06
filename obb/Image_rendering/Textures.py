@@ -7,6 +7,7 @@ screen = pygame.display.set_mode()
 
 class Textures:
     def __init__(self):
+        self.loaded_textures = dict()
         self.resizer = GetSystemMetrics(0) / 1920
         self.priority = ['water', 'sand', 'flower', 'ground', 'stone', 'snow', 'barrier']
 
@@ -14,8 +15,6 @@ class Textures:
 
         self.loading = self.render('data/loading/logo.png', (1920, 1080))
         self.connecting = self.render('data/loading/connecting.png', (1920, 1080))
-
-        self.label = self.render('data/ground/label.png', (400, 30))
 
         self.select = self.render('data/ground/ground_select.png', (60, 60))
 
@@ -79,6 +78,7 @@ class Textures:
                                                 self.render(f'data/widgets/menu/labels/count_playert.png', (550, 66))],
                           'label_port': [self.render(f'data/widgets/menu/labels/port.png', (550, 66)),
                                          self.render(f'data/widgets/menu/labels/portt.png', (550, 66))]}
+
         self.pause = {'background': [self.render(f'data/widgets/menu/labels/background.png', (1920, 1080))],
                       'button_menu': [self.render(f'data/widgets/menu/buttons/button6.png', (400, 70)),
                                       self.render(f'data/widgets/menu/buttons/button6t.png', (400, 70))],
@@ -112,5 +112,9 @@ class Textures:
                                      self.render(f'data/widgets/setting/labels/nicknamet.png', (560, 50))]}
 
     def render(self, address, size):
+        if address in self.loaded_textures:
+            return self.loaded_textures[address]
         size = size[0] * self.resizer, size[1] * self.resizer
-        return pygame.transform.scale(pygame.image.load(address), size).convert_alpha()
+        image = pygame.transform.scale(pygame.image.load(address), size).convert_alpha()
+        self.loaded_textures[address] = image
+        return image

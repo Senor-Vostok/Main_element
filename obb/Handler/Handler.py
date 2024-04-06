@@ -25,7 +25,7 @@ class EventHandler:
         self.size = GetSystemMetrics(0), GetSystemMetrics(1)
         self.centre = (self.size[0] // 2, self.size[1] // 2)
         self.clock = pygame.time.Clock()
-        self.screen = pygame.display.set_mode(self.size)
+        self.screen = pygame.display.set_mode(self.size, pygame.DOUBLEBUF | pygame.HWSURFACE | pygame.RESIZABLE)
         self.screen.set_alpha(None)
         pygame.mouse.set_visible(False)
         self.matr, self.screen_world, self.name_save = None, None, None
@@ -258,12 +258,7 @@ class EventHandler:
                 sys.exit()
             if i.type == pygame.KEYDOWN and self.decoding()[0] == self.me.id:
                 c = i
-                if i.key == pygame.K_ESCAPE and len(self.interfaces) >= 2:
-                    try:
-                        self.interfaces.pop(self.end)
-                    except Exception:
-                        pass
-                elif i.key == pygame.K_ESCAPE and not self.open_some:
+                if i.key == pygame.K_ESCAPE and not self.open_some:
                     show_pause(self, self.centre) if 'pause' not in self.interfaces else close(self, 'pause', False, None)
                 if 'popup_menu' in self.interfaces: self.interfaces.pop('popup_menu')
                 if 'buildmenu' in self.interfaces: self.interfaces.pop('buildmenu')
@@ -273,8 +268,7 @@ class EventHandler:
         return c
 
     def update(self):
-        self.screen.fill(BACKGROUND_COLOR)
-        self.clock.tick(self.vsync_fps)
+        self.clock.tick()
         rendering(self, self.screen_world)
 
     def complete(self):

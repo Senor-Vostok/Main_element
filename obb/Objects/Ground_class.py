@@ -48,8 +48,7 @@ class Ground(pygame.sprite.Sprite):
 
         if y_n:
             if self.structure: self.structure.update(move, y_n)
-            self.rect.y += move[1]
-            self.rect.x += move[0]
+            self.rect.move_ip(move)
 
     def __draw_structure(self, screen):
         self.structure.draw(screen)

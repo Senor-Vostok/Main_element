@@ -30,17 +30,13 @@ def rendering(handler, machine):
         elif not flag:
             camera_move[0] *= -1
             camera_move[1] *= -1
-
         for sprite in itertools.chain.from_iterable(machine.great_world):
             sprite.update(machine.synchronous, camera_move, flag and not handler.open_some)
             sprite.draw(machine.win, mouse_click, machine.handler)
-
         machine.synchronous = machine.synchronous + 1 if machine.synchronous < UPDATE_LIMIT else 0
-
     c = handler.click_handler()
     if handler.screen_world:
         handler.machine()
-
     try:
         for interface in handler.interfaces.values():
             interface.surface.update(handler.camera.mouse_click, handler.screen, c)

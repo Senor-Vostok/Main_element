@@ -29,8 +29,7 @@ class ClassicStructure(pygame.sprite.Sprite):
     def update(self, move, y_n):
         self.__start_animation()
         if y_n:
-            self.rect.x += move[0]
-            self.rect.y += move[1]
+            self.rect.move_ip(move)
 
 
 class CenterStructure(ClassicStructure):
