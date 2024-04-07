@@ -49,8 +49,6 @@ class PopupMenu:
 class InGame:
     def __init__(self, xoy, textures, fraction):
         r = textures.resizer
-        if not fraction:
-            fraction = 'water'
         self.button_end = Button(textures.ingame['button_end'], (xoy[0] - 755 * r, xoy[1] + 510 * r))
         self.button_back = Button(textures.ingame[f'back_{fraction}'], (xoy[0] * 2 - 40 * r, 40 * r))
         self.surface = Surface(self.button_end, self.button_back)

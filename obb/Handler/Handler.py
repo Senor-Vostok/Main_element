@@ -1,4 +1,5 @@
 import os
+import time
 
 import pygame.display
 import obb.Objects.Player as Player
@@ -61,7 +62,7 @@ class EventHandler:
             if ground.biome[0] != 'barrier':
                 show_popup_menu(self, (ground.rect[0] + ground.rect[2], ground.rect[1] + ground.rect[3]), ground, self.me.fraction_name)
 
-    def generation(self, size=200, barrier=20):
+    def generation(self, size=200, barrier=BARRIER_SIZE):
         gen = Generation(size, self.screen, self.centre)
         self.world_coord = (size + barrier * 2) // 2
         gen.generation()
@@ -88,7 +89,6 @@ class EventHandler:
 
     def init_players(self):
         if len(self.info_players[0]) > 1:
-            print(self.info_players)
             for c in range(1, len(self.info_players)):
                 i = self.contact.users.index(self.info_players[c][0])
                 self.contact.send(f"uid-0-{self.info_players[c][1]}|{'_'.join(map(str, self.info_players[c][2]))}-end-", self.contact.array_clients[i - 1])
@@ -163,6 +163,7 @@ class EventHandler:
             if not self.screen_world.rendering:
                 if self.contact.protocol == 'unknown' or self.contact.protocol == 'host':
                     self.init_players()
+                time.sleep(1)
                 show_ingame(self, self.centre)
                 self.move_to_coord(self.me.start_point)
                 if self.name_save:
