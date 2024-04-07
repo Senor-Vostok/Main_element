@@ -90,7 +90,15 @@ class Textures:
                                       self.render(f'data/widgets/menu/buttons/button9t.png', (400, 70))]}
 
         self.ingame = {'button_end': [self.render(f'data/widgets/menu/buttons/button7.png', (400, 50)),
-                                      self.render(f'data/widgets/menu/buttons/button7t.png', (400, 50))]}
+                                      self.render(f'data/widgets/menu/buttons/button7t.png', (400, 50))],
+                       'back_water': [self.render(f'data/ico/fractions/water.png', (60, 60)),
+                                      self.render(f'data/ico/fractions/watert.png', (60, 60))],
+                       'back_fire': [self.render(f'data/ico/fractions/fire.png', (60, 60)),
+                                     self.render(f'data/ico/fractions/firet.png', (60, 60))],
+                       'back_air': [self.render(f'data/ico/fractions/air.png', (60, 60)),
+                                    self.render(f'data/ico/fractions/airt.png', (60, 60))],
+                       'back_earth': [self.render(f'data/ico/fractions/earth.png', (60, 60)),
+                                      self.render(f'data/ico/fractions/eartht.png', (60, 60))]}
 
         self.buildmenu = {'background': [self.render(f'data/widgets/buildmenu/labels/background.png', (500, 1000))],
                           'button_project': [self.render(f'data/widgets/buildmenu/buttons/button1.png', (400, 50)),

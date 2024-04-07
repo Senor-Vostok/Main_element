@@ -46,5 +46,6 @@ def rendering(handler, machine):
     point_pos = (handler.camera.mouse_click[0] - 10, handler.camera.mouse_click[1] - 10)
     handler.screen.blit(handler.textures.point, point_pos)
     fps_text = handler.textures.font.render(f'fps: {int(handler.clock.get_fps())}', False, DEFAULT_COLOR)
-    handler.screen.blit(fps_text, (30, 30))
+    handler.screen.blit(handler.uid, (10, 10))
+    handler.screen.blit(fps_text, (10, 40))
     pygame.display.flip()

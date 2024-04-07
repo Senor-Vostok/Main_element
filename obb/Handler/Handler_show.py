@@ -9,7 +9,8 @@ def close(self, name, open_some, func=None):
 
 
 def show_ingame(self, centre):
-    game = Interfaces.InGame(centre, self.textures)
+    game = Interfaces.InGame(centre, self.textures, self.me.fraction_name)
+    game.button_back.connect(self.move_to_coord, self.me.start_point)
     self.interfaces['ingame'] = game
 
 
@@ -70,8 +71,12 @@ def show_popup_menu(self, centre, ground=None, fraction=None):
     self.interfaces['popup_menu'] = popup
 
 
-def show_choicegame(self, centre, matr=None, n=None):
+def show_choicegame(self, centre, matr=None, n=None, info_players=None):
     self.name_save = self.interfaces['create_save'].name.text[:-1] if not n else n
+    self.loaded_save = False
+    if info_players:
+        self.loaded_save = True
+        self.info_players = info_players
     self.interfaces = dict()
     show_menu(self, self.centre)
     choice = Interfaces.ChoiceGame(centre, self.textures)

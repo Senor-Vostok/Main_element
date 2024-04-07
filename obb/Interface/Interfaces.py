@@ -47,10 +47,13 @@ class PopupMenu:
 
 
 class InGame:
-    def __init__(self, xoy, textures):
+    def __init__(self, xoy, textures, fraction):
         r = textures.resizer
+        if not fraction:
+            fraction = 'water'
         self.button_end = Button(textures.ingame['button_end'], (xoy[0] - 755 * r, xoy[1] + 510 * r))
-        self.surface = Surface(self.button_end)
+        self.button_back = Button(textures.ingame[f'back_{fraction}'], (xoy[0] * 2 - 40 * r, 40 * r))
+        self.surface = Surface(self.button_end, self.button_back)
 
 
 class BuildMenu:
@@ -108,10 +111,11 @@ class Save_menu:
         print(f'saves/{save}')
 
     def __decode_world(self, name):
-        matr = None
         with open(f'saves/{name}', mode='rt') as file:
-            matr = [[j.split('|') for j in i.split('\t')] for i in file.read().split('\n')]
-        return matr, name[:-6]
+            distribut = file.read().split(':')
+            matr = [[j.split('|') for j in i.split('\t')] for i in distribut[1].split('\n')]
+            info_players = distribut[0].split('\n')
+        return matr, name[:-6], [[i.split('|')[0], i.split('|')[1], [int(j) for j in [i.split('|')[2], i.split('|')[3]]]] for i in info_players]
 
     def add_saves(self, saves, choice, handler):
         r = self.r
@@ -122,7 +126,7 @@ class Save_menu:
                       Button(self.t.save_menu['button_play'], (self.xoy[0] + 235 * r, self.xoy[1] - 25 * r - y * r)),
                       Button(self.t.save_menu['button_delete'], (self.xoy[0] + 235 * r, self.xoy[1] + 25 * r - y * r))]
             decode = self.__decode_world(i)
-            spisok[2].connect(choice, handler, handler.centre, decode[0], decode[1])
+            spisok[2].connect(choice, handler, handler.centre, decode[0], decode[1], decode[2])
             spisok[3].connect(self.delete, i)
             self.save[i] = spisok
             for s in spisok:

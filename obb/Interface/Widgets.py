@@ -36,6 +36,8 @@ class Button(pygame.sprite.Sprite):
                         return self.func(self.args[0], self.args[1], self.args[2])
                     elif len(self.args) == 4:
                         return self.func(self.args[0], self.args[1], self.args[2], self.args[3])
+                    elif len(self.args) == 5:
+                        return self.func(self.args[0], self.args[1], self.args[2], self.args[3], self.args[4])
             else:
                 self.one_press = True
         else:
@@ -98,6 +100,8 @@ class InteractLabel(pygame.sprite.Sprite):
                         return self.func(self.args[0], self.args[1], self.args[2])
                     elif len(self.args) == 4:
                         return self.func(self.args[0], self.args[1], self.args[2], self.args[3])
+                    elif len(self.args) == 5:
+                        return self.func(self.args[0], self.args[1], self.args[2], self.args[3], self.args[4])
             elif len(str(command.unicode)) > 0 and command.type == pygame.KEYDOWN:
                 self.text = self.text[:-1] + command.unicode + "/"
 

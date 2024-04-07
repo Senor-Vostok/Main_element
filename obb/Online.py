@@ -14,6 +14,8 @@ class Client:
         self.gen = ''
         self.users = []
         self.maxclient = None
+        self.private = False
+        self.whitelist = list()
 
     def connecting(self):
         try:
@@ -28,11 +30,18 @@ class Client:
             message = self.__encoding(info)
             if not self.loaded_map:
                 self.gen += message
-                if '<>' in message:
+                if '-end-' in message:
                     self.loaded_map = True
                     self.gen += message.split('<>')[0]
-                    self.send('join-0-' + self.nickname + '-end-')
+                    with open('data/user/information', mode='rt') as uid:
+                        uid = uid.read()
+                    self.send(f'join-0-{self.nickname}|{uid}-end-')
                     self.maxclient = int(message.split('<>')[1][0])
+                    self.private = bool(int(message.split('<>')[2][0]))
+                    self.whitelist = ''.join(((message.split('<>')[2]).split(':')[1]).split('-end-')).split('|')
+                    if uid not in self.whitelist and self.private:
+                        self.sock.close()
+                        return 'close'
                     print('loaded')
                     return message.split('<>')[1][2:]
             else:
@@ -50,7 +59,7 @@ class Client:
 
 
 class Host:
-    def __init__(self, host, port, gen, maxclient=3):
+    def __init__(self, host, port, gen, maxclient=3, private=False):
         self.protocol = 'host'
         self.host, self.port = host, int(port)
         self.gen = gen
@@ -60,14 +69,16 @@ class Host:
         self.sock.listen()
         self.thread = None
         self.in_other_thread = False
+        self.private = private
         self.array_clients = list()
-        self.users = ['0']
+        self.users = list()
+        self.whitelist = list()
 
     def send_map(self):
         client, adr = self.sock.accept()
         if client not in self.array_clients:
             self.array_clients.append(client)
-            self.send(self.gen + '<>' + '|'.join([str(self.maxclient)] + self.users), client)
+            self.send(self.gen + '<>' + '|'.join([str(self.maxclient)] + self.users) + f'<>{int(self.private)}:{"|".join(self.whitelist)}-end-', client)
             self.in_other_thread = False
 
     def send(self, message, client=None):
@@ -102,6 +113,8 @@ class Unknown:
         self.users = ['i']
         self.maxclient = 0
         self.array_clients = list()
+        self.private = False
+        self.whitelist = list()
 
     def send(self, *args):
         pass
