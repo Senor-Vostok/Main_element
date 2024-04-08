@@ -113,12 +113,9 @@ class EventHandler:
             for i in range(-2, 3):
                 for j in range(-2, 3):
                     self.screen_world.biomes[start_point[0] + i][start_point[1] + j][4] = fraction
-                    if self.contact.protocol == 'host':
-                        message += f'change-0-{"|".join(self.screen_world.biomes[start_point[0] + i][start_point[1] + j])}-end-'
-            if self.contact.protocol == 'host':
-                self.contact.send(message)
-            if c > 0 and self.contact.protocol == 'host':
-                self.contact.send(f"uid-0-{fraction}|{'_'.join(map(str, start_point))}-end-", self.contact.array_clients[c - 1])
+                    message += f'change-0-{"|".join(self.screen_world.biomes[start_point[0] + i][start_point[1] + j])}-end-'
+            if c > 0:
+                self.contact.send(f"{message}uid-0-{fraction}|{'_'.join(map(str, start_point))}-end-", self.contact.array_clients[c - 1])
         self.init_player(self.info_players[0][1], self.info_players[0][2])
 
     def init_world(self, matr=None):
@@ -148,13 +145,15 @@ class EventHandler:
                     if self.contact.protocol == 'host':
                         self.contact.array_clients.pop(-1).close()
                 else:
-                    self.contact.users.append(mess[1].split('|')[1])
-                    if not self.loaded_save:
-                        self.info_players.append([mess[1].split('|')[1]])
+                    if mess[1].split('|')[1] != self.me.uid:
+                        self.contact.users.append(mess[1].split('|')[1])
+                        if not self.loaded_save:
+                            self.info_players.append([mess[1].split('|')[1]])
             if mess[0] == 'uid':
                 fraction = mess[1].split('|')[0]
                 coord = [int(i) for i in (mess[1].split('|')[1]).split('_')]
                 self.init_player(fraction, coord)
+                self.contact.users.append(self.me.uid)
 
     def machine(self):
         try:
