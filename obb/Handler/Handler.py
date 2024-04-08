@@ -144,11 +144,10 @@ class EventHandler:
                 if self.contact.private and mess[1].split('|')[1] not in self.contact.whitelist:
                     if self.contact.protocol == 'host':
                         self.contact.array_clients.pop(-1).close()
-                else:
-                    if mess[1].split('|')[1] != self.me.uid:
-                        self.contact.users.append(mess[1].split('|')[1])
-                        if not self.loaded_save:
-                            self.info_players.append([mess[1].split('|')[1]])
+                elif mess[1].split('|')[1] != self.me.uid and mess[1].split('|')[1] not in self.contact.users:
+                    self.contact.users.append(mess[1].split('|')[1])
+                    if not self.loaded_save:
+                        self.info_players.append([mess[1].split('|')[1]])
             if mess[0] == 'uid':
                 fraction = mess[1].split('|')[0]
                 coord = [int(i) for i in (mess[1].split('|')[1]).split('_')]
@@ -161,7 +160,7 @@ class EventHandler:
             if self.contact.protocol == 'client': self.decode_message(self.contact.check_message())
         except Exception:
             pass
-        if len(self.contact.users) == self.contact.maxclient + 1:
+        if len(self.contact.users) >= self.contact.maxclient + 1:
             if not self.screen_world.rendering:
                 if self.contact.protocol == 'unknown' or self.contact.protocol == 'host':
                     self.init_players()
