@@ -95,6 +95,7 @@ class EventHandler:
             self.init_player(self.info_players[0][1], self.info_players[0][2])
             return
         whitelist = list()
+        message = ''
         for c in range(len(self.info_players)):
             fraction = random.choice(self.fractions)  # создание фракции
             while fraction in whitelist:
@@ -109,13 +110,12 @@ class EventHandler:
             self.start_points.append(start_point)
             self.info_players[c].append([start_point[0], start_point[1]])
             self.screen_world.biomes[start_point[0]][start_point[1]][1] = fraction
-            message = ''
             for i in range(-2, 3):
                 for j in range(-2, 3):
                     self.screen_world.biomes[start_point[0] + i][start_point[1] + j][4] = fraction
                     message += f'change-0-{"|".join(self.screen_world.biomes[start_point[0] + i][start_point[1] + j])}-end-'
-            if c > 0:
-                self.contact.send(f"{message}uid-0-{fraction}|{'_'.join(map(str, start_point))}-end-", self.contact.array_clients[c - 1])
+        for c in range(1, len(self.info_players)):
+            self.contact.send(f"{message}uid-0-{self.info_players[c][1]}|{'_'.join(map(str, self.info_players[c][2]))}-end-", self.contact.array_clients[c - 1])
         self.init_player(self.info_players[0][1], self.info_players[0][2])
 
     def init_world(self, matr=None):
@@ -174,7 +174,7 @@ class EventHandler:
             self.camera.inter()
         else:
             self.screen_world.rendering = False
-            self.screen.blit(self.textures.font.render(f'{len(self.contact.users)}/{self.contact.maxclient + 1}', False, DEFAULT_COLOR), self.centre)
+            self.screen.blit(self.textures.font.render(f'{len(self.contact.users) + int(bool(self.contact.protocol == "client"))}/{self.contact.maxclient + 1}', False, DEFAULT_COLOR), self.centre)
             if 'ingame' in self.interfaces: close(self, 'ingame', False)
 
     def go_back_to_menu(self, save=True):
