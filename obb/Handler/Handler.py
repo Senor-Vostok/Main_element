@@ -109,11 +109,14 @@ class EventHandler:
             self.start_points.append(start_point)
             self.info_players[c].append([start_point[0], start_point[1]])
             self.screen_world.biomes[start_point[0]][start_point[1]][1] = fraction
+            message = ''
             for i in range(-2, 3):
                 for j in range(-2, 3):
                     self.screen_world.biomes[start_point[0] + i][start_point[1] + j][4] = fraction
                     if self.contact.protocol == 'host':
-                        self.contact.send(f'change-0-{"|".join(self.screen_world.biomes[start_point[0] + i][start_point[1] + j])}-end-')
+                        message += f'change-0-{"|".join(self.screen_world.biomes[start_point[0] + i][start_point[1] + j])}-end-'
+            if self.contact.protocol == 'host':
+                self.contact.send(message)
             if c > 0 and self.contact.protocol == 'host':
                 self.contact.send(f"uid-0-{fraction}|{'_'.join(map(str, start_point))}-end-", self.contact.array_clients[c - 1])
         self.init_player(self.info_players[0][1], self.info_players[0][2])
@@ -124,7 +127,7 @@ class EventHandler:
         if not matr:
             self.generation(200)
             matr = self.matr
-        self.world_coord = 0
+        self.world_coord = BARRIER_SIZE
         self.screen_world = World(self.screen, self.centre, [self.world_coord, self.world_coord], matr, self)  # создание динамической сетки
         self.screen_world.create()
         if not self.loaded_save:
@@ -217,7 +220,7 @@ class EventHandler:
         if count > 4:
             count = 4
         self.contact = Host('0.0.0.0', int(self.interfaces['online'].port.text[:-1]),
-                            '\n'.join('\t'.join('|'.join(k) for k in i) for i in matr),
+                            ':n:'.join(':t:'.join('|'.join(k) for k in i) for i in matr),
                             count - 1, self.loaded_save)
         self.contact.users.append(self.me.uid)
         self.contact.whitelist = [user[0] for user in self.info_players]
@@ -237,14 +240,14 @@ class EventHandler:
                 self.go_back_to_menu(False)
                 return
             self.contact.users = users.split('|')
-            self.world_coord = len(self.contact.gen.split('\n')) // 2
-            self.init_world([[k.split('|') for k in i.split('\t')] for i in self.contact.gen.split('\n')])
+            self.world_coord = len(self.contact.gen.split(':n:')) // 2
+            self.init_world([[k.split('|') for k in i.split(':t:')] for i in self.contact.gen.split(':n:')])
 
     def make_save(self):
         with open(f'saves/{self.name_save}.maiso', mode='w') as file:
-            massive = '\n'.join('\t'.join('|'.join(j) for j in i) for i in self.screen_world.biomes)
-            info_fractions = '\n'.join([f'{"|".join([i[0], i[1]])}|{"|".join(map(str, i[2]))}' for i in self.info_players])
-            file.write(f"{info_fractions}:{massive}")
+            massive = ':n:'.join(':t:'.join('|'.join(j) for j in i) for i in self.screen_world.biomes)
+            info_fractions = ':n:'.join([f'{"|".join([i[0], i[1]])}|{"|".join(map(str, i[2]))}' for i in self.info_players])
+            file.write(f"{info_fractions}:l:{massive}")
 
     def open_save(self):
         self.interfaces = dict()
@@ -289,9 +292,9 @@ class EventHandler:
         else:
             ground.structure = None
             ground.biome[1] = "null"
-        if 'buildmenu' in self.interfaces:
-            self.interfaces.pop('buildmenu')
         if info:
+            if 'buildmenu' in self.interfaces:
+                self.interfaces.pop('buildmenu')
             self.contact.send(f'change-0-' + '|'.join(ground.biome) + '-end-')
 
     def buy_ground(self, xoy, fraction, buyer):

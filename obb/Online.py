@@ -11,11 +11,12 @@ class Client:
         self.host, self.port = host, int(port)
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.loaded_map = False
-        self.gen = ''
         self.users = []
+        self.gen = ''
         self.maxclient = None
         self.private = False
         self.whitelist = list()
+        self.cache = ''
 
     def connecting(self):
         try:
@@ -28,24 +29,27 @@ class Client:
         ready_socks, _, _ = select.select([self.sock], [], [], 0)
         for info in ready_socks:
             message = self.__encoding(info)
-            if not self.loaded_map:
-                self.gen += message
-                if '-end-' in message:
+            self.cache += message
+            if self.cache[-5:] == '-end-':
+                info = '-end-'.join(self.cache.split('-end-')[:-1])
+                if not self.loaded_map:
+                    mess = (info.split('-end-')[0]).split('-0-')
+                    self.cache = self.cache.split('-end-')[1]
                     self.loaded_map = True
-                    self.gen += message.split('<>')[0]
+                    self.gen = mess[0]
                     with open('data/user/information', mode='rt') as uid:
                         uid = uid.read()
                     self.send(f'join-0-{self.nickname}|{uid}-end-')
-                    self.maxclient = int(message.split('<>')[1][0])
-                    self.private = bool(int(message.split('<>')[2][0]))
-                    self.whitelist = ''.join(((message.split('<>')[2]).split(':')[1]).split('-end-')).split('|')
+                    self.maxclient = int(mess[1][0])
+                    self.private = bool(int(mess[2][0]) - 1)
+                    self.whitelist = mess[3].split('|')
                     if uid not in self.whitelist and self.private:
                         self.sock.close()
                         return 'close'
-                    print('loaded')
-                    return message.split('<>')[1][2:]
-            else:
-                return message
+                    return mess[1][2:]
+                else:
+                    self.cache = self.cache.split('-end-')[1]
+                    return info
         return None
 
     def send(self, message):
@@ -55,7 +59,7 @@ class Client:
         encode = code.recv(8192)
         message = encode.decode('utf-8')
         code.sendall(bytes(' ', 'utf-8'))
-        return message
+        return ''.join(message.split())
 
 
 class Host:
@@ -78,7 +82,7 @@ class Host:
         client, adr = self.sock.accept()
         if client not in self.array_clients:
             self.array_clients.append(client)
-            self.send(self.gen + '<>' + '|'.join([str(self.maxclient)] + self.users) + f'<>{int(self.private)}:{"|".join(self.whitelist)}-end-', client)
+            self.send(self.gen + '-0-' + '|'.join([str(self.maxclient)] + self.users) + f'-0-{int(self.private) + 1}-0-{"|".join(self.whitelist)}-end-', client)
             self.in_other_thread = False
 
     def send(self, message, client=None):
