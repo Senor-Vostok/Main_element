@@ -3,13 +3,14 @@ import pygame
 from obb.Image_rendering.Textures import Textures
 from numpy import floor
 from perlin_noise import PerlinNoise
-from obb.Constants import DEFAULT_COLOR, OCTAVES_G, PERIOD_G, AMP_G, PERCENT_MOVE_Y, BARRIER_SIZE
+from obb.Constants import DEFAULT_COLOR, OCTAVES_G, PERIOD_G, AMP_G, PERCENT_MOVE_Y, BARRIER_SIZE, PERIOD_H, OCTAVES_H
 
 
 class Generation:
     def __init__(self, massive, screen, centre):
         self.textures = Textures()
         self.translate = {0: 'water', 1: 'sand', 2: 'flower', 3: 'ground', 4: 'stone', 5: 'snow'}
+        self.temperature = {-2:'frozen', -1:'cold', 0:'middle', 1:'warm', 2:'hot'}
         self.biome_massive = [[['null', 'null', '0', '0', 'null', '0'] for _ in range(massive)] for _ in range(massive)]  # Первый биом второй структура
         self.massive = massive
         self.win = screen
@@ -57,3 +58,19 @@ class Generation:
                 self.biome_massive[i][j][0] = self.translate[landscale[i][j]]
                 self.biome_massive[i][j][2] = str(i + BARRIER_SIZE)
                 self.biome_massive[i][j][3] = str(j + BARRIER_SIZE)
+        # seed = random.randint(1000, 9000)
+        # noise = PerlinNoise(octaves=OCTAVES_H, seed=seed)
+        # landscale = [[0 for _ in range(self.massive)] for _ in range(self.massive)]
+        # for x in range(self.massive):
+        #     for z in range(self.massive):
+        #         y = floor(noise([x / PERIOD_H, z / PERIOD_H]) * AMP_G)
+        #         landscale[int(x)][int(z)] = landscale[int(x)][int(z)] + "_" + self.temperature[int(y)]
+        #
+        #     procent = int(((x / self.massive) * 100) // 1)
+        #     self.win.blit(self.textures.loading, (self.centre[0] - self.textures.loading.get_rect()[2] // 2,
+        #                                           self.centre[1] - self.textures.loading.get_rect()[3] // 2))
+        #     self.win.blit(self.textures.font.render(f'{procent}%', False, DEFAULT_COLOR),
+        #                   (self.centre[0], self.centre[1] + PERCENT_MOVE_Y * self.textures.resizer))
+        #     pygame.display.update()
+
+
