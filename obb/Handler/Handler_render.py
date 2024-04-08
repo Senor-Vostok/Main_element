@@ -40,7 +40,7 @@ def rendering(handler, machine):
     try:
         for interface in handler.interfaces.values():
             interface.surface.update(handler.camera.mouse_click, handler.screen, c)
-    except Exception as e:
+    except Exception:
         pass
     update_effects(handler)
     point_pos = (handler.camera.mouse_click[0] - 10, handler.camera.mouse_click[1] - 10)

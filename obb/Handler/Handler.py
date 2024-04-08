@@ -28,13 +28,13 @@ class EventHandler:
         pygame.mouse.set_visible(False)
         self.matr, self.screen_world, self.name_save = None, None, None
         self.loaded_save, self.pressed = False, False
+        self.save_point_mouse = [0, 0]
         self.world_coord = 0
         self.camera = Cam()
         self.open_some, self.flag = True, True
         self.fractions = ['water', 'fire', 'air', 'earth']
         self.start_points = list()
         self.info_players = list()
-        self.turn = None  # Чей ход
         self.contact = Unknown()
         self.interfaces = dict()
         self.effects = list()
@@ -125,7 +125,7 @@ class EventHandler:
         self.open_some = False
         self.interfaces = dict()
         if not matr:
-            self.generation(200)
+            self.generation(100)
             matr = self.matr
         self.world_coord = BARRIER_SIZE
         self.screen_world = World(self.screen, self.centre, [self.world_coord, self.world_coord], matr, self)  # создание динамической сетки
@@ -140,7 +140,7 @@ class EventHandler:
                 i, j = int(mess[1].split('|')[2]), int(mess[1].split('|')[3])
                 self.screen_world.biomes[i][j] = mess[1].split('|')
                 i, j = i - self.screen_world.world_coord[0], j - self.screen_world.world_coord[1]
-                if self.screen_world.sq1 > i >= 0 and self.screen_world.sq2 > j >= 0:
+                if self.screen_world.sq2 > i >= 0 and self.screen_world.sq1 > j >= 0:
                     self.screen_world.great_world[i][j].fraction = mess[1].split('|')[4]
                     self.place_structure(self.screen_world.great_world[i][j], mess[1].split('|')[1], False)
             if mess[0] == 'join':
@@ -166,7 +166,6 @@ class EventHandler:
             if not self.screen_world.rendering:
                 if self.contact.protocol == 'unknown' or self.contact.protocol == 'host':
                     self.init_players()
-                time.sleep(1)
                 show_ingame(self, self.centre)
                 self.move_to_coord(self.me.start_point)
                 if self.name_save:
@@ -212,7 +211,7 @@ class EventHandler:
 
     def host_game(self, matr):
         if not matr:
-            self.generation(200)
+            self.generation(100)
             matr = self.matr
         count = int(self.interfaces['online'].count.text[:-1])
         if count < 2:
@@ -303,7 +302,7 @@ class EventHandler:
         if buyer.resources >= ground_cost and biome[4] == 'null':
             x = xoy[0] - self.screen_world.world_coord[0]
             y = xoy[1] - self.screen_world.world_coord[1]
-            if self.screen_world.sq1 > x >= 0 and self.screen_world.sq2 > y >= 0:
+            if self.screen_world.sq2 > x >= 0 and self.screen_world.sq1 > y >= 0:
                 self.screen_world.great_world[x][y].fraction = fraction
             self.screen_world.biomes[xoy[0]][xoy[1]][4] = fraction
             buyer.resources -= ground_cost
