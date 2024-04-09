@@ -89,5 +89,5 @@ def show_settings(self, centre):
     self.interfaces = dict()
     show_menu(self, self.centre)
     setting = Interfaces.Setting(centre, self.textures)
-    setting.nickname.text = "ТЫ ЛОХ/"
+    setting.nickname.text = "НТ/"
     self.interfaces['setting'] = setting

@@ -14,6 +14,9 @@ from obb.Handler.Handler_show import *
 from obb.Constants import DEFAULT_COLOR, BACKGROUND_COLOR, BARRIER_SIZE
 from obb.Handler.Handler_render import rendering
 
+pygame.scrap.init()
+pygame.scrap.set_mode(pygame.SCRAP_CLIPBOARD)
+#pygame.scrap.set_mode(pygame.SCRAP_SELECTION)
 
 class EventHandler:
     def __init__(self):  # TODO: исправить присваивание bot_id и id
@@ -139,7 +142,7 @@ class EventHandler:
                 i, j = i - self.screen_world.world_coord[0], j - self.screen_world.world_coord[1]
                 if self.screen_world.sq2 > i >= 0 and self.screen_world.sq1 > j >= 0:
                     self.screen_world.great_world[i][j].fraction = mess[1].split('|')[4]
-                    self.place_structure(self.screen_world.great_world[i][j], mess[1].split('|')[1], False)
+                    self.place_structure(self.screen_world.great_world[i][j], mess[1].split('|')[1], self, False)
             if mess[0] == 'join':
                 if self.contact.private and mess[1].split('|')[1] not in self.contact.whitelist:
                     if self.contact.protocol == 'host':
@@ -276,12 +279,19 @@ class EventHandler:
         self.me.action_pts -= struct_action_pts
         self.me.resources -= struct_cost
 
+    def tower_area(self, ground):
+        for i in range(-2, 3):
+            for j in range(-2, 3):
+                self.buy_ground((int(ground.biome[2]) + i, int(ground.biome[3]) + j), self.me.fraction_name, self.me, False)
+
     def place_structure(self, ground, structure=None, info=True, me=False):
         if not structure:
             structure = self.structures[self.now_structure]
         if structure != 'null': # я могу строить?
             if (self.me.fraction_name == ground.fraction and me) or not me:
                 ground.biome[1] = structure
+                if structure == "tower":
+                    self.tower_area(ground)
                 try:
                     ground.structure = ClassicStructure(self.textures.animations_structures[structure][0][0], (ground.rect[0] + ground.rect[2] // 2, ground.rect[1] + ground.rect[3] // 2), structure, self.textures)
                 except Exception:
@@ -294,8 +304,10 @@ class EventHandler:
                 self.interfaces.pop('buildmenu')
             self.contact.send(f'change-0-' + '|'.join(ground.biome) + '-end-')
 
-    def buy_ground(self, xoy, fraction, buyer):
+    def buy_ground(self, xoy, fraction, buyer, takes_money=True):
         biome = self.screen_world.biomes[xoy[0]][xoy[1]]
+        if biome[0] == 'barrier': # проверка на барьер
+            return
         ground_cost = int(self.rules['GroundsCosts'][biome[0]][0])
         if buyer.resources >= ground_cost and biome[4] == 'null':
             x = xoy[0] - self.screen_world.world_coord[0]
@@ -303,7 +315,8 @@ class EventHandler:
             if self.screen_world.sq2 > x >= 0 and self.screen_world.sq1 > y >= 0:
                 self.screen_world.great_world[x][y].fraction = fraction
             self.screen_world.biomes[xoy[0]][xoy[1]][4] = fraction
-            buyer.resources -= ground_cost
+            if takes_money:
+                buyer.resources -= ground_cost
             self.contact.send(f'change-0-' + '|'.join(self.screen_world.biomes[xoy[0]][xoy[1]]) + '-end-')
         elif biome[4] == 'null':
             print('no mani')
