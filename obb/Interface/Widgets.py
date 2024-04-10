@@ -123,10 +123,15 @@ class Surface:
 class Label(pygame.sprite.Sprite):
     def __init__(self, text, xoy, size, color=DEFAULT_COLOR):
         pygame.sprite.Sprite.__init__(self)
+        self.color = color
         self.text = text
         self.font = pygame.font.SysFont("progresspixel-bold", size)
         self.label = self.font.render(self.text, 1, color)
         self.rect = self.label.get_rect(center=xoy)
+
+    def new_text(self, text):
+        self.text = text
+        self.label = self.font.render(text, 1, self.color)
 
     def draw(self, screen):
         screen.blit(self.label, (self.rect.x, self.rect.y))
