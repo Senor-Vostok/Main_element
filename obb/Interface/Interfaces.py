@@ -49,22 +49,26 @@ class PopupMenu:
 class InGame:
     def __init__(self, xoy, textures, fraction):
         r = textures.resizer
-        self.button_end = Button(textures.ingame['button_end'], (xoy[0] - 755 * r, xoy[1] + 510 * r))
         self.button_back = Button(textures.ingame[f'back_{fraction}'], (xoy[0] * 2 - 40 * r, 40 * r))
-        self.surface = Surface(self.button_end, self.button_back)
+        self.resource_ico = BackGround(textures.ingame['resource'][0], (xoy[0] * 2 - 300 * r, 40 * r))
+        self.count_resource = Label('-', (xoy[0] * 2 - 240 * r, 40 * r), int(30 * r))
+        self.back1 = BackGround(textures.ingame['back'][0], (xoy[0], 40 * r))
+        self.back2 = BackGround(textures.ingame['back'][0], (xoy[0], 1040 * r))
+        self.surface = Surface(self.back1, self.back2, self.button_back, self.resource_ico, self.count_resource)
 
 
 class BuildMenu:
-    def __init__(self, xoy, textures):
+    def __init__(self, xoy, textures, coord_select_ground):
         r = textures.resizer
         self.background = BackGround(textures.buildmenu['background'][0], (xoy[0] + 705 * r, xoy[1]))
+        self.select_ground = BackGround(textures.select, coord_select_ground)
         self.button_project = Button(textures.buildmenu['button_project'], (xoy[0] + 705 * r, xoy[1] + 465 * r))
         self.down = Button(textures.buildmenu['down'], (xoy[0] + 705 * r, xoy[1] + 361 * r))
         self.up = Button(textures.buildmenu['up'], (xoy[0] + 705 * r, xoy[1] - 381 * r))
         self.structure = BackGround(
             pygame.transform.scale(textures.animations_structures['tower'][0][0], (360 * r, 540 * r)),
             (xoy[0] + 705 * r, xoy[1]))
-        self.surface = Surface(self.background, self.button_project, self.down, self.up, self.structure)
+        self.surface = Surface(self.background, self.select_ground, self.button_project, self.down, self.up, self.structure)
 
 
 class Online_connect:
