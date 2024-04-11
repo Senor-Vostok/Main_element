@@ -9,12 +9,13 @@ class Bot:
         self.uid = "0" * (9 - len(str(id))) + str(id)
         self.fraction_name = None
         self.resources = 0
-        self.exist_structers = []
+        self.exist_structers = ["tower", "mill", "mine", "homes"]
         self.structures_list = dict()
         self.my_ground = list()
         self.can_i_do_smth = True
         self.thread = None
         self.start_point = (None, None)  # точка спавна фракции
+        print("сам ты абортыш, я родился из кода я тут и полягу")
 
     def think_smth_please(self, handler):
         if self.can_i_do_smth:
@@ -22,6 +23,7 @@ class Bot:
             self.thread.start()
             dodo = random.choice([self.build_smth, self.buy_smth])
             dodo(handler)
+            print(f"ну я {self.uid} тут подумал что ты клоун")
 
     def cooldown(self):
         self.can_i_do_smth = False
@@ -29,13 +31,16 @@ class Bot:
         self.can_i_do_smth = True
 
     def buy_smth(self, handler):
-        pass
+        print("купил прада")
 
     def build_smth(self, handler):
         field = random.choice(self.my_ground)
         i, j = int(field[2]), int(field[3])
-        structure = random.choice(handler.exist_structers)
+        structure = random.choice(self.exist_structers)
         handler.screen_world.biomes[i][j][1] = structure
         i, j = i - handler.screen_world.world_coord[0], j - handler.screen_world.world_coord[1]
+        print("я построил")
         if handler.screen_world.sq2 > i >= 0 and handler.screen_world.sq1 > j >= 0:
-            handler.place_structure(handler.screen_world.great_world[i][j], structure, handler.screen_world.biomes[1], True, False)
+            handler.place_structure(handler.screen_world.great_world[i][j], structure, handler.screen_world.biomes[1], True, False, self)
+        else:
+            handler.area(field, self)

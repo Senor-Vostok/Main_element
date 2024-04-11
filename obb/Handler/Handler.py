@@ -1,6 +1,7 @@
 import os
 import pygame.display
-import obb.Objects.Player as Player
+from obb.Objects.Player import Player
+from obb.Objects.Bot import Bot
 from obb.Image_rendering.Textures import Textures
 from obb.Image_rendering.Machine import World
 from obb.Generation import Generation
@@ -18,7 +19,7 @@ class EventHandler:
     def __init__(self):  # TODO: исправить присваивание bot_id и id
         pygame.init()
         with open('data/user/information', mode='rt') as file:
-            self.me = Player.Player(int(file.read()))
+            self.me = Player(int(file.read()))
         self.textures = Textures()
         self.size = GetSystemMetrics(0), GetSystemMetrics(1)
         self.centre = (self.size[0] // 2, self.size[1] // 2)
@@ -34,6 +35,8 @@ class EventHandler:
         self.info_players = list()
         self.contact = Unknown()
         self.interfaces = dict()
+        self.bots = list()
+
         self.effects = list()
         self.structures = [i for i in self.textures.animations_structures]
         self.now_structure = 0
@@ -72,6 +75,14 @@ class EventHandler:
         self.me.resources = 15
         self.me.start_point = start_point
 
+    def init_bot(self, fraction, start_point):
+        self.bots.append(Bot(len(self.bots)))
+        self.bots[-1].fraction_name = fraction
+        self.bots[-1].units_count = 100
+        self.bots[-1].action_pts = 2
+        self.bots[-1].resources = 15
+        self.bots[-1].start_point = start_point
+
     def init_players(self):
         if len(self.info_players[0]) > 1:
             for c in range(1, len(self.info_players)):
@@ -96,13 +107,19 @@ class EventHandler:
             start_points.append(start_point)
             self.info_players[c].append([start_point[0], start_point[1]])
             self.screen_world.biomes[start_point[0]][start_point[1]][1] = fraction
+            if "bot" in self.info_players[c][0]:
+                self.init_bot(self.info_players[c][1], self.info_players[c][2])
             for i in range(-2, 3):
                 for j in range(-2, 3):
+                    if "bot" in self.info_players[c][0]:
+                        self.bots[-1].my_ground.append(self.screen_world.biomes[start_point[0] + i][start_point[1] + j])
                     self.screen_world.biomes[start_point[0] + i][start_point[1] + j][4] = fraction
                     message += f'change-0-{"|".join(self.screen_world.biomes[start_point[0] + i][start_point[1] + j])}-end-'
         for c in range(1, len(self.info_players)):
-            self.contact.send(f"{message}uid-0-{self.info_players[c][1]}|{'_'.join(map(str, self.info_players[c][2]))}-end-", self.contact.array_clients[c - 1])
+            if 'bot' not in self.info_players[c][0]:
+                self.contact.send(f"{message}uid-0-{self.info_players[c][1]}|{'_'.join(map(str, self.info_players[c][2]))}-end-", self.contact.array_clients[c - 1])
         self.init_player(self.info_players[0][1], self.info_players[0][2])
+
 
     def init_world(self, matr=None):
         self.open_some = False
@@ -142,6 +159,8 @@ class EventHandler:
 
     def machine(self):
         try:
+            for bot in self.bots:
+                bot.think_smth_please(self)
             if self.contact.protocol == 'host': self.decode_message(self.contact.hosting())
             if self.contact.protocol == 'client': self.decode_message(self.contact.check_message())
         except Exception:
@@ -149,6 +168,8 @@ class EventHandler:
         if len(self.contact.users) + int(bool(self.contact.protocol == "client")) >= self.contact.maxclient + 1:
             if not self.screen_world.rendering:
                 if self.contact.protocol == 'unknown' or self.contact.protocol == 'host':
+                    for i in range(4 - len(self.contact.users)):
+                        self.info_players.append([f'bot{i}'])
                     self.init_players()
                 show_ingame(self, self.centre)
                 self.move_to_coord(self.me.start_point)
@@ -246,22 +267,23 @@ class EventHandler:
         self.me.action_pts -= struct_action_pts
         self.me.resources -= struct_cost
 
-    def area(self, ground):
-        if ground.biome[1] == "tower":
+    def area(self, ground, buyer):
+        if ground[1] == "tower":
             for i in range(-2, 3):
                 for j in range(-2, 3):
-                    self.buy_ground((int(ground.biome[2]) + i, int(ground.biome[3]) + j), self.me.fraction_name, self.me, False)
+                    self.buy_ground((int(ground[2]) + i, int(ground[3]) + j), buyer.fraction_name, buyer, False)
 
-    def place_structure(self, ground, structure=None, info=True, me=False):
+    def place_structure(self, ground, structure=None, info=True, me=False, buyer=None):
         if not structure:
             structure = self.structures[self.now_structure]
         if structure != 'null':  # я могу строить?
             if ground.biome[1] != 'null' or ground.biome[4] != self.me.fraction_name:
                 self.effects.append(Information(Y_TEXT_INFORMATION, "Вы не можете здесь строить", self.textures.resizer))
                 return
-            if (self.me.fraction_name == ground.biome[4] and me) or not me:
+            if not me or (buyer.fraction_name == ground.biome[4] and me):
                 ground.biome[1] = structure
-                self.area(ground)
+                if buyer:
+                    self.area(ground.biome, buyer)
                 try:
                     ground.structure = ClassicStructure(self.textures.animations_structures[structure][0][0], (ground.rect[0] + ground.rect[2] // 2, ground.rect[1] + ground.rect[3] // 2), structure, self.textures)
                 except Exception:

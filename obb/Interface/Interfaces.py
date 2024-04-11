@@ -53,7 +53,7 @@ class InGame:
         self.resource_ico = BackGround(textures.ingame['resource'][0], (xoy[0] * 2 - 300 * r, 40 * r))
         self.count_resource = Label('-', (xoy[0] * 2 - 240 * r, 40 * r), int(30 * r))
         self.back1 = BackGround(textures.ingame['back'][0], (xoy[0], 40 * r))
-        self.back2 = BackGround(textures.ingame['back'][0], (xoy[0], 1040 * r))
+        self.back2 = BackGround(textures.ingame['back'][0], (xoy[0], xoy[1] * 2 - 40 * r))
         self.surface = Surface(self.back1, self.back2, self.button_back, self.resource_ico, self.count_resource)
 
 

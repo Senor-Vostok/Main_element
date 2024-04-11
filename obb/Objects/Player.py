@@ -3,8 +3,6 @@ class Player:
         self.id = id
         self.uid = "0" * (9 - len(str(id))) + str(id)
         self.fraction_name = None
-        self.units_count = 0
-        self.action_pts = 0 #кол-во ходов
         self.resources = 0
         self.structures_list = [] #структуры во владении
 
