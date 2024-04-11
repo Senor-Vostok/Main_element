@@ -72,7 +72,7 @@ class EventHandler:
         self.me.fraction_name = fraction
         self.me.units_count = 100
         self.me.action_pts = 2
-        self.me.resources = 15
+        self.me.resources = 20
         self.me.start_point = start_point
 
     # def init_bot(self, fraction, start_point):
@@ -255,26 +255,26 @@ class EventHandler:
         saves.add_saves(files, show_choicegame, self)
         self.interfaces['save_menu'] = saves
 
-    # def check_structure_placement(self, ground, structure):
-    #     if ground.biome[0] not in self.rules['StructuresPermissions'][structure]:
-    #         print('nelza tut stroit')
-    #         # сообщить во всплывающем окошке, что нельзя строить
-    #         return False
-    #     struct_cost = int(self.rules['StructuresCosts'][self.structures[self.now_structure]][0])
-    #     struct_action_pts = int(self.rules['StructuresActionPoints'][self.structures[self.now_structure]][0])
-    #     if self.me.action_pts < struct_action_pts:
-    #         print("no points((9(")
-    #         return False
-    #     if self.me.resources < struct_cost:
-    #         print('malo denyak, vzuh, and ti bezdomni (ﾉ◕ヮ◕)ﾉ*:･ﾟ✧')
-    #         return False
-    #     self.update_placement_state(ground, structure, struct_cost, struct_action_pts)
-    #     return True
-
-    def update_placement_state(self, ground, structure, struct_cost, struct_action_pts):
+    def check_structure_placement(self, buyer, ground, structure):
+        if ground.biome[0] not in self.rules['StructuresPermissions'][structure]:
+            print('nelza tut stroit')
+            # сообщить во всплывающем окошке, что нельзя строить
+            return False
+        struct_cost = int(self.rules['StructuresCosts'][self.structures[self.now_structure]][0])
+        struct_action_pts = int(self.rules['StructuresActionPoints'][self.structures[self.now_structure]][0])
+        if self.me.action_pts < struct_action_pts:
+            print("no points((9(")
+            return False
+        if self.me.resources < struct_cost:
+            print('malo denyak, vzuh, and ti bezdomni (ﾉ◕ヮ◕)ﾉ*:･ﾟ✧')
+            return False
         ground.biome[1] = structure
-        self.me.action_pts -= struct_action_pts
-        self.me.resources -= struct_cost
+        self.update_placement_state(buyer, struct_cost, struct_action_pts)
+        return True
+
+    def update_placement_state(self, buyer, cost, action_pts):
+        buyer.action_pts -= action_pts
+        buyer.resources -= cost
 
     def place_structure(self, ground, structure=None, info=True, me=False):
         if not structure:
@@ -283,7 +283,11 @@ class EventHandler:
             if (self.me.fraction_name == ground.fraction and me) or not me:
                 ground.biome[1] = structure
                 try:
-                    ground.structure = ClassicStructure(self.textures.animations_structures[structure][0][0], (ground.rect[0] + ground.rect[2] // 2, ground.rect[1] + ground.rect[3] // 2), structure, self.textures)
+                    if self.check_structure_placement(self.me, ground, structure):
+                        ground.structure = ClassicStructure(self.textures.animations_structures[structure][0][0], (ground.rect[0] + ground.rect[2] // 2, ground.rect[1] + ground.rect[3] // 2), structure, self.textures)
+                    else:
+                        ground.structure = None
+                        ground.biome[1] = "null"
                 except Exception:
                     ground.structure = MainStructure(self.textures.animations_structures[structure][0], (ground.rect[0] + ground.rect[2] // 2, ground.rect[1] + ground.rect[3] // 2), structure, self.textures)
         else:
@@ -294,21 +298,38 @@ class EventHandler:
                 self.interfaces.pop('buildmenu')
             self.contact.send(f'change-0-' + '|'.join(ground.biome) + '-end-')
 
+    def check_ground_purchase(self, buyer, ground):
+        ground_cost = int(self.rules['GroundsCosts'][ground.biome[0]][0])
+        ground_action_pts = int(self.rules['GroundsActionPoints'][ground.biome[0]][0])
+        if buyer.action_pts < ground_action_pts:
+            print("no points((9(")
+            return False
+        if buyer.resources < ground_cost:
+            print('malo denyak, vzuh, and ti bezdomni (ﾉ◕ヮ◕)ﾉ*:･ﾟ✧')
+            return False
+
+        x = int(ground.biome[2]) - self.screen_world.world_coord[0]
+        y = int(ground.biome[3]) - self.screen_world.world_coord[1]
+        for i in range(-1, 2): # Проверка фракции соседних клеток
+            for j in range(-1, 2):
+                if i == j == 0:
+                    continue
+                neighbour_ground = self.screen_world.great_world[x + i][y + j]
+                if neighbour_ground.biome[4] == buyer.fraction_name:
+                    self.update_placement_state(buyer, ground_cost, ground_action_pts)
+                    return True
+
     def buy_ground(self, xoy, fraction, buyer):
-        biome = self.screen_world.biomes[xoy[0]][xoy[1]]
-        ground_cost = int(self.rules['GroundsCosts'][biome[0]][0])
-        if buyer.resources >= ground_cost and biome[4] == 'null':
-            x = xoy[0] - self.screen_world.world_coord[0]
-            y = xoy[1] - self.screen_world.world_coord[1]
-            if self.screen_world.sq2 > x >= 0 and self.screen_world.sq1 > y >= 0:
+        x = xoy[0] - self.screen_world.world_coord[0]
+        y = xoy[1] - self.screen_world.world_coord[1]
+        ground = self.screen_world.great_world[x][y]
+        if ground.biome[4] == 'null':
+            if self.check_ground_purchase(buyer, ground) and self.screen_world.sq2 > x >= 0 and self.screen_world.sq1 > y >= 0:
                 self.screen_world.great_world[x][y].fraction = fraction
-            self.screen_world.biomes[xoy[0]][xoy[1]][4] = fraction
-            buyer.resources -= ground_cost
-            self.contact.send(f'change-0-' + '|'.join(self.screen_world.biomes[xoy[0]][xoy[1]]) + '-end-')
-        elif biome[4] == 'null':
-            print('no mani')
+                self.screen_world.biomes[xoy[0]][xoy[1]][4] = fraction
+                self.contact.send(f'change-0-' + '|'.join(self.screen_world.biomes[xoy[0]][xoy[1]]) + '-end-')
         else:
-            print('chuzoy rayon')
+            print('zanyato')
 
     def click_handler(self):
         c = None
