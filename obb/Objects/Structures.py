@@ -11,7 +11,7 @@ class ClassicStructure(pygame.sprite.Sprite):
         self.name = name
         try:
             self.animation = random.choice(textures.animations_structures[name])
-        except:
+        except Exception:
             pass
         self.rect = self.image.get_rect(center=xoy)
 

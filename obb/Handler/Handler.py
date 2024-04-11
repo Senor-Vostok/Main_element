@@ -27,12 +27,10 @@ class EventHandler:
         pygame.mouse.set_visible(False)
         self.matr, self.screen_world, self.name_save = None, None, None
         self.loaded_save, self.pressed = False, False
-        self.save_point_mouse = [0, 0]
         self.world_coord = 0
         self.camera = Cam()
         self.open_some, self.flag = True, True
         self.fractions = ['water', 'fire', 'air', 'earth']
-        self.start_points = list()
         self.info_players = list()
         self.contact = Unknown()
         self.interfaces = dict()
@@ -74,18 +72,6 @@ class EventHandler:
         self.me.resources = 15
         self.me.start_point = start_point
 
-    # def init_bot(self, fraction, start_point):
-    #     self.bot.fraction_name = fraction
-    #     self.bot.units_count = 100
-    #     self.bot.action_pts = 2e10
-    #     self.bot.resources = 15e10
-    #     self.bot.start_point = start_point
-    #     self.run_bot()
-    #
-    # def run_bot(self):
-    #     self.bot.buy_smth(self)
-    #     # self.bot.build_smth(self, 0)
-
     def init_players(self):
         if len(self.info_players[0]) > 1:
             for c in range(1, len(self.info_players)):
@@ -94,6 +80,7 @@ class EventHandler:
             self.init_player(self.info_players[0][1], self.info_players[0][2])
             return
         whitelist = list()
+        start_points = list()
         message = ''
         for c in range(len(self.info_players)):
             fraction = random.choice(self.fractions)  # создание фракции
@@ -103,10 +90,10 @@ class EventHandler:
             self.info_players[c].append(fraction)
             start_point = [random.randint(BARRIER_SIZE, len(self.screen_world.biomes) - BARRIER_SIZE),
                            random.randint(BARRIER_SIZE, len(self.screen_world.biomes) - BARRIER_SIZE)]
-            while start_point in self.start_points:
+            while start_point in start_points:
                 start_point = [random.randint(BARRIER_SIZE, len(self.screen_world.biomes) - BARRIER_SIZE),
                                random.randint(BARRIER_SIZE, len(self.screen_world.biomes) - BARRIER_SIZE)]
-            self.start_points.append(start_point)
+            start_points.append(start_point)
             self.info_players[c].append([start_point[0], start_point[1]])
             self.screen_world.biomes[start_point[0]][start_point[1]][1] = fraction
             for i in range(-2, 3):
@@ -138,7 +125,7 @@ class EventHandler:
                 i, j = i - self.screen_world.world_coord[0], j - self.screen_world.world_coord[1]
                 if self.screen_world.sq2 > i >= 0 and self.screen_world.sq1 > j >= 0:
                     self.screen_world.great_world[i][j].fraction = mess[1].split('|')[4]
-                    self.place_structure(self.screen_world.great_world[i][j], mess[1].split('|')[1], self, False)
+                    self.place_structure(self.screen_world.great_world[i][j], mess[1].split('|')[1], self.screen_world.biomes[1], False)
             if mess[0] == 'join':
                 if self.contact.private and mess[1].split('|')[1] not in self.contact.whitelist:
                     if self.contact.protocol == 'host':
@@ -159,7 +146,7 @@ class EventHandler:
             if self.contact.protocol == 'client': self.decode_message(self.contact.check_message())
         except Exception:
             pass
-        if len(self.contact.users) >= self.contact.maxclient + 1:
+        if len(self.contact.users) + int(bool(self.contact.protocol == "client")) >= self.contact.maxclient + 1:
             if not self.screen_world.rendering:
                 if self.contact.protocol == 'unknown' or self.contact.protocol == 'host':
                     self.init_players()
@@ -181,12 +168,12 @@ class EventHandler:
         self.matr, self.screen_world, self.name_save = None, None, None
         self.world_coord = 0
         self.open_some, self.flag = True, True
-        self.turn = None
         self.contact = Unknown()
         self.info_players = list()
         self.loaded_save = False
         self.start_points = list()
         self.interfaces = dict()
+        self.effects = list()
         show_menu(self, self.centre)
 
     def move_to_coord(self, coord):
@@ -254,22 +241,6 @@ class EventHandler:
         saves.add_saves(files, show_choicegame, self)
         self.interfaces['save_menu'] = saves
 
-    # def check_structure_placement(self, ground, structure):
-    #     if ground.biome[0] not in self.rules['StructuresPermissions'][structure]:
-    #         print('nelza tut stroit')
-    #         # сообщить во всплывающем окошке, что нельзя строить
-    #         return False
-    #     struct_cost = int(self.rules['StructuresCosts'][self.structures[self.now_structure]][0])
-    #     struct_action_pts = int(self.rules['StructuresActionPoints'][self.structures[self.now_structure]][0])
-    #     if self.me.action_pts < struct_action_pts:
-    #         print("no points((9(")
-    #         return False
-    #     if self.me.resources < struct_cost:
-    #         print('malo denyak, vzuh, and ti bezdomni (ﾉ◕ヮ◕)ﾉ*:･ﾟ✧')
-    #         return False
-    #     self.update_placement_state(ground, structure, struct_cost, struct_action_pts)
-    #     return True
-
     def update_placement_state(self, ground, structure, struct_cost, struct_action_pts):
         ground.biome[1] = structure
         self.me.action_pts -= struct_action_pts
@@ -285,10 +256,10 @@ class EventHandler:
         if not structure:
             structure = self.structures[self.now_structure]
         if structure != 'null':  # я могу строить?
-            if ground.biome[1] != 'null' or ground.biome[4] == 'null':
+            if ground.biome[1] != 'null' or ground.biome[4] != self.me.fraction_name:
                 self.effects.append(Information(Y_TEXT_INFORMATION, "Вы не можете здесь строить", self.textures.resizer))
                 return
-            if (self.me.fraction_name == ground.fraction and me) or not me:
+            if (self.me.fraction_name == ground.biome[4] and me) or not me:
                 ground.biome[1] = structure
                 self.area(ground)
                 try:
@@ -336,16 +307,10 @@ class EventHandler:
             if i.type == pygame.QUIT:
                 sys.exit()
             if i.type == pygame.MOUSEWHEEL:
-                self.next_struct(1)
+                self.next_struct(int(i.precise_y)) if 'buildmenu' in self.interfaces else None
         return c
 
     def update(self):
         self.screen.fill(BACKGROUND_COLOR)
         self.clock.tick()
         rendering(self, self.screen_world)
-
-    def complete(self):
-        pass
-
-    def decoding(self):  # возвращает название протокола и массив
-        return [1]

@@ -123,17 +123,20 @@ class Save_menu:
         r = self.r
         y = 210
         for i in saves:
-            spisok = [BackGround(self.t.save_menu['variant_save'][0], (self.xoy[0] - 30 * r, self.xoy[1] - y * r)),
-                      Label(i[:-6], (self.xoy[0] - 30 * r, self.xoy[1] - y * r), 30),
-                      Button(self.t.save_menu['button_play'], (self.xoy[0] + 235 * r, self.xoy[1] - 25 * r - y * r)),
-                      Button(self.t.save_menu['button_delete'], (self.xoy[0] + 235 * r, self.xoy[1] + 25 * r - y * r))]
-            decode = self.__decode_world(i)
-            spisok[2].connect(choice, handler, handler.centre, decode[0], decode[1], decode[2])
-            spisok[3].connect(self.delete, i)
-            self.save[i] = spisok
-            for s in spisok:
-                self.surface.add(s)
-            y -= 105
+            try:
+                spisok = [BackGround(self.t.save_menu['variant_save'][0], (self.xoy[0] - 30 * r, self.xoy[1] - y * r)),
+                          Label(i[:-6], (self.xoy[0] - 30 * r, self.xoy[1] - y * r), 30),
+                          Button(self.t.save_menu['button_play'], (self.xoy[0] + 235 * r, self.xoy[1] - 25 * r - y * r)),
+                          Button(self.t.save_menu['button_delete'], (self.xoy[0] + 235 * r, self.xoy[1] + 25 * r - y * r))]
+                decode = self.__decode_world(i)
+                spisok[2].connect(choice, handler, handler.centre, decode[0], decode[1], decode[2])
+                spisok[3].connect(self.delete, i)
+                self.save[i] = spisok
+                for s in spisok:
+                    self.surface.add(s)
+                y -= 105
+            except Exception:
+                pass
 
 
 class Setting:

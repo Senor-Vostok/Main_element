@@ -29,6 +29,7 @@ class Information(pygame.sprite.Sprite):
         self.font = pygame.font.SysFont('progresspixel-bold', int(30 * resizer))
         self.resizer = resizer
         self.speed_animation = 3
+        self.alpha = 255
         self.image = self.font.render(text, 1, DEFAULT_COLOR)
         self.rect = self.image.get_rect()
         self.rect.y = y + self.rect[1] // 2
@@ -39,6 +40,8 @@ class Information(pygame.sprite.Sprite):
 
     def update(self):
         if self.rect[0] < 1920 * self.resizer:
+            self.image.set_alpha(self.alpha)
+            self.alpha -= 3 * bool(self.rect[0] > 0)
             self.rect.x += self.speed_animation
             return True
         return False
