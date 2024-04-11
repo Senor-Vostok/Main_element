@@ -11,7 +11,7 @@ class Textures:
         self.resizer = GetSystemMetrics(0) / 1920
         self.priority = ['water', 'sand', 'flower', 'ground', 'stone', 'snow', 'barrier']
 
-        self.font = pygame.font.SysFont('progresspixel-bold', 20)
+        self.font = pygame.font.SysFont('progresspixel-bold', int(20 * self.resizer))
 
         self.loading = self.render('data/loading/logo.png', (1920, 1080))
         self.connecting = self.render('data/loading/connecting.png', (1920, 1080))
@@ -98,7 +98,10 @@ class Textures:
                        'back_air': [self.render(f'data/ico/fractions/air.png', (60, 60)),
                                     self.render(f'data/ico/fractions/airt.png', (60, 60))],
                        'back_earth': [self.render(f'data/ico/fractions/earth.png', (60, 60)),
-                                      self.render(f'data/ico/fractions/eartht.png', (60, 60))]}
+                                      self.render(f'data/ico/fractions/eartht.png', (60, 60))],
+                       'resource': [self.render(f'data/ico/fractions/resource.png', (60, 60)),
+                                    self.render(f'data/ico/fractions/no_resource.png', (60, 60))],
+                       'back': [self.render('data/ico/fractions/test.png', (1920, 80))]}
 
         self.buildmenu = {'background': [self.render(f'data/widgets/buildmenu/labels/background.png', (500, 1000))],
                           'button_project': [self.render(f'data/widgets/buildmenu/buttons/button1.png', (400, 50)),

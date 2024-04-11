@@ -18,6 +18,14 @@ def update_effects(self):
             self.effects.remove(i)
 
 
+def update_titles(handler):
+    fps_text = handler.textures.font.render(f'fps: {int(handler.clock.get_fps())}', False, DEFAULT_COLOR)
+    if 'ingame' in handler.interfaces:
+        handler.interfaces['ingame'].count_resource.new_text(str(handler.me.resources))
+    handler.screen.blit(handler.uid, (10, 10))
+    handler.screen.blit(fps_text, (10, 40))
+
+
 def rendering(handler, machine):
     if machine and machine.rendering:
         camera_move = handler.camera.move
@@ -45,7 +53,5 @@ def rendering(handler, machine):
     update_effects(handler)
     point_pos = (handler.camera.mouse_click[0] - 10, handler.camera.mouse_click[1] - 10)
     handler.screen.blit(handler.textures.point, point_pos)
-    fps_text = handler.textures.font.render(f'fps: {int(handler.clock.get_fps())}', False, DEFAULT_COLOR)
-    handler.screen.blit(handler.uid, (10, 10))
-    handler.screen.blit(fps_text, (10, 40))
+    update_titles(handler)
     pygame.display.flip()

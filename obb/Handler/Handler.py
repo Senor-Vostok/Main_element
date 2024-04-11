@@ -1,6 +1,4 @@
 import os
-import time
-
 import pygame.display
 import obb.Objects.Player as Player
 from obb.Image_rendering.Textures import Textures
@@ -11,7 +9,8 @@ from obb.Online import *
 from win32api import GetSystemMetrics
 from obb.Objects.Structures import *
 from obb.Handler.Handler_show import *
-from obb.Constants import DEFAULT_COLOR, BACKGROUND_COLOR, BARRIER_SIZE
+from obb.Constants import DEFAULT_COLOR, BACKGROUND_COLOR, BARRIER_SIZE, Y_TEXT_INFORMATION
+from obb.Image_rendering.Efffect import Information
 from obb.Handler.Handler_render import rendering
 
 
@@ -139,7 +138,7 @@ class EventHandler:
                 i, j = i - self.screen_world.world_coord[0], j - self.screen_world.world_coord[1]
                 if self.screen_world.sq2 > i >= 0 and self.screen_world.sq1 > j >= 0:
                     self.screen_world.great_world[i][j].fraction = mess[1].split('|')[4]
-                    self.place_structure(self.screen_world.great_world[i][j], mess[1].split('|')[1], False)
+                    self.place_structure(self.screen_world.great_world[i][j], mess[1].split('|')[1], self, False)
             if mess[0] == 'join':
                 if self.contact.private and mess[1].split('|')[1] not in self.contact.whitelist:
                     if self.contact.protocol == 'host':
@@ -276,12 +275,22 @@ class EventHandler:
         buyer.action_pts -= action_pts
         buyer.resources -= cost
 
+    def area(self, ground):
+        if ground.biome[1] == "tower":
+            for i in range(-2, 3):
+                for j in range(-2, 3):
+                    self.buy_ground((int(ground.biome[2]) + i, int(ground.biome[3]) + j), self.me.fraction_name, self.me, False)
+
     def place_structure(self, ground, structure=None, info=True, me=False):
         if not structure:
             structure = self.structures[self.now_structure]
-        if structure != 'null': # я могу строить?
+        if structure != 'null':  # я могу строить?
+            if ground.biome[1] != 'null' or ground.biome[4] == 'null':
+                self.effects.append(Information(Y_TEXT_INFORMATION, "Вы не можете здесь строить", self.textures.resizer))
+                return
             if (self.me.fraction_name == ground.fraction and me) or not me:
                 ground.biome[1] = structure
+                self.area(ground)
                 try:
                     if self.check_structure_placement(self.me, ground, structure):
                         ground.structure = ClassicStructure(self.textures.animations_structures[structure][0][0], (ground.rect[0] + ground.rect[2] // 2, ground.rect[1] + ground.rect[3] // 2), structure, self.textures)
@@ -298,6 +307,17 @@ class EventHandler:
                 self.interfaces.pop('buildmenu')
             self.contact.send(f'change-0-' + '|'.join(ground.biome) + '-end-')
 
+    def buy_ground(self, xoy, fraction, buyer, takes_money=True):
+        biome = self.screen_world.biomes[xoy[0]][xoy[1]]
+        if biome[0] == 'barrier':  # проверка на барьер
+            return
+        ground_cost = int(self.rules['GroundsCosts'][biome[0]][0])
+        if buyer.resources < ground_cost and takes_money:
+            self.effects.append(Information(Y_TEXT_INFORMATION, "Недостаточно ресурса", self.textures.resizer))
+        if buyer.resources >= ground_cost and biome[4] == 'null' or not takes_money:
+            x = xoy[0] - self.screen_world.world_coord[0]
+            y = xoy[1] - self.screen_world.world_coord[1]
+            if self.screen_world.sq2 > x >= 0 and self.screen_world.sq1 > y >= 0:
     def check_ground_purchase(self, buyer, ground):
         ground_cost = int(self.rules['GroundsCosts'][ground.biome[0]][0])
         ground_action_pts = int(self.rules['GroundsActionPoints'][ground.biome[0]][0])
@@ -326,6 +346,10 @@ class EventHandler:
         if ground.biome[4] == 'null':
             if self.check_ground_purchase(buyer, ground) and self.screen_world.sq2 > x >= 0 and self.screen_world.sq1 > y >= 0:
                 self.screen_world.great_world[x][y].fraction = fraction
+            self.screen_world.biomes[xoy[0]][xoy[1]][4] = fraction
+            if takes_money:
+                buyer.resources -= ground_cost
+            self.contact.send(f'change-0-' + '|'.join(self.screen_world.biomes[xoy[0]][xoy[1]]) + '-end-')
                 self.screen_world.biomes[xoy[0]][xoy[1]][4] = fraction
                 self.contact.send(f'change-0-' + '|'.join(self.screen_world.biomes[xoy[0]][xoy[1]]) + '-end-')
         else:
@@ -346,6 +370,8 @@ class EventHandler:
                 if 'choicegame' in self.interfaces: self.interfaces.pop('choicegame')
             if i.type == pygame.QUIT:
                 sys.exit()
+            if i.type == pygame.MOUSEWHEEL:
+                self.next_struct(1)
         return c
 
     def update(self):

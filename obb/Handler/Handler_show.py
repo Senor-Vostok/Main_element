@@ -33,7 +33,8 @@ def show_menu(self, centre):
 
 
 def show_buildmenu(self, centre, ground=None):
-    build = Interfaces.BuildMenu(centre, self.textures)
+    build = Interfaces.BuildMenu(centre, self.textures, (ground.rect[0] + ground.rect[2] // 2,
+                                                         ground.rect[1] + ground.rect[3] // 2))
     build.down.connect(self.next_struct, -1)
     build.up.connect(self.next_struct, 1)
     self.now_structure = 0
@@ -89,5 +90,5 @@ def show_settings(self, centre):
     self.interfaces = dict()
     show_menu(self, self.centre)
     setting = Interfaces.Setting(centre, self.textures)
-    setting.nickname.text = "ТЫ ЛОХ/"
+    setting.nickname.text = "НТ/"
     self.interfaces['setting'] = setting
