@@ -13,7 +13,6 @@ class Ground(pygame.sprite.Sprite):
             self.animation = None
         self.biome = biome
         self.units_count = 0
-        self.fraction = biome[4]
         self.tile_image = image  # изначальная текстура клетки
         self.image = image  # текущая текстура клетки
         self.select_image = textures.select
@@ -32,8 +31,8 @@ class Ground(pygame.sprite.Sprite):
 
     def draw(self, screen, mouse_click, handler):
         screen.blit(self.textures.land['barrier'][0] if self.structure else self.image, (self.rect.x, self.rect.y))
-        if self.fraction != 'null':
-            screen.blit(self.textures.border_fractions[self.fraction][0], (self.rect.x, self.rect.y))
+        if self.biome[4] != 'null':
+            screen.blit(self.textures.border_fractions[self.biome[4]][0], (self.rect.x, self.rect.y))
         if self.rect.colliderect(mouse_click[0], mouse_click[1], 1, 1) and self.biome[0] != 'barrier':
             screen.blit(self.select_image, (self.rect.x, self.rect.y))
         if self.structure:
