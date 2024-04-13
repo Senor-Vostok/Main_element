@@ -10,7 +10,7 @@ class Bot:
         self.fraction_name = None
         self.resources = 0
         self.exist_structers = ["tower", "mill", "mine", "homes"]
-        self.structures_list = dict()
+        self.potential_resource = 0
         self.my_ground = list()
         self.can_i_do_smth = True
         self.thread = None

@@ -1,4 +1,6 @@
 import os
+import threading
+
 import pygame.display
 from obb.Objects.Player import Player
 from obb.Objects.Bot import Bot
@@ -36,7 +38,7 @@ class EventHandler:
         self.contact = Unknown()
         self.interfaces = dict()
         self.bots = list()
-
+        self.timer = threading.Timer(3, self.get_resource)
         self.effects = list()
         self.structures = [i for i in self.textures.animations_structures]
         self.now_structure = 0
@@ -111,11 +113,12 @@ class EventHandler:
                 fraction = random.choice(self.fractions)
             whitelist.append(fraction)
             self.info_players[c].append(fraction)
-            start_point = [random.randint(BARRIER_SIZE, len(self.screen_world.biomes) - BARRIER_SIZE),
-                           random.randint(BARRIER_SIZE, len(self.screen_world.biomes) - BARRIER_SIZE)]
+            barrier = BARRIER_SIZE * 2
+            start_point = [random.randint(barrier, len(self.screen_world.biomes) - barrier),
+                           random.randint(barrier, len(self.screen_world.biomes) - barrier)]
             while start_point in start_points:
-                start_point = [random.randint(BARRIER_SIZE, len(self.screen_world.biomes) - BARRIER_SIZE),
-                               random.randint(BARRIER_SIZE, len(self.screen_world.biomes) - BARRIER_SIZE)]
+                start_point = [random.randint(barrier, len(self.screen_world.biomes) - barrier),
+                               random.randint(barrier, len(self.screen_world.biomes) - barrier)]
             start_points.append(start_point)
             self.info_players[c].append([start_point[0], start_point[1]])
             self.screen_world.biomes[start_point[0]][start_point[1]][1] = fraction
@@ -174,6 +177,10 @@ class EventHandler:
                 uid = mess[1].split('|')[0]
                 delta_resource = int(mess[1].split('|')[1])
                 self.update_resource(uid, delta_resource)
+            if mess[0] == 'host':
+                if mess[1] == 'timer':
+                    self.me.resources += self.me.potential_resource
+            # запрос от таймера
 
     def machine(self):
         try:
@@ -185,8 +192,9 @@ class EventHandler:
 
             if not self.screen_world.rendering:
                 if self.contact.protocol == 'unknown' or self.contact.protocol == 'host':
+                    self.timer.start()
                     if not self.loaded_save:
-                        for i in range(4 - len(self.contact.users)):
+                        for i in range(len(self.fractions) - len(self.contact.users)):
                             self.info_players.append([f'bot{i}'])
                     self.init_players()
                 if not self.me.fraction_name:
@@ -207,6 +215,7 @@ class EventHandler:
             if 'ingame' in self.interfaces: close(self, 'ingame', False)
 
     def go_back_to_menu(self, save=True):
+        self.timer.join()
         if save:
             self.make_save()
         self.matr, self.screen_world, self.name_save = None, None, None
@@ -289,13 +298,37 @@ class EventHandler:
                         buyer.my_ground.append(self.screen_world.biomes[x][y])
                     self.set_fraction((x, y), buyer.fraction_name, True)
 
+    def check_structure_placement(self, ground, structure, buyer):
+        y = self.centre[1] * 2 - 60 * self.textures.resizer
+        if ground[4] != buyer.fraction_name:
+            if buyer == self.me:
+                self.effects.append(Information(y, "Эта клетка не принадлежит Вам", self.textures.resizer))
+            return False
+        if ground[1] != 'null':
+            if buyer == self.me:
+                self.effects.append(Information(y, "Здесь стоит другая структура", self.textures.resizer))
+            return False
+        if ground[0] not in self.rules['StructuresPermissions'][structure]:
+            if buyer == self.me:
+                self.effects.append(Information(y, "Вы не можете строить в этом биоме", self.textures.resizer))
+            return False
+        struct_cost = int(self.rules['StructuresCosts'][self.structures[self.now_structure]][0])
+        if buyer.resources < struct_cost:
+            if buyer == self.me:
+                self.effects.append(Information(y, "Не хватает ресурсов", self.textures.resizer))
+            return False
+        buyer.resources -= struct_cost
+        self.update_resource(buyer.uid, -struct_cost)
+        buyer.potential_resource += int(self.rules['ResourcesFromStructures'][structure][0])
+        return True
+
     def place_structure(self, coord_ground, structure=None, info=True, buyer=None):
         i, j = coord_ground[0], coord_ground[1]
         sq_i, sq_j = i - self.screen_world.world_coord[0], j - self.screen_world.world_coord[1]
         in_matrix = 0 <= sq_i < self.screen_world.sq2 and 0 <= sq_j < self.screen_world.sq1
         if not structure:
             structure = self.structures[self.now_structure]
-        if self.screen_world.biomes[i][j][1] != 'null':
+        if buyer and not self.check_structure_placement(self.screen_world.biomes[i][j], structure, buyer):
             return
         self.screen_world.biomes[i][j][1] = structure
         if structure != 'null' and in_matrix:
@@ -335,6 +368,15 @@ class EventHandler:
             self.info_players[ind][3] += delta_resource
         else:
             self.contact.send(f'resource-0-{uid}|{delta_resource}-end-')
+
+    def get_resource(self):
+        self.contact.send(f'host-0-timer-end-')
+        self.me.resources += self.me.potential_resource
+        if self.contact.protocol == 'host':
+            for bot in self.bots:
+                bot.resources += bot.potential_resource
+        self.timer = threading.Timer(3, self.get_resource)
+        self.timer.start()
 
     def click_handler(self):
         c = None
