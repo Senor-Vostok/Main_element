@@ -85,7 +85,6 @@ class Host:
             self.in_other_thread = False
 
     def send(self, message, client=None):
-        print('send', message)
         if not client:
             for client in self.array_clients:
                 client.sendall(bytes(message, 'utf-8'))
@@ -101,8 +100,8 @@ class Host:
         for info in ready_socks:
             message = self.__encoding(info)
             if len(message.split('-0-')) > 1:
-                self.send(''.join(message.split(' ')))
-                return ''.join(message.split(' '))
+                self.send(''.join(message.split()))
+                return ''.join(message.split())
         return None
 
     def __encoding(self, code):

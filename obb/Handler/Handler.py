@@ -131,7 +131,7 @@ class EventHandler:
                     message += f'change-0-fraction|{fraction}|{start_point[0] + i}|{start_point[1] + j}-end-'
         for c in range(1, len(self.info_players)):
             if 'bot' not in self.info_players[c][0]:
-                self.contact.send(f"{message}uid-0-{self.info_players[c][1]}|{'_'.join(map(str, self.info_players[c][2]))}|{str(self.info_players[c][3])}-end-", self.contact.array_clients[c - 1])
+                self.contact.send(f"uid-0-{self.info_players[c][1]}|{'_'.join(map(str, self.info_players[c][2]))}|{str(self.info_players[c][3])}-end-{message}", self.contact.array_clients[c - 1])
         self.init_player(self.info_players[0][1], self.info_players[0][2], self.info_players[0][3])
 
     def init_world(self, matr=None):
@@ -149,6 +149,7 @@ class EventHandler:
     def decode_message(self, message):
         for message in message.split('-end-'):
             mess = message.split('-0-')
+            print(mess)
             if mess[0] == 'change':
                 mess = mess[1].split('|')
                 i, j = int(mess[2]), int(mess[3])
@@ -185,6 +186,8 @@ class EventHandler:
                         for i in range(4 - len(self.contact.users)):
                             self.info_players.append([f'bot{i}'])
                     self.init_players()
+                if not self.me.fraction_name:
+                    return
                 show_ingame(self, self.centre)
                 self.move_to_coord(self.me.start_point)
                 if self.name_save:
