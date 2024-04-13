@@ -149,7 +149,6 @@ class EventHandler:
     def decode_message(self, message):
         for message in message.split('-end-'):
             mess = message.split('-0-')
-            print(mess)
             if mess[0] == 'change':
                 mess = mess[1].split('|')
                 i, j = int(mess[2]), int(mess[3])
@@ -171,6 +170,10 @@ class EventHandler:
                 resource = int(mess[1].split('|')[2])
                 self.init_player(fraction, coord, resource)
                 self.contact.users.append(self.me.uid)
+            if mess[0] == 'resource' and self.contact.protocol == 'host':
+                uid = mess[1].split('|')[0]
+                delta_resource = int(mess[1].split('|')[1])
+                self.update_resource(uid, delta_resource)
 
     def machine(self):
         try:
@@ -277,10 +280,6 @@ class EventHandler:
         saves.add_saves(files, show_choicegame, self)
         self.interfaces['save_menu'] = saves
 
-    def update_placement_state(self, ground, structure, struct_cost, struct_action_pts):
-        ground.biome[1] = structure
-        self.me.resources -= struct_cost
-
     def area(self, ground, buyer):
         if ground[1] == "tower":
             for i in range(-2, 3):
@@ -325,9 +324,17 @@ class EventHandler:
         if buyer:
             ground_cost = int(self.rules['GroundsCosts'][self.screen_world.biomes[i][j][0]][0])
             if buyer.resources >= ground_cost:
-                buyer.resources -= ground_cost
+                self.update_resource(buyer.uid, -ground_cost)  # Мы не можем заглянуть в me у другого игрока (ПРОБЛМЕА)
+                buyer.resources -= ground_cost                 # А это решение этого (выше смотри строчку)
         if info:
             self.contact.send(f'change-0-fraction|{fraction}|{i}|{j}-end-')
+
+    def update_resource(self, uid, delta_resource):  # Костыль мб
+        if self.contact.protocol == 'host':
+            ind = [i[0] for i in self.info_players].index(uid)
+            self.info_players[ind][3] += delta_resource
+        else:
+            self.contact.send(f'resource-0-{uid}|{delta_resource}-end-')
 
     def click_handler(self):
         c = None
