@@ -117,7 +117,7 @@ class Save_menu:
             distribut = file.read().split(':l:')
             matr = [[j.split('|') for j in i.split(':t:')] for i in distribut[1].split(':n:')]
             info_players = distribut[0].split(':n:')
-        return matr, name[:-6], [[i.split('|')[0], i.split('|')[1], [int(j) for j in [i.split('|')[2], i.split('|')[3]]]] for i in info_players]
+        return matr, name[:-6], [[i.split('|')[0], i.split('|')[1], [int(j) for j in [i.split('|')[2], i.split('|')[3]]], int(i.split('|')[4])] for i in info_players]
 
     def add_saves(self, saves, choice, handler):
         r = self.r

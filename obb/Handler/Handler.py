@@ -10,7 +10,7 @@ from obb.Online import *
 from win32api import GetSystemMetrics
 from obb.Objects.Structures import *
 from obb.Handler.Handler_show import *
-from obb.Constants import DEFAULT_COLOR, BACKGROUND_COLOR, BARRIER_SIZE, Y_TEXT_INFORMATION
+from obb.Constants import DEFAULT_COLOR, BACKGROUND_COLOR, BARRIER_SIZE, Y_TEXT_INFORMATION, FIRST_RESOURCES
 from obb.Image_rendering.Efffect import Information
 from obb.Handler.Handler_render import rendering
 
@@ -62,34 +62,46 @@ class EventHandler:
             if ground.biome[0] != 'barrier':
                 show_popup_menu(self, (ground.rect[0] + ground.rect[2], ground.rect[1] + ground.rect[3]), ground, self.me.fraction_name)
 
+    def found_fractions_board(self, fraction):
+        boards = list()
+        for i in range(len(self.screen_world.biomes)):
+            for j in range(len(self.screen_world.biomes)):
+                if self.screen_world.biomes[i][j][4] == fraction:
+                    boards.append(self.screen_world.biomes[i][j])
+        return boards
+
     def generation(self, size=200, barrier=BARRIER_SIZE):
         gen = Generation(size, self.screen, self.centre)
         self.world_coord = (size + barrier * 2) // 2
         gen.generation()
         self.matr = gen.add_barrier(barrier)
 
-    def init_player(self, fraction, start_point):
+    def init_player(self, fraction, start_point, resource):
         self.me.fraction_name = fraction
-        self.me.units_count = 100
-        self.me.action_pts = 2
-        self.me.resources = 15
+        self.me.resources = resource
         self.me.start_point = start_point
 
-    def init_bot(self, fraction, start_point):
+    def init_bot(self, fraction, start_point, resource):
         self.bots.append(Bot(len(self.bots)))
         self.bots[-1].fraction_name = fraction
-        self.bots[-1].units_count = 100
-        self.bots[-1].action_pts = 2
-        self.bots[-1].resources = 15
+        self.bots[-1].resources = resource
         self.bots[-1].start_point = start_point
 
     def init_players(self):
+        # Эта часть кода для загруженной игры
         if len(self.info_players[0]) > 1:
+            print(self.info_players)
             for c in range(1, len(self.info_players)):
-                i = self.contact.users.index(self.info_players[c][0])  # TODO: бота инициализировать
-                self.contact.send(f"uid-0-{self.info_players[c][1]}|{'_'.join(map(str, self.info_players[c][2]))}-end-", self.contact.array_clients[i - 1])
-            self.init_player(self.info_players[0][1], self.info_players[0][2])
+                uid = self.info_players[c][0]
+                if 'bot' in uid:
+                    self.init_bot(self.info_players[c][1], self.info_players[c][2], self.info_players[c][3])
+                    self.bots[-1].my_ground = self.found_fractions_board(self.info_players[c][1])
+                else:
+                    i = self.contact.users.index(uid)
+                    self.contact.send(f"uid-0-{self.info_players[c][1]}|{'_'.join(map(str, self.info_players[c][2]))}|{str(self.info_players[c][3])}-end-", self.contact.array_clients[i - 1])
+            self.init_player(self.info_players[0][1], self.info_players[0][2], self.info_players[0][3])
             return
+        # Эта часть кода для новой игры
         whitelist = list()
         start_points = list()
         message = ''
@@ -107,18 +119,20 @@ class EventHandler:
             start_points.append(start_point)
             self.info_players[c].append([start_point[0], start_point[1]])
             self.screen_world.biomes[start_point[0]][start_point[1]][1] = fraction
+            self.info_players[c].append(FIRST_RESOURCES)
+            message += f'change-0-structure|{fraction}|{start_point[0]}|{start_point[1]}-end-'
             if "bot" in self.info_players[c][0]:
-                self.init_bot(self.info_players[c][1], self.info_players[c][2])
+                self.init_bot(self.info_players[c][1], self.info_players[c][2], self.info_players[c][3])
             for i in range(-2, 3):
                 for j in range(-2, 3):
                     if "bot" in self.info_players[c][0]:
                         self.bots[-1].my_ground.append(self.screen_world.biomes[start_point[0] + i][start_point[1] + j])
                     self.screen_world.biomes[start_point[0] + i][start_point[1] + j][4] = fraction
-                    message += f'change-0-{"|".join(self.screen_world.biomes[start_point[0] + i][start_point[1] + j])}-end-'
+                    message += f'change-0-fraction|{fraction}|{start_point[0] + i}|{start_point[1] + j}-end-'
         for c in range(1, len(self.info_players)):
             if 'bot' not in self.info_players[c][0]:
-                self.contact.send(f"{message}uid-0-{self.info_players[c][1]}|{'_'.join(map(str, self.info_players[c][2]))}-end-", self.contact.array_clients[c - 1])
-        self.init_player(self.info_players[0][1], self.info_players[0][2])
+                self.contact.send(f"{message}uid-0-{self.info_players[c][1]}|{'_'.join(map(str, self.info_players[c][2]))}|{str(self.info_players[c][3])}-end-", self.contact.array_clients[c - 1])
+        self.init_player(self.info_players[0][1], self.info_players[0][2], self.info_players[0][3])
 
     def init_world(self, matr=None):
         self.open_some = False
@@ -134,27 +148,28 @@ class EventHandler:
 
     def decode_message(self, message):
         for message in message.split('-end-'):
-            try:
-                mess = message.split('-0-')
-                if mess[0] == 'change':
-                    i, j = int(mess[1].split('|')[2]), int(mess[1].split('|')[3])
-                    self.screen_world.biomes[i][j] = mess[1].split('|')
-                    self.place_structure((i, j), self.screen_world.biomes[i][j][1], False)
-                if mess[0] == 'join':
-                    if self.contact.private and mess[1].split('|')[1] not in self.contact.whitelist:
-                        if self.contact.protocol == 'host':
-                            self.contact.array_clients.pop(-1).close()
-                    elif mess[1].split('|')[1] != self.me.uid and mess[1].split('|')[1] not in self.contact.users:
-                        self.contact.users.append(mess[1].split('|')[1])
-                        if not self.loaded_save:
-                            self.info_players.append([mess[1].split('|')[1]])
-                if mess[0] == 'uid':
-                    fraction = mess[1].split('|')[0]
-                    coord = [int(i) for i in (mess[1].split('|')[1]).split('_')]
-                    self.init_player(fraction, coord)
-                    self.contact.users.append(self.me.uid)
-            except Exception as e:
-                print(e)
+            mess = message.split('-0-')
+            if mess[0] == 'change':
+                mess = mess[1].split('|')
+                i, j = int(mess[2]), int(mess[3])
+                if mess[0] == 'structure':
+                    self.place_structure((i, j), mess[1], False)
+                if mess[0] == 'fraction':
+                    self.set_fraction((i, j), mess[1], False)
+            if mess[0] == 'join':
+                if self.contact.private and mess[1].split('|')[1] not in self.contact.whitelist:
+                    if self.contact.protocol == 'host':
+                        self.contact.array_clients.pop(-1).close()
+                elif mess[1].split('|')[1] != self.me.uid and mess[1].split('|')[1] not in self.contact.users:
+                    self.contact.users.append(mess[1].split('|')[1])
+                    if not self.loaded_save:
+                        self.info_players.append([mess[1].split('|')[1]])
+            if mess[0] == 'uid':
+                fraction = mess[1].split('|')[0]
+                coord = [int(i) for i in (mess[1].split('|')[1]).split('_')]
+                resource = int(mess[1].split('|')[2])
+                self.init_player(fraction, coord, resource)
+                self.contact.users.append(self.me.uid)
 
     def machine(self):
         try:
@@ -166,8 +181,9 @@ class EventHandler:
 
             if not self.screen_world.rendering:
                 if self.contact.protocol == 'unknown' or self.contact.protocol == 'host':
-                    for i in range(4 - len(self.contact.users)):
-                        self.info_players.append([f'bot{i}'])
+                    if not self.loaded_save:
+                        for i in range(4 - len(self.contact.users)):
+                            self.info_players.append([f'bot{i}'])
                     self.init_players()
                 show_ingame(self, self.centre)
                 self.move_to_coord(self.me.start_point)
@@ -193,7 +209,6 @@ class EventHandler:
         self.contact = Unknown()
         self.info_players = list()
         self.loaded_save = False
-        self.start_points = list()
         self.interfaces = dict()
         self.effects = list()
         show_menu(self, self.centre)
@@ -247,7 +262,7 @@ class EventHandler:
     def make_save(self):
         with open(f'saves/{self.name_save}.maiso', mode='w') as file:
             massive = ':n:'.join(':t:'.join('|'.join(j) for j in i) for i in self.screen_world.biomes)
-            info_fractions = ':n:'.join([f'{"|".join([i[0], i[1]])}|{"|".join(map(str, i[2]))}' for i in self.info_players])
+            info_fractions = ':n:'.join([f'{"|".join([i[0], i[1]])}|{"|".join(map(str, i[2]))}|{str(i[3])}' for i in self.info_players])
             file.write(f"{info_fractions}:l:{massive}")
 
     def open_save(self):
@@ -268,22 +283,21 @@ class EventHandler:
             for i in range(-2, 3):
                 for j in range(-2, 3):
                     x, y = int(ground[2]) + i, int(ground[3]) + j
-                    if buyer.id in range(4):
+                    if 0 <= buyer.id <= 3 and self.screen_world.biomes[x][y] not in buyer.my_ground:
                         buyer.my_ground.append(self.screen_world.biomes[x][y])
-                    self.buy_ground((x, y), buyer.fraction_name, buyer, False)
+                    self.set_fraction((x, y), buyer.fraction_name, True)
 
     def place_structure(self, coord_ground, structure=None, info=True, buyer=None):
         i, j = coord_ground[0], coord_ground[1]
         sq_i, sq_j = i - self.screen_world.world_coord[0], j - self.screen_world.world_coord[1]
         in_matrix = 0 <= sq_i < self.screen_world.sq2 and 0 <= sq_j < self.screen_world.sq1
-        if buyer and (buyer.fraction_name != self.screen_world.biomes[i][j][4] or (structure != 'null' and self.screen_world.biomes[i][j][1] != 'null')):
-            return
         if not structure:
             structure = self.structures[self.now_structure]
+        if self.screen_world.biomes[i][j][1] != 'null':
+            return
         self.screen_world.biomes[i][j][1] = structure
         if structure != 'null' and in_matrix:
             ground = self.screen_world.great_world[sq_i][sq_j]  # Объект Ground
-            ground.biome[1] = structure
             xoy = (ground.rect[0] + ground.rect[2] // 2, ground.rect[1] + ground.rect[3] // 2)
             image = self.textures.animations_structures[structure][0][0]
             if structure in self.structures:
@@ -293,27 +307,24 @@ class EventHandler:
         elif in_matrix and structure == 'null':
             ground = self.screen_world.great_world[sq_i][sq_j]
             ground.structure = None
-            ground.biome[1] = structure
         if buyer:
             self.area(self.screen_world.biomes[i][j], buyer)
         if buyer == self.me:
             if 'buildmenu' in self.interfaces: close(self, 'buildmenu', False)
         if info:
-            self.contact.send(f'change-0-' + '|'.join(self.screen_world.biomes[i][j]) + '-end-')
+            self.contact.send(f'change-0-structure|{structure}|{i}|{j}-end-')
 
-    def buy_ground(self, coord_ground, fraction, buyer, takes_money=True):
+    def set_fraction(self, coord_ground, fraction, info=True, buyer=None):
         i, j = coord_ground[0], coord_ground[1]
-        biome = self.screen_world.biomes[i][j]
-        if biome[0] == 'barrier':  # проверка на барьер
+        if self.screen_world.biomes[i][j][4] != 'null':
             return
-        ground_cost = int(self.rules['GroundsCosts'][biome[0]][0])
-        if buyer.resources < ground_cost and takes_money:
-            self.effects.append(Information(Y_TEXT_INFORMATION, "Недостаточно ресурса", self.textures.resizer))
-        if buyer.resources >= ground_cost and biome[4] == 'null' or not takes_money:
-            self.screen_world.biomes[i][j][4] = fraction
-            if takes_money:
+        self.screen_world.biomes[i][j][4] = fraction
+        if buyer:
+            ground_cost = int(self.rules['GroundsCosts'][self.screen_world.biomes[i][j][0]][0])
+            if buyer.resources >= ground_cost:
                 buyer.resources -= ground_cost
-            self.contact.send(f'change-0-' + '|'.join(self.screen_world.biomes[i][j]) + '-end-')
+        if info:
+            self.contact.send(f'change-0-fraction|{fraction}|{i}|{j}-end-')
 
     def click_handler(self):
         c = None

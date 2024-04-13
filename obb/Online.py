@@ -31,10 +31,10 @@ class Client:
             message = self.__encoding(info)
             self.cache += message
             if self.cache[-5:] == '-end-':
-                info = '-end-'.join(self.cache.split('-end-')[:-1])
+                info = self.cache[:-5]
+                self.cache = ''
                 if not self.loaded_map:
-                    mess = (info.split('-end-')[0]).split('-0-')
-                    self.cache = self.cache.split('-end-')[1]
+                    mess = info.split('-0-')
                     self.loaded_map = True
                     self.gen = mess[0]
                     with open('data/user/information', mode='rt') as uid:
@@ -48,7 +48,6 @@ class Client:
                         return 'close'
                     return mess[1][2:]
                 else:
-                    self.cache = self.cache.split('-end-')[1]
                     return info
         return None
 
@@ -86,6 +85,7 @@ class Host:
             self.in_other_thread = False
 
     def send(self, message, client=None):
+        print('send', message)
         if not client:
             for client in self.array_clients:
                 client.sendall(bytes(message, 'utf-8'))

@@ -70,7 +70,7 @@ def show_popup_menu(self, centre, ground, fraction):
     popup.button_build.connect(show_buildmenu, self, self.centre, ground)
     i, j = int(ground.biome[2]), int(ground.biome[3])
     popup.button_destroy.connect(self.place_structure, (i, j), 'null', True, self.me)
-    popup.button_buy.connect(self.buy_ground, (i, j), fraction, self.me)
+    popup.button_buy.connect(self.set_fraction, (i, j), fraction, True, self.me)
     self.interfaces['popup_menu'] = popup
 
 
