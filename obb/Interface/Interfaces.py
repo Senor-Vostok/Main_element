@@ -1,5 +1,6 @@
 import pygame.transform
 from obb.Interface.Widgets import *
+import os
 
 
 class Pause:
@@ -107,10 +108,15 @@ class Save_menu:
         self.xoy = xoy
         self.background = BackGround(textures.save_menu['background'][0], xoy)
         self.surface = Surface(self.background)
+        self.deleted = list()
         self.save = dict()
 
     def delete(self, save):
-        print(f'saves/{save}')
+        self.save[save][0].image = self.t.save_menu['variant_save'][1]
+        self.save[save][2].active = False
+        self.save[save][1].color = (68, 41, 23)
+        self.save[save][1].new_text(self.save[save][1].text)
+        os.remove(f'saves/{save}')
 
     def __decode_world(self, name):
         with open(f'saves/{name}', mode='rt') as file:

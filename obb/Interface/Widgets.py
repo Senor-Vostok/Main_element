@@ -3,13 +3,14 @@ from obb.Constants import DEFAULT_COLOR
 
 
 class Button(pygame.sprite.Sprite):
-    def __init__(self, image, xoy):
+    def __init__(self, image, xoy, active=True):
         pygame.sprite.Sprite.__init__(self)
         self.state = image[0]
         self.trigger = image[1]
         self.image = self.state
         self.func = None
         self.args = None
+        self.active = active
         self.rect = self.image.get_rect(center=xoy)
         self.one_press = True
 
@@ -21,6 +22,8 @@ class Button(pygame.sprite.Sprite):
         self.args = args
 
     def update(self, mouse_click, command=None):
+        if not self.active:
+            return
         if self.rect.colliderect(mouse_click[0], mouse_click[1], 1, 1):
             self.image = self.trigger
             if mouse_click[2] and mouse_click[3] == 1 and self.func:

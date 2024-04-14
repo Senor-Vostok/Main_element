@@ -1,5 +1,6 @@
 import obb.Interface.Interfaces as Interfaces
 import sys
+import os
 
 
 def close(self, name, open_some, func=None):
@@ -25,6 +26,8 @@ def show_create_save(self, centre):
 def show_menu(self, centre):
     menu = Interfaces.Menu(centre, self.textures)
     menu.button_start.connect(show_create_save, self, self.centre)
+    if len([i for i in os.listdir('saves') if len(i.split('.maiso')) > 1]) > 5:
+        menu.button_start.active = False
     menu.button_load.connect(self.open_save)
     menu.button_online.connect(show_online, self, self.centre)
     menu.button_setting.connect(show_settings, self, self.centre)

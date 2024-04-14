@@ -1,6 +1,7 @@
 import pygame
 from win32api import GetSystemMetrics
 
+
 pygame.init()
 screen = pygame.display.set_mode()
 

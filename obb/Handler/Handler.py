@@ -308,7 +308,7 @@ class EventHandler:
             for i in range(-2, 3):
                 for j in range(-2, 3):
                     x, y = int(ground[2]) + i, int(ground[3]) + j
-                    if 'bot' in buyer.uid and self.screen_world.biomes[x][y] not in buyer.my_ground:
+                    if 'bot' in buyer.uid and self.screen_world.biomes[x][y] not in buyer.my_ground and buyer.fraction_name == self.screen_world.biomes[x][y][4]:
                         buyer.my_ground.append(self.screen_world.biomes[x][y])
                     self.set_fraction((x, y), buyer.fraction_name, True)
 
@@ -397,7 +397,7 @@ class EventHandler:
             self.contact.send(f'host-0-timer-end-')
             self.update_resource(self.me.uid, self.me.potential_resource)
             self.me.resources += self.me.potential_resource
-            if self.contact.protocol == 'host':
+            if self.contact.protocol == 'host' or self.contact.protocol == 'unknown':
                 for bot in self.bots:
                     self.update_resource(bot.uid, bot.potential_resource)
                     bot.resources += bot.potential_resource
