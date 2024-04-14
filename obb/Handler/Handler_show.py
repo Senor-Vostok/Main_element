@@ -44,7 +44,11 @@ def show_buildmenu(self, centre, ground=None):
     self.interfaces['buildmenu'] = build
 
 
-def show_online(self, centre, t='connect', matr=None):
+def show_online(self, centre, t='connect', matr=None, name_save=None, info_players=None):
+    if name_save:
+        self.loaded_save = True
+        self.name_save = name_save
+        self.info_players = info_players
     self.interfaces = dict()
     show_menu(self, self.centre)
     if 'choicegame' in self.interfaces: close(self, 'choicegame', True)
@@ -55,6 +59,9 @@ def show_online(self, centre, t='connect', matr=None):
     elif t == 'create':
         label = Interfaces.Online_create(centre, self.textures)
         label.count.connect(self.host_game, matr)
+        if self.loaded_save:
+            label.count.active = not self.loaded_save
+            label.count.text = f"{len([i for i in [j[0] for j in self.info_players] if 'bot' not in i])}/"
         label.port.connect(self.host_game, matr)
         self.interfaces['online'] = label
 
@@ -74,12 +81,8 @@ def show_popup_menu(self, centre, ground, fraction):
     self.interfaces['popup_menu'] = popup
 
 
-def show_choicegame(self, centre, matr=None, n=None, info_players=None):
-    self.name_save = self.interfaces['create_save'].name.text[:-1] if not n else n
-    self.loaded_save = False
-    if info_players:
-        self.loaded_save = True
-        self.info_players = info_players
+def show_choicegame(self, centre, matr=None):
+    self.name_save = self.interfaces['create_save'].name.text[:-1]
     self.interfaces = dict()
     show_menu(self, self.centre)
     choice = Interfaces.ChoiceGame(centre, self.textures)

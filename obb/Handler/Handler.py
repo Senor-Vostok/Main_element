@@ -1,6 +1,4 @@
 import os
-import threading
-
 import pygame.display
 from obb.Objects.Player import Player
 from obb.Objects.Bot import Bot
@@ -12,9 +10,10 @@ from obb.Online import *
 from win32api import GetSystemMetrics
 from obb.Objects.Structures import *
 from obb.Handler.Handler_show import *
-from obb.Constants import DEFAULT_COLOR, BACKGROUND_COLOR, BARRIER_SIZE, Y_TEXT_INFORMATION, FIRST_RESOURCES
+from obb.Constants import DEFAULT_COLOR, BACKGROUND_COLOR, BARRIER_SIZE, FIRST_RESOURCES, COOLDOWN
 from obb.Image_rendering.Efffect import Information
 from obb.Handler.Handler_render import rendering
+from datetime import datetime
 
 
 class EventHandler:
@@ -28,7 +27,7 @@ class EventHandler:
         self.clock = pygame.time.Clock()
         self.screen = pygame.display.set_mode(self.size, pygame.DOUBLEBUF | pygame.HWSURFACE | pygame.RESIZABLE)
         pygame.mouse.set_visible(False)
-        self.matr, self.screen_world, self.name_save = None, None, None
+        self.matr, self.screen_world, self.name_save, self.timer = None, None, None, None
         self.loaded_save, self.pressed = False, False
         self.world_coord = 0
         self.camera = Cam()
@@ -38,7 +37,6 @@ class EventHandler:
         self.contact = Unknown()
         self.interfaces = dict()
         self.bots = list()
-        self.timer = threading.Timer(3, self.get_resource)
         self.effects = list()
         self.structures = [i for i in self.textures.animations_structures]
         self.now_structure = 0
@@ -78,30 +76,31 @@ class EventHandler:
         gen.generation()
         self.matr = gen.add_barrier(barrier)
 
-    def init_player(self, fraction, start_point, resource):
+    def init_player(self, fraction, start_point, resource, potential_resource):
         self.me.fraction_name = fraction
+        self.me.potential_resource = potential_resource
         self.me.resources = resource
         self.me.start_point = start_point
 
-    def init_bot(self, fraction, start_point, resource):
+    def init_bot(self, fraction, start_point, resource, potential_resource):
         self.bots.append(Bot(len(self.bots)))
         self.bots[-1].fraction_name = fraction
         self.bots[-1].resources = resource
+        self.bots[-1].potential_resource = potential_resource
         self.bots[-1].start_point = start_point
 
     def init_players(self):
         # Эта часть кода для загруженной игры
         if len(self.info_players[0]) > 1:
-            print(self.info_players)
             for c in range(1, len(self.info_players)):
                 uid = self.info_players[c][0]
                 if 'bot' in uid:
-                    self.init_bot(self.info_players[c][1], self.info_players[c][2], self.info_players[c][3])
+                    self.init_bot(self.info_players[c][1], self.info_players[c][2], self.info_players[c][3], self.info_players[c][4])
                     self.bots[-1].my_ground = self.found_fractions_board(self.info_players[c][1])
                 else:
                     i = self.contact.users.index(uid)
-                    self.contact.send(f"uid-0-{self.info_players[c][1]}|{'_'.join(map(str, self.info_players[c][2]))}|{str(self.info_players[c][3])}-end-", self.contact.array_clients[i - 1])
-            self.init_player(self.info_players[0][1], self.info_players[0][2], self.info_players[0][3])
+                    self.contact.send(f"uid-0-{self.info_players[c][1]}|{'_'.join(map(str, self.info_players[c][2]))}|{self.info_players[c][3]}|{self.info_players[c][4]}-end-", self.contact.array_clients[i - 1])
+            self.init_player(self.info_players[0][1], self.info_players[0][2], self.info_players[0][3], self.info_players[0][4])
             return
         # Эта часть кода для новой игры
         whitelist = list()
@@ -123,9 +122,10 @@ class EventHandler:
             self.info_players[c].append([start_point[0], start_point[1]])
             self.screen_world.biomes[start_point[0]][start_point[1]][1] = fraction
             self.info_players[c].append(FIRST_RESOURCES)
+            self.info_players[c].append(0)
             message += f'change-0-structure|{fraction}|{start_point[0]}|{start_point[1]}-end-'
             if "bot" in self.info_players[c][0]:
-                self.init_bot(self.info_players[c][1], self.info_players[c][2], self.info_players[c][3])
+                self.init_bot(self.info_players[c][1], self.info_players[c][2], self.info_players[c][3], 0)
             for i in range(-2, 3):
                 for j in range(-2, 3):
                     if "bot" in self.info_players[c][0]:
@@ -134,10 +134,14 @@ class EventHandler:
                     message += f'change-0-fraction|{fraction}|{start_point[0] + i}|{start_point[1] + j}-end-'
         for c in range(1, len(self.info_players)):
             if 'bot' not in self.info_players[c][0]:
-                self.contact.send(f"uid-0-{self.info_players[c][1]}|{'_'.join(map(str, self.info_players[c][2]))}|{str(self.info_players[c][3])}-end-{message}", self.contact.array_clients[c - 1])
-        self.init_player(self.info_players[0][1], self.info_players[0][2], self.info_players[0][3])
+                self.contact.send(f"uid-0-{self.info_players[c][1]}|{'_'.join(map(str, self.info_players[c][2]))}|{self.info_players[c][3]}|{0}-end-{message}", self.contact.array_clients[c - 1])
+        self.init_player(self.info_players[0][1], self.info_players[0][2], self.info_players[0][3], 0)
 
-    def init_world(self, matr=None):
+    def init_world(self, matr=None, name_save=None, info_players=None):
+        if name_save:
+            self.loaded_save = True
+            self.name_save = name_save
+            self.info_players = info_players
         self.open_some = False
         self.interfaces = dict()
         if not matr:
@@ -171,16 +175,36 @@ class EventHandler:
                 fraction = mess[1].split('|')[0]
                 coord = [int(i) for i in (mess[1].split('|')[1]).split('_')]
                 resource = int(mess[1].split('|')[2])
-                self.init_player(fraction, coord, resource)
+                potential_resource = int(mess[1].split('|')[3])
+                self.init_player(fraction, coord, resource, potential_resource)
                 self.contact.users.append(self.me.uid)
             if mess[0] == 'resource' and self.contact.protocol == 'host':
                 uid = mess[1].split('|')[0]
                 delta_resource = int(mess[1].split('|')[1])
                 self.update_resource(uid, delta_resource)
+            if mess[0] == 'presource' and self.contact.protocol == 'host':
+                uid = mess[1].split('|')[0]
+                delta_presource = int(mess[1].split('|')[1])
+                self.update_presource(uid, delta_presource)
             if mess[0] == 'host':
                 if mess[1] == 'timer':
+                    self.update_resource(self.me.uid, self.me.potential_resource)
                     self.me.resources += self.me.potential_resource
             # запрос от таймера
+
+    def load_world(self):
+        if self.contact.protocol == 'unknown' or self.contact.protocol == 'host':
+            self.timer = datetime.now()
+            if not self.loaded_save:
+                for i in range(len(self.fractions) - len(self.contact.users)):
+                    self.info_players.append([f'bot{i}'])
+            self.init_players()
+        if not self.me.fraction_name:
+            return
+        show_ingame(self, self.centre)
+        self.move_to_coord(self.me.start_point)
+        if self.name_save:
+            self.make_save()
 
     def machine(self):
         try:
@@ -189,21 +213,10 @@ class EventHandler:
         except Exception:
             pass
         if len(self.contact.users) + int(bool(self.contact.protocol == "client")) >= self.contact.maxclient + 1:
-
             if not self.screen_world.rendering:
-                if self.contact.protocol == 'unknown' or self.contact.protocol == 'host':
-                    self.timer.start()
-                    if not self.loaded_save:
-                        for i in range(len(self.fractions) - len(self.contact.users)):
-                            self.info_players.append([f'bot{i}'])
-                    self.init_players()
-                if not self.me.fraction_name:
-                    return
-                show_ingame(self, self.centre)
-                self.move_to_coord(self.me.start_point)
-                if self.name_save:
-                    self.make_save()
-
+                self.load_world()
+            if self.contact.protocol == 'unknown' or self.contact.protocol == 'host':
+                self.get_resource()
             for bot in self.bots:
                 bot.think_smth_please(self)
             self.screen_world.rendering = True
@@ -215,17 +228,18 @@ class EventHandler:
             if 'ingame' in self.interfaces: close(self, 'ingame', False)
 
     def go_back_to_menu(self, save=True):
-        self.timer.join()
         if save:
             self.make_save()
-        self.matr, self.screen_world, self.name_save = None, None, None
+        self.matr, self.screen_world, self.name_save, self.timer = None, None, None, None
+        self.loaded_save, self.pressed = False, False
         self.world_coord = 0
         self.open_some, self.flag = True, True
-        self.contact = Unknown()
         self.info_players = list()
-        self.loaded_save = False
+        self.contact = Unknown()
         self.interfaces = dict()
+        self.bots = list()
         self.effects = list()
+        self.now_structure = 0
         show_menu(self, self.centre)
 
     def move_to_coord(self, coord):
@@ -237,9 +251,6 @@ class EventHandler:
         self.now_structure = (self.now_structure + ind) % len(self.structures) if self.now_structure + ind >= 0 else len(
             self.structures) - 1
         self.interfaces['buildmenu'].structure.image = pygame.transform.scale(self.textures.animations_structures[self.structures[self.now_structure]][0][0], (360 * self.textures.resizer, 540 * self.textures.resizer))
-
-    def attack(self, ground):
-        pass
 
     def host_game(self, matr):
         if not matr:
@@ -277,8 +288,11 @@ class EventHandler:
     def make_save(self):
         with open(f'saves/{self.name_save}.maiso', mode='w') as file:
             massive = ':n:'.join(':t:'.join('|'.join(j) for j in i) for i in self.screen_world.biomes)
-            info_fractions = ':n:'.join([f'{"|".join([i[0], i[1]])}|{"|".join(map(str, i[2]))}|{str(i[3])}' for i in self.info_players])
-            file.write(f"{info_fractions}:l:{massive}")
+            info_fractions = ':n:'.join([f'{"|".join([i[0], i[1]])}|{"|".join(map(str, i[2]))}|{i[3]}|{i[4]}' for i in self.info_players])
+            game = 'local'
+            if self.contact.protocol != 'unknown':
+                game = 'online'
+            file.write(f"{game}:l:{info_fractions}:l:{massive}")
 
     def open_save(self):
         self.interfaces = dict()
@@ -286,7 +300,7 @@ class EventHandler:
         saves = Interfaces.Save_menu(self.centre, self.textures)
         files = [i for i in os.listdir('saves') if len(i.split('.maiso')) > 1]
         saves.handler = self
-        saves.add_saves(files, show_choicegame, self)
+        saves.add_saves(files, self.init_world, show_online, self)
         self.interfaces['save_menu'] = saves
 
     def area(self, ground, buyer):
@@ -294,7 +308,7 @@ class EventHandler:
             for i in range(-2, 3):
                 for j in range(-2, 3):
                     x, y = int(ground[2]) + i, int(ground[3]) + j
-                    if 0 <= buyer.id <= 3 and self.screen_world.biomes[x][y] not in buyer.my_ground:
+                    if 'bot' in buyer.uid and self.screen_world.biomes[x][y] not in buyer.my_ground:
                         buyer.my_ground.append(self.screen_world.biomes[x][y])
                     self.set_fraction((x, y), buyer.fraction_name, True)
 
@@ -319,6 +333,7 @@ class EventHandler:
             return False
         buyer.resources -= struct_cost
         self.update_resource(buyer.uid, -struct_cost)
+        self.update_presource(buyer.uid, int(self.rules['ResourcesFromStructures'][structure][0]))
         buyer.potential_resource += int(self.rules['ResourcesFromStructures'][structure][0])
         return True
 
@@ -362,21 +377,30 @@ class EventHandler:
         if info:
             self.contact.send(f'change-0-fraction|{fraction}|{i}|{j}-end-')
 
-    def update_resource(self, uid, delta_resource):  # Костыль мб
-        if self.contact.protocol == 'host':
+    def update_resource(self, uid, delta_resource):
+        if self.contact.protocol == 'host' or self.contact.protocol == 'unknown':
             ind = [i[0] for i in self.info_players].index(uid)
             self.info_players[ind][3] += delta_resource
         else:
             self.contact.send(f'resource-0-{uid}|{delta_resource}-end-')
 
+    def update_presource(self, uid, delta_presource):
+        if self.contact.protocol == 'host' or self.contact.protocol == 'unknown':
+            ind = [i[0] for i in self.info_players].index(uid)
+            self.info_players[ind][4] += delta_presource
+        else:
+            self.contact.send(f'presource-0-{uid}|{delta_presource}-end-')
+
     def get_resource(self):
-        self.contact.send(f'host-0-timer-end-')
-        self.me.resources += self.me.potential_resource
-        if self.contact.protocol == 'host':
-            for bot in self.bots:
-                bot.resources += bot.potential_resource
-        self.timer = threading.Timer(3, self.get_resource)
-        self.timer.start()
+        if (datetime.now() - self.timer).seconds >= COOLDOWN:
+            self.timer = datetime.now()
+            self.contact.send(f'host-0-timer-end-')
+            self.update_resource(self.me.uid, self.me.potential_resource)
+            self.me.resources += self.me.potential_resource
+            if self.contact.protocol == 'host':
+                for bot in self.bots:
+                    self.update_resource(bot.uid, bot.potential_resource)
+                    bot.resources += bot.potential_resource
 
     def click_handler(self):
         c = None
@@ -392,6 +416,7 @@ class EventHandler:
                 if 'buildmenu' in self.interfaces: self.interfaces.pop('buildmenu')
                 if 'choicegame' in self.interfaces: self.interfaces.pop('choicegame')
             if i.type == pygame.QUIT:
+                self.contact.sock.close()
                 sys.exit()
             if i.type == pygame.MOUSEWHEEL:
                 self.next_struct(int(i.precise_y)) if 'buildmenu' in self.interfaces else None

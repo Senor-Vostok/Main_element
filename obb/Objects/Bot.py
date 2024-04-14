@@ -5,7 +5,7 @@ import threading
 class Bot:
     def __init__(self, id):
         self.id = id
-        self.uid = "0" * (9 - len(str(id))) + str(id)
+        self.uid = f'bot{id}'
         self.interval = id + 1
         self.fraction_name = None
         self.resources = 0

@@ -115,11 +115,12 @@ class Save_menu:
     def __decode_world(self, name):
         with open(f'saves/{name}', mode='rt') as file:
             distribut = file.read().split(':l:')
-            matr = [[j.split('|') for j in i.split(':t:')] for i in distribut[1].split(':n:')]
-            info_players = distribut[0].split(':n:')
-        return matr, name[:-6], [[i.split('|')[0], i.split('|')[1], [int(j) for j in [i.split('|')[2], i.split('|')[3]]], int(i.split('|')[4])] for i in info_players]
+            game = distribut[0]
+            matr = [[j.split('|') for j in i.split(':t:')] for i in distribut[2].split(':n:')]
+            info_players = distribut[1].split(':n:')
+        return [matr, name[:-6], [[i.split('|')[0], i.split('|')[1], [int(j) for j in [i.split('|')[2], i.split('|')[3]]], int(i.split('|')[4]), int(i.split('|')[5])] for i in info_players]], game
 
-    def add_saves(self, saves, choice, handler):
+    def add_saves(self, saves, local, online, handler):
         r = self.r
         y = 210
         for i in saves:
@@ -128,8 +129,11 @@ class Save_menu:
                           Label(i[:-6], (self.xoy[0] - 30 * r, self.xoy[1] - y * r), 30),
                           Button(self.t.save_menu['button_play'], (self.xoy[0] + 235 * r, self.xoy[1] - 25 * r - y * r)),
                           Button(self.t.save_menu['button_delete'], (self.xoy[0] + 235 * r, self.xoy[1] + 25 * r - y * r))]
-                decode = self.__decode_world(i)
-                spisok[2].connect(choice, handler, handler.centre, decode[0], decode[1], decode[2])
+                decode, game = self.__decode_world(i)
+                if game == 'local':
+                    spisok[2].connect(local, decode[0], decode[1], decode[2])
+                else:
+                    spisok[2].connect(online, handler, handler.centre, 'create', decode[0], decode[1], decode[2])
                 spisok[3].connect(self.delete, i)
                 self.save[i] = spisok
                 for s in spisok:

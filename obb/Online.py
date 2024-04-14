@@ -112,6 +112,7 @@ class Host:
 
 class Unknown:
     def __init__(self):
+        self.sock = None
         self.protocol = 'unknown'
         self.users = ['i']
         self.maxclient = 0

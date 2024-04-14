@@ -38,6 +38,8 @@ class Button(pygame.sprite.Sprite):
                         return self.func(self.args[0], self.args[1], self.args[2], self.args[3])
                     elif len(self.args) == 5:
                         return self.func(self.args[0], self.args[1], self.args[2], self.args[3], self.args[4])
+                    elif len(self.args) == 6:
+                        return self.func(self.args[0], self.args[1], self.args[2], self.args[3], self.args[4], self.args[5])
             else:
                 self.one_press = True
         else:
@@ -45,7 +47,7 @@ class Button(pygame.sprite.Sprite):
 
 
 class InteractLabel(pygame.sprite.Sprite):
-    def __init__(self, image, xoy):
+    def __init__(self, image, xoy, active=True):
         pygame.sprite.Sprite.__init__(self)
         self.state = image[0]
         self.flex = image[1]
@@ -53,7 +55,7 @@ class InteractLabel(pygame.sprite.Sprite):
         self.text = "/"
         self.func = None
         self.args = None
-        self.clear = False
+        self.active = active
         self.rect = self.image.get_rect(center=xoy)
         self.font = pygame.font.SysFont("progresspixel-bold", self.rect[3] - self.rect[3] // 3)
         self.can_write = False
@@ -72,6 +74,8 @@ class InteractLabel(pygame.sprite.Sprite):
         self.args = args
 
     def update(self, mouse_click, command=None):
+        if not self.active:
+            return
         if not self.rect.colliderect(mouse_click[0], mouse_click[1], 1, 1) and mouse_click[2] and mouse_click[3] == 1:
             self.can_write = False
             self.image = self.state
@@ -101,6 +105,8 @@ class InteractLabel(pygame.sprite.Sprite):
                         return self.func(self.args[0], self.args[1], self.args[2], self.args[3])
                     elif len(self.args) == 5:
                         return self.func(self.args[0], self.args[1], self.args[2], self.args[3], self.args[4])
+                    elif len(self.args) == 6:
+                        return self.func(self.args[0], self.args[1], self.args[2], self.args[3], self.args[4], self.args[5])
             elif len(str(command.unicode)) > 0 and command.type == pygame.KEYDOWN:
                 self.text = self.text[:-1] + command.unicode + "/"
 
