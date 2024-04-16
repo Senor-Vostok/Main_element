@@ -22,3 +22,4 @@ Y_TEXT_INFORMATION = 1040
 
 FIRST_RESOURCES = 50
 COOLDOWN = 3  # раз во сколько секунд выдаётся ресурс
+COOLDOWN_MUSIC = 600

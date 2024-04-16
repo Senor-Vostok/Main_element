@@ -1,5 +1,7 @@
 import pygame
 from obb.Constants import DEFAULT_COLOR
+from obb.Sond_rendering.Sounds import Sounds
+sounds = Sounds()
 
 
 class Button(pygame.sprite.Sprite):
@@ -29,6 +31,7 @@ class Button(pygame.sprite.Sprite):
             if mouse_click[2] and mouse_click[3] == 1 and self.func:
                 if self.one_press:
                     self.one_press = False
+                    pygame.mixer.Channel(1).play(sounds.click)
                     if len(self.args) == 0:
                         return self.func()
                     elif len(self.args) == 1:

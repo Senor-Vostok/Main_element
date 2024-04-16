@@ -14,7 +14,7 @@ def update_effects(self):
         self.pressed = False
     for i in self.effects:
         i.draw(self.screen)
-        if not i.update():
+        if not i.update(self.camera.move):
             self.effects.remove(i)
 
 

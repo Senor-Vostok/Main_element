@@ -1,16 +1,17 @@
-import os
 import pygame.display
 from obb.Objects.Player import Player
 from obb.Objects.Bot import Bot
 from obb.Image_rendering.Textures import Textures
+from obb.Sond_rendering.Sounds import Sounds
 from obb.Image_rendering.Machine import World
 from obb.Generation import Generation
 from obb.Objects.Cam_class import Cam
 from obb.Online import *
+from obb.Image_rendering.Efffect import Effect
 from win32api import GetSystemMetrics
 from obb.Objects.Structures import *
 from obb.Handler.Handler_show import *
-from obb.Constants import DEFAULT_COLOR, BACKGROUND_COLOR, BARRIER_SIZE, FIRST_RESOURCES, COOLDOWN
+from obb.Constants import DEFAULT_COLOR, BACKGROUND_COLOR, BARRIER_SIZE, FIRST_RESOURCES, COOLDOWN, COOLDOWN_MUSIC
 from obb.Image_rendering.Efffect import Information
 from obb.Handler.Handler_render import rendering
 from datetime import datetime
@@ -19,15 +20,20 @@ from datetime import datetime
 class EventHandler:
     def __init__(self):  # TODO: исправить присваивание bot_id и id
         pygame.init()
+        pygame.mixer.init()
         with open('data/user/information', mode='rt') as file:
             self.me = Player(int(file.read()))
-        self.textures = Textures()
         self.size = GetSystemMetrics(0), GetSystemMetrics(1)
         self.centre = (self.size[0] // 2, self.size[1] // 2)
         self.clock = pygame.time.Clock()
         self.screen = pygame.display.set_mode(self.size, pygame.DOUBLEBUF | pygame.HWSURFACE | pygame.RESIZABLE)
+        self.textures = Textures()
+        self.screen.blit(self.textures.loading, (self.centre[0] - self.textures.loading.get_rect()[2] // 2, self.centre[1] - self.textures.loading.get_rect()[3] // 2))
+        pygame.display.flip()
+        self.sounds = Sounds()
         pygame.mouse.set_visible(False)
-        self.matr, self.screen_world, self.name_save, self.timer = None, None, None, None
+        pygame.mixer.Channel(0).play(self.sounds.menu, -1)
+        self.matr, self.screen_world, self.name_save, self.timer, self.timer_backmusic = None, None, None, None, None
         self.loaded_save, self.pressed = False, False
         self.world_coord = 0
         self.camera = Cam()
@@ -38,7 +44,8 @@ class EventHandler:
         self.interfaces = dict()
         self.bots = list()
         self.effects = list()
-        self.structures = [i for i in self.textures.animations_structures]
+        self.structures = [i for i in self.textures.animations_structures if 'support' not in i]
+        self.supports_structure = [i for i in self.textures.animations_structures if 'support' in i]
         self.now_structure = 0
         self.rules = dict()
         self.read_rules()
@@ -83,7 +90,7 @@ class EventHandler:
         self.me.start_point = start_point
 
     def init_bot(self, fraction, start_point, resource, potential_resource):
-        self.bots.append(Bot(len(self.bots)))
+        self.bots.append(Bot(len(self.bots), self.structures))
         self.bots[-1].fraction_name = fraction
         self.bots[-1].resources = resource
         self.bots[-1].potential_resource = potential_resource
@@ -193,6 +200,8 @@ class EventHandler:
             # запрос от таймера
 
     def load_world(self):
+        pygame.mixer.Channel(0).play(random.choice(self.sounds.background))
+        self.timer_backmusic = datetime.now()
         if self.contact.protocol == 'unknown' or self.contact.protocol == 'host':
             self.timer = datetime.now()
             if not self.loaded_save:
@@ -219,6 +228,9 @@ class EventHandler:
                 self.get_resource()
             for bot in self.bots:
                 bot.think_smth_please(self)
+            if (datetime.now() - self.timer_backmusic).seconds >= COOLDOWN_MUSIC:
+                pygame.mixer.Channel(0).play(random.choice(self.sounds.background))
+                self.timer_backmusic = datetime.now()
             self.screen_world.rendering = True
             self.camera.speed = (self.camera.normal_fps + 1) / (self.clock.get_fps() + 1)
             self.camera.inter()
@@ -240,6 +252,7 @@ class EventHandler:
         self.bots = list()
         self.effects = list()
         self.now_structure = 0
+        pygame.mixer.Channel(0).play(self.sounds.menu, -1)
         show_menu(self, self.centre)
 
     def move_to_coord(self, coord):
@@ -304,7 +317,7 @@ class EventHandler:
         self.interfaces['save_menu'] = saves
 
     def area(self, ground, buyer):
-        if ground[1] == "tower":
+        if "tower" in ground[1]:
             for i in range(-2, 3):
                 for j in range(-2, 3):
                     x, y = int(ground[2]) + i, int(ground[3]) + j
@@ -331,11 +344,24 @@ class EventHandler:
             if buyer == self.me:
                 self.effects.append(Information(y, "Не хватает ресурсов", self.textures.resizer))
             return False
+        if buyer == self.me:
+            pygame.mixer.Channel(1).play(self.sounds.draw)
         buyer.resources -= struct_cost
         self.update_resource(buyer.uid, -struct_cost)
         self.update_presource(buyer.uid, int(self.rules['ResourcesFromStructures'][structure][0]))
         buyer.potential_resource += int(self.rules['ResourcesFromStructures'][structure][0])
         return True
+
+    def try_connect_structure(self, coord_ground, structure):
+        i, j = coord_ground
+        smez_structures = [self.screen_world.biomes[i - 1][j][1],
+                           self.screen_world.biomes[i + 1][j][1],
+                           self.screen_world.biomes[i][j + 1][1],
+                           self.screen_world.biomes[i][j - 1][1]]
+        if f'{structure}_support' in self.supports_structure and\
+           (structure in smez_structures or f'{structure}_support' in smez_structures):
+            return f'{structure}_support'
+        return structure
 
     def place_structure(self, coord_ground, structure=None, info=True, buyer=None):
         i, j = coord_ground[0], coord_ground[1]
@@ -345,12 +371,15 @@ class EventHandler:
             structure = self.structures[self.now_structure]
         if buyer and not self.check_structure_placement(self.screen_world.biomes[i][j], structure, buyer):
             return
+        structure = self.try_connect_structure((i, j), structure)
         self.screen_world.biomes[i][j][1] = structure
         if structure != 'null' and in_matrix:
+            pygame.mixer.Channel(2).play(self.sounds.place)
             ground = self.screen_world.great_world[sq_i][sq_j]  # Объект Ground
             xoy = (ground.rect[0] + ground.rect[2] // 2, ground.rect[1] + ground.rect[3] // 2)
+            self.effects.append(Effect(xoy, self.textures.effects['place'], True))
             image = self.textures.animations_structures[structure][0][0]
-            if structure in self.structures:
+            if structure in self.structures + self.supports_structure:
                 ground.structure = ClassicStructure(image, xoy, structure, self.textures)
             else:
                 ground.structure = MainStructure(image, xoy, structure, self.textures)
@@ -366,9 +395,15 @@ class EventHandler:
 
     def set_fraction(self, coord_ground, fraction, info=True, buyer=None):
         i, j = coord_ground[0], coord_ground[1]
+        sq_i, sq_j = i - self.screen_world.world_coord[0], j - self.screen_world.world_coord[1]
+        in_matrix = 0 <= sq_i < self.screen_world.sq2 and 0 <= sq_j < self.screen_world.sq1
         if self.screen_world.biomes[i][j][4] != 'null':
             return
         self.screen_world.biomes[i][j][4] = fraction
+        if in_matrix:
+            ground = self.screen_world.great_world[sq_i][sq_j]  # Объект Ground
+            xoy = (ground.rect[0] + ground.rect[2] // 2, ground.rect[1] + ground.rect[3] // 2)
+            self.effects.append(Effect(xoy, self.textures.effects['set'], True, 10))
         if buyer:
             ground_cost = int(self.rules['GroundsCosts'][self.screen_world.biomes[i][j][0]][0])
             if buyer.resources >= ground_cost:

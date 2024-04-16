@@ -26,8 +26,8 @@ def show_create_save(self, centre):
 def show_menu(self, centre):
     menu = Interfaces.Menu(centre, self.textures)
     menu.button_start.connect(show_create_save, self, self.centre)
-    if len([i for i in os.listdir('saves') if len(i.split('.maiso')) > 1]) > 5:
-        menu.button_start.active = False
+    if len([i for i in os.listdir('saves') if len(i.split('.maiso')) > 1]) > 4:
+        menu.button_start.connect(self.open_save)
     menu.button_load.connect(self.open_save)
     menu.button_online.connect(show_online, self, self.centre)
     menu.button_setting.connect(show_settings, self, self.centre)
@@ -36,8 +36,7 @@ def show_menu(self, centre):
 
 
 def show_buildmenu(self, centre, ground=None):
-    build = Interfaces.BuildMenu(centre, self.textures, (ground.rect[0] + ground.rect[2] // 2,
-                                                         ground.rect[1] + ground.rect[3] // 2))
+    build = Interfaces.BuildMenu(centre, self.textures, (ground.rect[0] + ground.rect[2] // 2, ground.rect[1] + ground.rect[3] // 2))
     build.down.connect(self.next_struct, -1)
     build.up.connect(self.next_struct, 1)
     self.now_structure = 0
@@ -98,5 +97,5 @@ def show_settings(self, centre):
     self.interfaces = dict()
     show_menu(self, self.centre)
     setting = Interfaces.Setting(centre, self.textures)
-    setting.nickname.text = "НТ/"
+    setting.nickname.text = "Ваш ник/"
     self.interfaces['setting'] = setting

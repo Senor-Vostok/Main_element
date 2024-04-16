@@ -21,7 +21,9 @@ class Textures:
 
         self.point = self.render('data/ground/test.png', (20, 20))
 
-        self.effects = {'mouse1': [self.render(f'data/effects/mouse1/anim{i}.png', (60, 60)) for i in range(1, 6)]}
+        self.effects = {'mouse1': [self.render(f'data/effects/mouse1/anim{i}.png', (60, 60)) for i in range(1, 6)],
+                        'place': [self.render(f'data/effects/place/smog{i}.png', (120, 180)) for i in range(1, 5)],
+                        'set': [self.render(f'data/effects/set/anim{i}.png', (60, 60)) for i in range(1, 5)]}
 
         self.animation_ground = {'water': [self.render(f'data/ground/water{i}.png', (60, 60)) for i in range(1, 4)]}
 
@@ -38,13 +40,14 @@ class Textures:
                                  'fire': [self.render('data/border_fractions/red.png', (60, 60))],
                                  'air': [self.render('data/border_fractions/yellow.png', (60, 60))]}
 
-        self.animations_structures = {
-            'tower': [[self.render(f'data/structures/tower/anim{i}.png', (120, 180)) for i in range(1, 6)]],
-            'mill': [[self.render(f'data/structures/mill/anim{i}.png', (120, 180)) for i in range(1, 4)]],
-            'mine': [[self.render(f'data/structures/mine/anim{i}.png', (120, 180)) for i in range(1, 8)]],
-            'homes': [[self.render(f'data/structures/homes/home1_{i}.png', (120, 180)) for i in range(1, 4)],
-                      [self.render(f'data/structures/homes/home2_{i}.png', (120, 180)) for i in range(1, 4)],
-                      [self.render(f'data/structures/homes/home3_{i}.png', (120, 180)) for i in range(1, 4)]]}
+        self.animations_structures = {'tower': [[self.render(f'data/structures/tower/anim{i}.png', (120, 180)) for i in range(1, 6)]],
+                                      'mill': [[self.render(f'data/structures/mill/anim{i}.png', (120, 180)) for i in range(1, 4)]],
+                                      'mine': [[self.render(f'data/structures/mine/anim{i}.png', (120, 180)) for i in range(1, 8)]],
+                                      'homes': [[self.render(f'data/structures/homes/home1_{i}.png', (120, 180)) for i in range(1, 4)],
+                                                [self.render(f'data/structures/homes/home2_{i}.png', (120, 180)) for i in range(1, 4)],
+                                                [self.render(f'data/structures/homes/home3_{i}.png', (120, 180)) for i in range(1, 4)]],
+                                      'sawmill': [[self.render(f'data/structures/sawmill/anim1.png', (120, 180))]],
+                                      'mill_support': [[self.render('data/structures/mill/support.png', (60, 60))]]}
 
         self.animations_main_structures = {'water': [self.render(f'data/structures/centres/water/anim{i}.png', (120, 180)) for i in range(1, 4)],
                                            'fire': [self.render(f'data/structures/centres/fire/anim{i}.png', (120, 180)) for i in range(1, 4)],
