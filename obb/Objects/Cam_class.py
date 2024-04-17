@@ -47,9 +47,8 @@ class Cam(pygame.sprite.Sprite):
                 self.smooth_a = False
             if event.key == pygame.K_d:
                 self.smooth_d = False
-        if event.type == pygame.MOUSEMOTION:
-            self.mouse_click = (event.pos[0], event.pos[1], None, None)
-        if event.type == pygame.MOUSEBUTTONDOWN:
-            self.mouse_click = (event.pos[0], event.pos[1], True, event.button)
-        if event.type == pygame.MOUSEBUTTONUP:
-            self.mouse_click = (event.pos[0], event.pos[1], False, event.button)
+        pressed = True in pygame.mouse.get_pressed()
+        number = None
+        if pressed:
+            number = [_ for _ in pygame.mouse.get_pressed()].index(True) + 1
+        self.mouse_click = [pygame.mouse.get_pos()[0], pygame.mouse.get_pos()[1], pressed, number]

@@ -30,7 +30,7 @@ class Ground(pygame.sprite.Sprite):
         self.image = self.animation[stadia - 1]
 
     def draw(self, screen, mouse_click, handler):
-        screen.blit(self.textures.land['barrier'][0] if self.structure else self.image, (self.rect.x, self.rect.y))
+        screen.blit(self.image, (self.rect.x, self.rect.y))
         if self.biome[4] != 'null':
             screen.blit(self.textures.border_fractions[self.biome[4]][0], (self.rect.x, self.rect.y))
         if self.rect.colliderect(mouse_click[0], mouse_click[1], 1, 1) and self.biome[0] != 'barrier':
@@ -44,7 +44,6 @@ class Ground(pygame.sprite.Sprite):
         if self.animation:
             stage = (synchronous // ANIMATION_SLOWDOWN + 1) % len(self.animation)
             self.__self_animation(stage)
-
         if y_n:
             if self.structure: self.structure.update(move, y_n)
             self.rect.move_ip(move)

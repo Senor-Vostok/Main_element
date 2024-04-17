@@ -34,6 +34,7 @@ class EventHandler:
         pygame.mouse.set_visible(False)
         pygame.mixer.Channel(0).play(self.sounds.menu, -1)
         self.matr, self.screen_world, self.name_save, self.timer, self.timer_backmusic = None, None, None, None, None
+        self.selected_cells = [None, None]  # Начальная и конечная выбранные клетки
         self.loaded_save, self.pressed = False, False
         self.world_coord = 0
         self.camera = Cam()
@@ -68,6 +69,14 @@ class EventHandler:
                 self.interfaces.pop('popup_menu')
             if ground.biome[0] != 'barrier':
                 show_popup_menu(self, (ground.rect[0] + ground.rect[2], ground.rect[1] + ground.rect[3]), ground, self.me.fraction_name)
+        elif self.camera.mouse_click[3] == 1:
+            if self.camera.mouse_click[2] and not self.selected_cells[0]:
+                self.selected_cells[0] = ground.biome
+            if self.camera.mouse_click[2] and self.selected_cells[0]:
+                self.selected_cells[1] = ground.biome
+        elif self.camera.mouse_click[3] != 1 and self.selected_cells != [None, None]:  # вызывается если выделили клетки
+            print(self.selected_cells)  # тут делать чёта 0 индекс начальная клетка, 1 индекс конечная
+            self.selected_cells = [None, None]
 
     def found_fractions_board(self, fraction):
         boards = list()
