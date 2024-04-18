@@ -18,6 +18,14 @@ def update_effects(self):
             self.effects.remove(i)
 
 
+def update_resource_effects(self):
+    for i in self.effects_disappearance_resource:
+        i.draw(self.screen)
+        there = self.interfaces['ingame'].resource_ico.rect
+        if i.update(self.camera.move, (there[0], there[1])):
+            self.effects_disappearance_resource.remove(i)
+
+
 def update_titles(handler):
     fps_text = handler.textures.font.render(f'fps: {int(handler.clock.get_fps())}', False, DEFAULT_COLOR)
     if 'ingame' in handler.interfaces:
@@ -45,6 +53,7 @@ def rendering(handler, machine):
     c = handler.click_handler()
     if handler.screen_world:
         handler.machine()
+    update_resource_effects(handler)
     try:
         for interface in handler.interfaces.values():
             interface.surface.update(handler.camera.mouse_click, handler.screen, c)

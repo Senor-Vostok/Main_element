@@ -29,14 +29,40 @@ class Ground(pygame.sprite.Sprite):
     def __self_animation(self, stadia):
         self.image = self.animation[stadia - 1]
 
+    def connect_border(self, all_screen):
+        border = 0
+        i, j = int(self.biome[2]), int(self.biome[3])
+        around = [all_screen[i - 1][j], all_screen[i][j - 1], all_screen[i + 1][j], all_screen[i][j + 1]]
+        indexes = [5, 2, 3, 4]
+        flag = False
+        for board in around + around:
+            if self.biome[4] != board[4]:
+                if flag and border != 0:
+                    break
+                flag = True
+            elif self.biome[4] == board[4] and flag:
+                border = border + indexes[around.index(board)] if border == 0 else border + 4
+        if border == 0 and flag:
+            border = 1
+        elif not flag:
+            border = 0
+        if border in range(2, 6) and self.biome[4] == around[0][4] and self.biome[4] == around[2][4]:
+            border = 14
+        elif border in range(2, 6) and self.biome[4] == around[1][4] and self.biome[4] == around[3][4]:
+            border = 15
+        return border
+
     def draw(self, screen, mouse_click, handler):
         screen.blit(self.image, (self.rect.x, self.rect.y))
         if self.biome[4] != 'null':
-            screen.blit(self.textures.border_fractions[self.biome[4]][0], (self.rect.x, self.rect.y))
+            screen.blit(self.textures.border_fractions[self.biome[4]][self.connect_border(handler.screen_world.biomes)], (self.rect.x, self.rect.y))
         if self.rect.colliderect(mouse_click[0], mouse_click[1], 1, 1) and self.biome[0] != 'barrier':
             screen.blit(self.select_image, (self.rect.x, self.rect.y))
         if self.structure:
             self.__draw_structure(screen)
+        elif self.biome[5] != '0':
+            category = 'small' if int(self.biome[5]) < 10 else 'middle' if int(self.biome[5]) < 30 else 'large'
+            screen.blit(self.textures.army[category][0], (self.rect.x, self.rect.y))
         if self.rect.colliderect(mouse_click[0], mouse_click[1], 1, 1):
             handler.check_ground_please(self)
 

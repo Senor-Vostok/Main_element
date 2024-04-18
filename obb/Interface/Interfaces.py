@@ -60,17 +60,17 @@ class InGame:
 
 
 class BuildMenu:
-    def __init__(self, xoy, textures, coord_select_ground):
+    def __init__(self, xoy, textures, coord_select_ground, structures):
         r = textures.resizer
-        self.background = BackGround(textures.buildmenu['background'][0], (xoy[0] + 705 * r, xoy[1]))
+        self.background = BackGround(textures.buildmenu['background'][0], (293 * r, xoy[1] - 194 * r))
         self.select_ground = BackGround(textures.select, coord_select_ground)
-        self.button_project = Button(textures.buildmenu['button_project'], (xoy[0] + 705 * r, xoy[1] + 465 * r))
-        self.down = Button(textures.buildmenu['down'], (xoy[0] + 705 * r, xoy[1] + 361 * r))
-        self.up = Button(textures.buildmenu['up'], (xoy[0] + 705 * r, xoy[1] - 381 * r))
-        self.structure = BackGround(
-            pygame.transform.scale(textures.animations_structures['tower'][0][0], (360 * r, 540 * r)),
-            (xoy[0] + 705 * r, xoy[1]))
-        self.surface = Surface(self.background, self.select_ground, self.button_project, self.down, self.up, self.structure)
+        self.button_project = Button(textures.buildmenu['button_project'], (293 * r, xoy[1] - 104 * r))
+        self.down = Button(textures.buildmenu['button'], (98 * r, xoy[1] - 230 * r))
+        self.up = Button(textures.buildmenu['button'], (488 * r, xoy[1] - 230 * r))
+        self.structure = BackGround(pygame.transform.scale(textures.animations_structures[structures[0]][0][0], (240 * r, 360 * r)), (293 * r, xoy[1] - 200 * r))
+        self.s1 = BackGround(textures.animations_structures[structures[-1]][0][0], (98 * r, xoy[1] - 210 * r))
+        self.s2 = BackGround(textures.animations_structures[structures[1]][0][0], (488 * r, xoy[1] - 210 * r))
+        self.surface = Surface(self.background, self.select_ground, self.button_project, self.down, self.up, self.structure, self.s1, self.s2)
 
 
 class Online_connect:

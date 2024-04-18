@@ -1,4 +1,5 @@
 import obb.Interface.Interfaces as Interfaces
+from obb.Image_rendering.Resources import Resource
 import sys
 import os
 
@@ -36,7 +37,7 @@ def show_menu(self, centre):
 
 
 def show_buildmenu(self, centre, ground=None):
-    build = Interfaces.BuildMenu(centre, self.textures, (ground.rect[0] + ground.rect[2] // 2, ground.rect[1] + ground.rect[3] // 2))
+    build = Interfaces.BuildMenu(centre, self.textures, (ground.rect[0] + ground.rect[2] // 2, ground.rect[1] + ground.rect[3] // 2), self.structures)
     build.down.connect(self.next_struct, -1)
     build.up.connect(self.next_struct, 1)
     self.now_structure = 0
@@ -99,3 +100,13 @@ def show_settings(self, centre):
     setting = Interfaces.Setting(centre, self.textures)
     setting.nickname.text = "Ваш ник/"
     self.interfaces['setting'] = setting
+
+
+def show_resources(self, count):
+    if count <= 0:
+        return
+    count = 10 if count > 10 else count
+    y = self.interfaces['ingame'].back2.rect[1]
+    interval = self.size[0] // count
+    for i in range(self.size[0], self.size[0] * 2, interval):
+         self.effects_disappearance_resource.append(Resource((i / 2, y), self.textures.ingame['resource'][0]))

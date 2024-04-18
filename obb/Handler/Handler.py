@@ -44,7 +44,8 @@ class EventHandler:
         self.contact = Unknown()
         self.interfaces = dict()
         self.bots = list()
-        self.effects = list()
+        self.effects = list()  # Обрабатывает объекты класса Effects
+        self.effects_disappearance_resource = list()  # Обрабатывает объекты класса Resources
         self.structures = [i for i in self.textures.animations_structures if 'support' not in i]
         self.supports_structure = [i for i in self.textures.animations_structures if 'support' in i]
         self.now_structure = 0
@@ -259,7 +260,8 @@ class EventHandler:
         self.contact = Unknown()
         self.interfaces = dict()
         self.bots = list()
-        self.effects = list()
+        self.effects = list()  # Обрабатывает объекты класса Effects
+        self.effects_disappearance_resource = list()  # Обрабатывает объекты класса Resources
         self.now_structure = 0
         pygame.mixer.Channel(0).play(self.sounds.menu, -1)
         show_menu(self, self.centre)
@@ -270,9 +272,12 @@ class EventHandler:
         self.screen_world.create('static')
 
     def next_struct(self, ind):
-        self.now_structure = (self.now_structure + ind) % len(self.structures) if self.now_structure + ind >= 0 else len(
-            self.structures) - 1
-        self.interfaces['buildmenu'].structure.image = pygame.transform.scale(self.textures.animations_structures[self.structures[self.now_structure]][0][0], (360 * self.textures.resizer, 540 * self.textures.resizer))
+        self.now_structure = (self.now_structure + ind) % len(self.structures) if self.now_structure + ind >= 0 else len(self.structures) - 1
+        fs1 = (self.now_structure + 1) % len(self.structures) if self.now_structure + 1 >= 0 else len(self.structures) - 1
+        fs2 = (self.now_structure - 1) % len(self.structures) if self.now_structure - 1 >= 0 else len(self.structures) - 1
+        self.interfaces['buildmenu'].structure.image = pygame.transform.scale(self.textures.animations_structures[self.structures[self.now_structure]][0][0], (240 * self.textures.resizer, 360 * self.textures.resizer))
+        self.interfaces['buildmenu'].s2.image = self.textures.animations_structures[self.structures[fs1]][0][0]
+        self.interfaces['buildmenu'].s1.image = self.textures.animations_structures[self.structures[fs2]][0][0]
 
     def host_game(self, matr):
         if not matr:
@@ -435,12 +440,14 @@ class EventHandler:
         else:
             self.contact.send(f'presource-0-{uid}|{delta_presource}-end-')
 
+
     def get_resource(self):
         if (datetime.now() - self.timer).seconds >= COOLDOWN:
             self.timer = datetime.now()
             self.contact.send(f'host-0-timer-end-')
             self.update_resource(self.me.uid, self.me.potential_resource)
             self.me.resources += self.me.potential_resource
+            show_resources(self, self.me.potential_resource)
             if self.contact.protocol == 'host' or self.contact.protocol == 'unknown':
                 for bot in self.bots:
                     self.update_resource(bot.uid, bot.potential_resource)

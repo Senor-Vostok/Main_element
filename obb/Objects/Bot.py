@@ -6,7 +6,7 @@ class Bot:
     def __init__(self, id, structures):
         self.id = id
         self.uid = f'bot{id}'
-        self.interval = id + 1
+        self.interval = 0.01
         self.fraction_name = None
         self.resources = 0
         self.exist_structers = structures
