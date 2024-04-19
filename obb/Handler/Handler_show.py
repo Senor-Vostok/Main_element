@@ -1,5 +1,6 @@
 import obb.Interface.Interfaces as Interfaces
 from obb.Image_rendering.Resources import Resource
+import pygame
 import sys
 import os
 
@@ -17,8 +18,7 @@ def show_ingame(self, centre):
 
 
 def show_create_save(self, centre):
-    self.interfaces = dict()
-    show_menu(self, self.centre)
+    close_useless(self)
     name = Interfaces.CreateSave(centre, self.textures)
     name.name.connect(show_choicegame, self, centre, None)
     self.interfaces['create_save'] = name
@@ -32,7 +32,7 @@ def show_menu(self, centre):
     menu.button_load.connect(self.open_save)
     menu.button_online.connect(show_online, self, self.centre)
     menu.button_setting.connect(show_settings, self, self.centre)
-    menu.button_exit.connect(sys.exit)
+    menu.button_exit.connect(self.quit)
     self.interfaces['menu'] = menu
 
 
@@ -48,12 +48,11 @@ def show_buildmenu(self, centre, ground=None):
 
 
 def show_online(self, centre, t='connect', matr=None, name_save=None, info_players=None):
+    close_useless(self)
     if name_save:
         self.loaded_save = True
         self.name_save = name_save
         self.info_players = info_players
-    self.interfaces = dict()
-    show_menu(self, self.centre)
     if 'choicegame' in self.interfaces: close(self, 'choicegame', True)
     if t == 'connect':
         label = Interfaces.Online_connect(centre, self.textures)
@@ -72,10 +71,12 @@ def show_online(self, centre, t='connect', matr=None, name_save=None, info_playe
 def show_pause(self, centre):
     pause = Interfaces.Pause(centre, self.name_save, self.textures)
     pause.button_menu.connect(self.go_back_to_menu)
+    pause.button_setting.connect(show_settings, self, centre, False)
     self.interfaces['pause'] = pause
 
 
 def show_popup_menu(self, centre, ground, fraction):
+    close_useless(self)
     popup = Interfaces.PopupMenu(centre, self.textures)
     popup.button_build.connect(show_buildmenu, self, self.centre, ground)
     i, j = int(ground.biome[2]), int(ground.biome[3])
@@ -87,19 +88,21 @@ def show_popup_menu(self, centre, ground, fraction):
 
 def show_choicegame(self, centre, matr=None):
     self.name_save = self.interfaces['create_save'].name.text[:-1]
-    self.interfaces = dict()
-    show_menu(self, self.centre)
+    self.interfaces.pop('create_save')
     choice = Interfaces.ChoiceGame(centre, self.textures)
     choice.button_local.connect(self.init_world, matr)
     choice.button_online.connect(show_online, self, self.centre, 'create', matr)
     self.interfaces['choicegame'] = choice
 
 
-def show_settings(self, centre):
-    self.interfaces = dict()
-    show_menu(self, self.centre)
+def show_settings(self, centre, active=True):
+    close_useless(self)
     setting = Interfaces.Setting(centre, self.textures)
-    setting.nickname.text = "Ваш ник/"
+    setting.nickname.connect(self.save_settings, 'nickname')
+    setting.sound_loud.now_sector = 100 * self.volumes_channels[0]
+    setting.sound_loud.connect(self.change_volume, setting.sound_loud, 0)
+    setting.nickname.text = self.me.nickname + "/"
+    setting.nickname.active = active
     self.interfaces['setting'] = setting
 
 
@@ -111,3 +114,8 @@ def show_resources(self, count):
     interval = self.size[0] // count
     for i in range(self.size[0], self.size[0] * 2, interval):
          self.effects_disappearance_resource.append(Resource((i / 2, y), self.textures.ingame['resource'][0]))
+
+
+def close_useless(self):
+    if 'menu' in self.interfaces and len(self.interfaces) > 1:
+        self.interfaces.pop([_ for _ in self.interfaces if self.interfaces[_] == self.last_interface][0])

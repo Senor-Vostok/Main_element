@@ -57,6 +57,7 @@ def rendering(handler, machine):
     try:
         for interface in handler.interfaces.values():
             interface.surface.update(handler.camera.mouse_click, handler.screen, c)
+            handler.last_interface = interface
     except Exception:
         pass
     update_effects(handler)

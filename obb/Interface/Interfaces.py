@@ -30,8 +30,7 @@ class Menu:
         self.button_exit = Button(textures.main_menu['button_exit'], (
             self.button_start.rect.x + 200 * textures.resizer,
             self.button_start.rect.y + self.button_start.rect[3] + 265 * textures.resizer))
-        self.surface = Surface(self.background, self.button_start, self.button_load, self.button_online,
-                               self.button_setting, self.button_exit)
+        self.surface = Surface(self.background, self.button_start, self.button_load, self.button_online, self.button_setting, self.button_exit)
 
 
 class PopupMenu:
@@ -56,7 +55,8 @@ class InGame:
         self.count_resource = Label('-', (xoy[0] * 2 - 240 * r, 40 * r), int(30 * r))
         self.back1 = BackGround(textures.ingame['back'][0], (xoy[0], 40 * r))
         self.back2 = BackGround(textures.ingame['back'][0], (xoy[0], xoy[1] * 2 - 40 * r))
-        self.surface = Surface(self.back1, self.back2, self.button_back, self.resource_ico, self.count_resource)
+        self.state_game = Switch(textures.setting['switch'], (xoy[0] * 2 - 400 * r, 40 * r))
+        self.surface = Surface(self.back1, self.back2, self.button_back, self.resource_ico, self.count_resource, self.state_game)
 
 
 class BuildMenu:
@@ -155,4 +155,6 @@ class Setting:
         r = textures.resizer
         self.background = BackGround(textures.setting['background'][0], xoy)
         self.nickname = InteractLabel(textures.setting['nickname'], (xoy[0], xoy[1] - 255 * r))
-        self.surface = Surface(self.background, self.nickname)
+        self.label_sound = Label('Громкость музыки', (xoy[0], xoy[1] - 200 * r), int(20 * r))
+        self.sound_loud = Slicer(textures.setting['slicer'], (xoy[0], xoy[1] - 150 * r), 100, 1)
+        self.surface = Surface(self.background, self.nickname, self.label_sound, self.sound_loud)

@@ -186,7 +186,11 @@ class Textures:
 
         self.setting = {"background": self.save_menu['background'],
                         'nickname': [self.render(f'data/widgets/setting/labels/nickname.png', (560, 50)),
-                                     self.render(f'data/widgets/setting/labels/nicknamet.png', (560, 50))]}
+                                     self.render(f'data/widgets/setting/labels/nicknamet.png', (560, 50))],
+                        'slicer': [self.render(f'data/widgets/setting/labels/slicer_back.png', (560, 24)),
+                                   self.render(f'data/widgets/setting/labels/slicer_point.png', (18, 52))],
+                        'switch': [self.render(f'data/widgets/setting/labels/button1.png', (42, 60)),
+                                   self.render(f'data/widgets/setting/labels/button1t.png', (42, 60))]}
 
         self.army = {'small': [self.render(f'data/army/small.png', (60, 60))],
                      'middle': [self.render(f'data/army/midle.png', (60, 60))],
