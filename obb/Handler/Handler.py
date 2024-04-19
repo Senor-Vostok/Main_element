@@ -102,12 +102,18 @@ class EventHandler:
             self.attack(self.me)  # исправить attacker для ботов
             self.selected_cells = [None, None]
 
-    def found_fractions_board(self, fraction):
+    def found_board(self, index, board, flag_centre=None, block_size=0):
         boards = list()
-        for i in range(len(self.screen_world.biomes)):
-            for j in range(len(self.screen_world.biomes)):
-                if self.screen_world.biomes[i][j][4] == fraction:
-                    boards.append(self.screen_world.biomes[i][j])
+        if flag_centre:
+            for i in range(flag_centre[0] - block_size, flag_centre[0] + block_size):
+                for j in range(flag_centre[1] - block_size, flag_centre[1] + block_size):
+                    if self.screen_world.biomes[i][j][index] == board:
+                        boards.append(self.screen_world.biomes[i][j])
+        else:
+            for i in range(len(self.screen_world.biomes)):
+                for j in range(len(self.screen_world.biomes)):
+                    if self.screen_world.biomes[i][j][index] == board:
+                        boards.append(self.screen_world.biomes[i][j])
         return boards
 
     def generation(self, size=200, barrier=BARRIER_SIZE):
@@ -123,7 +129,7 @@ class EventHandler:
         self.me.start_point = start_point
 
     def init_bot(self, fraction, start_point, resource, potential_resource):
-        self.bots.append(Bot(len(self.bots), self.structures))
+        self.bots.append(Bot(len(self.bots), self.structures, self.rules))
         self.bots[-1].fraction_name = fraction
         self.bots[-1].resources = resource
         self.bots[-1].potential_resource = potential_resource
@@ -136,7 +142,7 @@ class EventHandler:
                 uid = self.info_players[c][0]
                 if 'bot' in uid:
                     self.init_bot(self.info_players[c][1], self.info_players[c][2], self.info_players[c][3], self.info_players[c][4])
-                    self.bots[-1].my_ground = self.found_fractions_board(self.info_players[c][1])
+                    self.bots[-1].my_ground = self.found_board(4, self.info_players[c][1])
                 else:
                     i = self.contact.users.index(uid)
                     self.contact.send(f"uid-0-{self.info_players[c][1]}|{'_'.join(map(str, self.info_players[c][2]))}|{self.info_players[c][3]}|{self.info_players[c][4]}-end-", self.contact.array_clients[i - 1])
@@ -477,6 +483,7 @@ class EventHandler:
             self.contact.send(f'change-0-structure|{structure}|{i}|{j}-end-')
 
     def set_fraction(self, coord_ground, fraction, info=True, buyer=None):
+        print(coord_ground[0])
         i, j = coord_ground[0], coord_ground[1]
         sq_i, sq_j = i - self.screen_world.world_coord[0], j - self.screen_world.world_coord[1]
         in_matrix = 0 <= sq_i < self.screen_world.sq2 and 0 <= sq_j < self.screen_world.sq1
