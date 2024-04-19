@@ -76,7 +76,9 @@ class EventHandler:
             if self.camera.mouse_click[2] and self.selected_cells[0]:
                 self.selected_cells[1] = ground.biome
         elif self.camera.mouse_click[3] != 1 and self.selected_cells != [None, None]:  # вызывается если выделили клетки
-            print(self.selected_cells)  # тут делать чёта 0 индекс начальная клетка, 1 индекс конечная
+            #если режим атаки:
+            self.attack(self.me) #исправить attacker для ботов
+            print(self.selected_cells)   # тут делать чёта 0 индекс начальная клетка, 1 индекс конечная
             self.selected_cells = [None, None]
 
     def found_board(self, index, board, flag_centre=None, block_size=0):
@@ -135,10 +137,10 @@ class EventHandler:
                 fraction = random.choice(self.fractions)
             whitelist.append(fraction)
             self.info_players[c].append(fraction)
-            barrier = BARRIER_SIZE * 2
+            barrier = BARRIER_SIZE + 5
             start_point = [random.randint(barrier, len(self.screen_world.biomes) - barrier),
                            random.randint(barrier, len(self.screen_world.biomes) - barrier)]
-            while start_point in start_points:
+            while (start_point in start_points) or (not self.check_start_point(start_point)):
                 start_point = [random.randint(barrier, len(self.screen_world.biomes) - barrier),
                                random.randint(barrier, len(self.screen_world.biomes) - barrier)]
             start_points.append(start_point)
@@ -154,11 +156,22 @@ class EventHandler:
                     if "bot" in self.info_players[c][0]:
                         self.bots[-1].my_ground.append(self.screen_world.biomes[start_point[0] + i][start_point[1] + j])
                     self.screen_world.biomes[start_point[0] + i][start_point[1] + j][4] = fraction
+                    if "bot" in self.info_players[c][0]: # 1 человек в каждую клетку для теста
+                        self.screen_world.biomes[start_point[0] + i][start_point[1] + j][5] = '1'
+                    else:
+                        self.screen_world.biomes[start_point[0] + i][start_point[1] + j][5] = '10'
                     message += f'change-0-fraction|{fraction}|{start_point[0] + i}|{start_point[1] + j}-end-'
         for c in range(1, len(self.info_players)):
             if 'bot' not in self.info_players[c][0]:
                 self.contact.send(f"uid-0-{self.info_players[c][1]}|{'_'.join(map(str, self.info_players[c][2]))}|{self.info_players[c][3]}|{0}-end-{message}", self.contact.array_clients[c - 1])
         self.init_player(self.info_players[0][1], self.info_players[0][2], self.info_players[0][3], 0)
+
+    def check_start_point(self, start_point):
+        for i in range(-2, 3):
+            for j in range(-2, 3):
+                if self.screen_world.biomes[start_point[0]][start_point[1]][1] != 'null':
+                    return False
+        return True
 
     def init_world(self, matr=None, name_save=None, info_players=None):
         if name_save:
@@ -335,6 +348,41 @@ class EventHandler:
         saves.handler = self
         saves.add_saves(files, self.init_world, show_online, self)
         self.interfaces['save_menu'] = saves
+
+    def attack(self, attacker):
+        y = self.centre[1] * 2 - 60 * self.textures.resizer
+
+        i_from = int(self.selected_cells[0][2])
+        j_from = int(self.selected_cells[0][3])
+
+        i_to = int(self.selected_cells[1][2])
+        j_to = int(self.selected_cells[1][3])
+
+        ground_from = self.screen_world.biomes[i_from][j_from]
+        ground_to = self.screen_world.biomes[i_to][j_to]
+
+        if ground_from[4] == attacker.fraction_name:
+            if ground_to[4] == attacker.fraction_name:
+                print('Это ваша клетка') # Добавить сюда перемещение войск по своим клеткам (выбор кол-ва)
+                return
+            units_from = int(ground_from[5]) - 1 # оставляем одного человека в атакующей клетке (для теста)
+            units_to = int(ground_to[5])
+            delta_units_cnt = units_from - units_to
+
+            defending_ground_protection = int(self.rules['StructuresProtection'][ground_to[1]][0])
+            if delta_units_cnt > defending_ground_protection:
+                if ground_to[4] == 'null':
+                    self.effects.append(Information(y, f"{ground_from[4]} успешно захватили новую клетку", self.textures.resizer))
+                else:
+                    self.effects.append(Information(y, f"{ground_from[4]} успешно атакуют {ground_to[4]}", self.textures.resizer))
+                ground_to[4] = ground_from[4]
+                ground_from[5] = str(max(0, units_from - delta_units_cnt + 1))
+                ground_to[5] = str(max(0, delta_units_cnt))
+            else:
+                if ground_to[4] == 'null':
+                    self.effects.append(Information(y, f"{ground_from[4]} не смогли расширить владения", self.textures.resizer))
+                else:
+                    self.effects.append(Information(y, f"{ground_from[4]} не смогли захватить клетку {ground_to[4]}", self.textures.resizer))
 
     def area(self, ground, buyer):
         if "tower" in ground[1]:

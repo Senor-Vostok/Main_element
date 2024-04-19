@@ -11,7 +11,7 @@ class Ground(pygame.sprite.Sprite):
             self.animation = textures.animation_ground[biome[0]]
         else:
             self.animation = None
-        self.biome = biome
+        self.biome = biome #0-биом 1-структура 2,3-координаты 4-фракция 5-кол-во юнитов
         self.units_count = 0
         self.tile_image = image  # изначальная текстура клетки
         self.image = image  # текущая текстура клетки
