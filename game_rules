@@ -1,0 +1,6 @@
+StructuresList:mill,mine,tower,homes,sawmill,fisherman
+StructuresCosts:mill_10,tower_20,mine_15,homes_5,sawmill_10,fisherman_10
+StructuresPermissions:mill_sand_flower,tower_sand_flower_ground,mine_stone_snow,homes_sand_flower_ground_snow,sawmill_ground,fisherman_water
+GroundsCosts:ground_2,flower_2,sand_2,snow_3,stone_3,water_3
+ResourcesFromStructures:mill_5,tower_0,mine_5,homes_0,sawmill_5,fisherman_5
+StructuresProtection:mill_1,tower_10,mine_3,homes_0,sawmill_2,fisherman_0,null_0,air_15,earth_15,fire_15,water_15
