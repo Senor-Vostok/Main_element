@@ -12,7 +12,7 @@ if __name__ == '__main__':
         file.close()
         file = open('data/user/information', mode='w')
         uid = random.randint(4, 100000000)
-        file.write('0' * (9 - len(str(id))) + str(id))
+        file.write('0' * (9 - len(str(uid))) + str(uid))
         file.close()
     handler = EventHandler()
     show_menu(handler, handler.centre)
