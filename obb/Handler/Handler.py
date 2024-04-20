@@ -43,7 +43,7 @@ class EventHandler:
         pygame.mixer.Channel(0).play(self.sounds.menu, -1)
         self.matr, self.screen_world, self.name_save, self.timer, self.timer_backmusic, self.last_interface = None, None, None, None, None, None
         self.selected_cells = [None, None]  # Начальная и конечная выбранные клетки
-        self.loaded_save, self.pressed = False, False
+        self.loaded_save = False
         self.world_coord = 0
         self.camera = Cam()
         self.open_some, self.flag = True, True
@@ -483,7 +483,6 @@ class EventHandler:
             self.contact.send(f'change-0-structure|{structure}|{i}|{j}-end-')
 
     def set_fraction(self, coord_ground, fraction, info=True, buyer=None):
-        print(coord_ground[0])
         i, j = coord_ground[0], coord_ground[1]
         sq_i, sq_j = i - self.screen_world.world_coord[0], j - self.screen_world.world_coord[1]
         in_matrix = 0 <= sq_i < self.screen_world.sq2 and 0 <= sq_j < self.screen_world.sq1

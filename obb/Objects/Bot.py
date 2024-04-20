@@ -69,14 +69,14 @@ class Bot:
     def __get_event(self, y):
         if y < 5 or self.resources <= (int(self.guides["StructuresCosts"]['tower'][0]) * 2) : # строим фарм строения Todo 50 20 300 не константы
             return 1
-        elif 5 < y < 8 and self.resources >= 200: # строимся к врагам
+        elif 5 < y < 8 and self.resources >= 200:  # строимся к врагам
             return 2
-        elif 8 < y < 12: # пупупу
+        elif 8 < y < 12:  # пупупу
             return 3
-        elif 12 < y < 14 or self.people >= 300: # атакуем врагов
+        elif 12 < y < 14 or self.people >= 300:  # атакуем врагов
             return 4
         else:
-            return 5 # строим провинцию
+            return 5  # строим провинцию
 
     def check_place_structure(self, handler, flag_money=False): # пофиКСЬ ДВЕ ТАВЕРКИ
         while True:
