@@ -11,7 +11,7 @@ if __name__ == '__main__':
     if file.read() == 'UID':
         file.close()
         file = open('data/user/information', mode='w')
-        id = random.randint(4, 100000000)
+        uid = random.randint(4, 100000000)
         file.write('0' * (9 - len(str(id))) + str(id))
         file.close()
     handler = EventHandler()

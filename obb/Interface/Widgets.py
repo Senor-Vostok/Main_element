@@ -32,24 +32,71 @@ class Button(pygame.sprite.Sprite):
                 if self.one_press:
                     self.one_press = False
                     pygame.mixer.Channel(1).play(sounds.click)
-                    if len(self.args) == 0:
-                        return self.func()
-                    elif len(self.args) == 1:
-                        return self.func(self.args[0])
-                    elif len(self.args) == 2:
-                        return self.func(self.args[0], self.args[1])
-                    elif len(self.args) == 3:
-                        return self.func(self.args[0], self.args[1], self.args[2])
-                    elif len(self.args) == 4:
-                        return self.func(self.args[0], self.args[1], self.args[2], self.args[3])
-                    elif len(self.args) == 5:
-                        return self.func(self.args[0], self.args[1], self.args[2], self.args[3], self.args[4])
-                    elif len(self.args) == 6:
-                        return self.func(self.args[0], self.args[1], self.args[2], self.args[3], self.args[4], self.args[5])
+                    self.func(*self.args)
             else:
                 self.one_press = True
         else:
             self.image = self.state
+
+
+class Switch(pygame.sprite.Sprite):
+    def __init__(self, image, xoy, active=False):
+        pygame.sprite.Sprite.__init__(self)
+        self.active = active
+        self.enable = image[0]
+        self.disable = image[1]
+        self.one_press = False
+        self.func, self.args = None, None
+        if self.active:
+            self.image = self.enable
+        else:
+            self.image = self.disable
+        self.rect = self.image.get_rect(center=xoy)
+
+    def draw(self, screen):
+        screen.blit(self.image, (self.rect.x, self.rect.y))
+
+    def connect(self, func, *args):
+        self.func = func
+        self.args = args
+
+    def update(self, mouse_click, command=None):
+        if self.rect.colliderect(mouse_click[0], mouse_click[1], 1, 1) and mouse_click[2] and mouse_click[3] == 1:
+            if self.one_press:
+                return
+            pygame.mixer.Channel(1).play(sounds.click)
+            self.one_press = True
+            self.active = not self.active
+            self.image = self.enable if self.active else self.disable
+        else:
+            self.one_press = False
+
+
+class Slicer(pygame.sprite.Sprite):
+    def __init__(self, image, xoy, cuts=1, now_sector=1):
+        pygame.sprite.Sprite.__init__(self)
+        self.back_image = image[0]
+        self.point_image = image[1]
+        self.cuts = cuts
+        self.func, self.args = None, None
+        self.now_sector = now_sector
+        self.rect = self.back_image.get_rect(center=xoy)
+
+    def draw(self, screen):
+        delta_x = ((self.rect[2] - self.point_image.get_rect()[2]) / self.cuts) * (self.now_sector - 1)
+        screen.blit(self.back_image, self.rect)
+        screen.blit(self.point_image, (self.rect.x + delta_x, self.rect.y - (self.point_image.get_rect()[3] // 2 - self.rect[3] // 2)))
+
+    def connect(self, func, *args):
+        self.func = func
+        self.args = args
+
+    def update(self, mouse_click, command=None):
+        if self.rect.colliderect(mouse_click[0], mouse_click[1], 1, 1) and mouse_click[2] and mouse_click[3] == 1:
+            if self.now_sector != (mouse_click[0] - self.rect[0]) // (self.rect[2] / self.cuts) + 1:
+                if self.func:
+                    self.func(*self.args)
+                self.now_sector = (mouse_click[0] - self.rect[0]) // (self.rect[2] / self.cuts) + 1
 
 
 class InteractLabel(pygame.sprite.Sprite):
@@ -99,20 +146,7 @@ class InteractLabel(pygame.sprite.Sprite):
                 self.text = self.text[:-2] + "/"
             elif int(command.key) == 13:
                 if self.func:
-                    if len(self.args) == 0:
-                        return self.func()
-                    elif len(self.args) == 1:
-                        return self.func(self.args[0])
-                    elif len(self.args) == 2:
-                        return self.func(self.args[0], self.args[1])
-                    elif len(self.args) == 3:
-                        return self.func(self.args[0], self.args[1], self.args[2])
-                    elif len(self.args) == 4:
-                        return self.func(self.args[0], self.args[1], self.args[2], self.args[3])
-                    elif len(self.args) == 5:
-                        return self.func(self.args[0], self.args[1], self.args[2], self.args[3], self.args[4])
-                    elif len(self.args) == 6:
-                        return self.func(self.args[0], self.args[1], self.args[2], self.args[3], self.args[4], self.args[5])
+                    self.func(*self.args)
             elif len(str(command.unicode)) > 0 and command.type == pygame.KEYDOWN:
                 self.text = self.text[:-1] + command.unicode + "/"
 

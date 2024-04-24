@@ -21,8 +21,16 @@ class EventHandler:
     def __init__(self):  # TODO: исправить присваивание bot_id и id
         pygame.init()
         pygame.mixer.init()
+        self.settings = dict()
+        self.volumes_channels = [1] * 8
         with open('data/user/information', mode='rt') as file:
             self.me = Player(int(file.read()))
+        with open('data/user/settings', mode='rt', encoding='utf-8') as file:
+            for info in file.read().split('\n'):
+                self.settings[info.split(':t:')[0]] = info.split(':t:')[1]
+            self.me.nickname = self.settings['nickname']
+            self.volumes_channels[0] = float(self.settings['volume'])
+            pygame.mixer.Channel(0).set_volume(float(self.settings['volume']))
         self.size = GetSystemMetrics(0), GetSystemMetrics(1)
         self.centre = (self.size[0] // 2, self.size[1] // 2)
         self.clock = pygame.time.Clock()
@@ -33,7 +41,7 @@ class EventHandler:
         self.sounds = Sounds()
         pygame.mouse.set_visible(False)
         pygame.mixer.Channel(0).play(self.sounds.menu, -1)
-        self.matr, self.screen_world, self.name_save, self.timer, self.timer_backmusic = None, None, None, None, None
+        self.matr, self.screen_world, self.name_save, self.timer, self.timer_backmusic, self.last_interface = None, None, None, None, None, None
         self.selected_cells = [None, None]  # Начальная и конечная выбранные клетки
         self.loaded_save, self.pressed = False, False
         self.world_coord = 0
@@ -52,6 +60,20 @@ class EventHandler:
         self.rules = dict()
         self.read_rules()
         self.uid = self.textures.font.render(f'UID: {"0" * (9 - len(str(self.me.id))) + str(self.me.id)}', False, DEFAULT_COLOR)
+
+    def change_volume(self, object, channel):
+        self.volumes_channels[channel] = object.now_sector / 100
+        pygame.mixer.Channel(channel).set_volume(self.volumes_channels[channel])
+
+    def save_settings(self, do='all'):
+        if do == 'nickname':
+            self.settings[do] = self.interfaces['setting'].nickname.text[:-1]
+            self.me.nickname = self.settings[do]
+        if do == 'all':
+            self.settings['volume'] = str(self.volumes_channels[0])
+        with open('data/user/settings', mode='w', encoding='utf-8') as file:
+            settings = '\n'.join([':t:'.join([i, self.settings[i]]) for i in self.settings])
+            file.write(settings)
 
     def read_rules(self):
         with open('game_rules', 'rt') as file:
@@ -76,17 +98,22 @@ class EventHandler:
             if self.camera.mouse_click[2] and self.selected_cells[0]:
                 self.selected_cells[1] = ground.biome
         elif self.camera.mouse_click[3] != 1 and self.selected_cells != [None, None]:  # вызывается если выделили клетки
-            #если режим атаки:
-            self.attack(self.me) #исправить attacker для ботов
-            print(self.selected_cells)   # тут делать чёта 0 индекс начальная клетка, 1 индекс конечная
+            # если режим атаки:
+            self.attack(self.me)  # исправить attacker для ботов
             self.selected_cells = [None, None]
 
-    def found_fractions_board(self, fraction):
+    def found_board(self, index, board, flag_centre=None, block_size=0):
         boards = list()
-        for i in range(len(self.screen_world.biomes)):
-            for j in range(len(self.screen_world.biomes)):
-                if self.screen_world.biomes[i][j][4] == fraction:
-                    boards.append(self.screen_world.biomes[i][j])
+        if flag_centre:
+            for i in range(flag_centre[0] - block_size, flag_centre[0] + block_size):
+                for j in range(flag_centre[1] - block_size, flag_centre[1] + block_size):
+                    if self.screen_world.biomes[i][j][index] == board:
+                        boards.append(self.screen_world.biomes[i][j])
+        else:
+            for i in range(len(self.screen_world.biomes)):
+                for j in range(len(self.screen_world.biomes)):
+                    if self.screen_world.biomes[i][j][index] == board:
+                        boards.append(self.screen_world.biomes[i][j])
         return boards
 
     def generation(self, size=200, barrier=BARRIER_SIZE):
@@ -102,7 +129,7 @@ class EventHandler:
         self.me.start_point = start_point
 
     def init_bot(self, fraction, start_point, resource, potential_resource):
-        self.bots.append(Bot(len(self.bots), self.structures))
+        self.bots.append(Bot(len(self.bots), self.structures, self.rules))
         self.bots[-1].fraction_name = fraction
         self.bots[-1].resources = resource
         self.bots[-1].potential_resource = potential_resource
@@ -115,7 +142,7 @@ class EventHandler:
                 uid = self.info_players[c][0]
                 if 'bot' in uid:
                     self.init_bot(self.info_players[c][1], self.info_players[c][2], self.info_players[c][3], self.info_players[c][4])
-                    self.bots[-1].my_ground = self.found_fractions_board(self.info_players[c][1])
+                    self.bots[-1].my_ground = self.found_board(4, self.info_players[c][1])
                 else:
                     i = self.contact.users.index(uid)
                     self.contact.send(f"uid-0-{self.info_players[c][1]}|{'_'.join(map(str, self.info_players[c][2]))}|{self.info_players[c][3]}|{self.info_players[c][4]}-end-", self.contact.array_clients[i - 1])
@@ -150,7 +177,7 @@ class EventHandler:
                     if "bot" in self.info_players[c][0]:
                         self.bots[-1].my_ground.append(self.screen_world.biomes[start_point[0] + i][start_point[1] + j])
                     self.screen_world.biomes[start_point[0] + i][start_point[1] + j][4] = fraction
-                    if "bot" in self.info_players[c][0]: # 1 человек в каждую клетку для теста
+                    if "bot" in self.info_players[c][0]:  # 1 человек в каждую клетку для теста
                         self.screen_world.biomes[start_point[0] + i][start_point[1] + j][5] = '1'
                     else:
                         self.screen_world.biomes[start_point[0] + i][start_point[1] + j][5] = '10'
@@ -361,7 +388,7 @@ class EventHandler:
 
         if ground_from[4] == attacker.fraction_name:
             if ground_to[4] == attacker.fraction_name:
-                print('Это ваша клетка') # Добавить сюда перемещение войск по своим клеткам (выбор кол-ва)
+                print('Это ваша клетка')  # Добавить сюда перемещение войск по своим клеткам (выбор кол-ва)
                 return
             units_from = int(ground_from[5]) - 1 # оставляем одного человека в атакующей клетке (для теста)
             units_to = int(ground_to[5])
@@ -476,6 +503,7 @@ class EventHandler:
             self.contact.send(f'change-0-structure|{structure}|{i}|{j}-end-')
 
     def set_fraction(self, coord_ground, fraction, info=True, buyer=None):
+        print(coord_ground[0])
         i, j = coord_ground[0], coord_ground[1]
         sq_i, sq_j = i - self.screen_world.world_coord[0], j - self.screen_world.world_coord[1]
         in_matrix = 0 <= sq_i < self.screen_world.sq2 and 0 <= sq_j < self.screen_world.sq1
@@ -508,7 +536,6 @@ class EventHandler:
         else:
             self.contact.send(f'presource-0-{uid}|{delta_presource}-end-')
 
-
     def get_resource(self):
         if (datetime.now() - self.timer).seconds >= COOLDOWN:
             self.timer = datetime.now()
@@ -525,18 +552,18 @@ class EventHandler:
         c = None
         for i in pygame.event.get():
             self.camera.event(i)
-            if i.type == pygame.QUIT:
-                sys.exit()
             if i.type == pygame.KEYDOWN:
                 c = i
-                if i.key == pygame.K_ESCAPE and not self.open_some:
-                    show_pause(self, self.centre) if 'pause' not in self.interfaces else close(self, 'pause', False, None)
+                if i.key == pygame.K_ESCAPE:
+                    if len(self.interfaces) > 1:
+                        self.interfaces.pop([_ for _ in self.interfaces if self.interfaces[_] == self.last_interface][0])
+                        continue
+                    show_pause(self, self.centre) if 'pause' not in self.interfaces and not self.open_some else None
                 if 'popup_menu' in self.interfaces: self.interfaces.pop('popup_menu')
                 if 'buildmenu' in self.interfaces: self.interfaces.pop('buildmenu')
                 if 'choicegame' in self.interfaces: self.interfaces.pop('choicegame')
             if i.type == pygame.QUIT:
-                self.contact.sock.close()
-                sys.exit()
+                self.quit()
             if i.type == pygame.MOUSEWHEEL:
                 self.next_struct(int(i.precise_y)) if 'buildmenu' in self.interfaces else None
         return c
@@ -545,3 +572,9 @@ class EventHandler:
         self.screen.fill(BACKGROUND_COLOR)
         self.clock.tick()
         rendering(self, self.screen_world)
+
+    def quit(self):
+        self.save_settings()
+        if self.contact.sock:
+            self.contact.sock.close()
+        sys.exit()
