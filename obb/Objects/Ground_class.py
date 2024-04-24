@@ -73,6 +73,9 @@ class Ground(pygame.sprite.Sprite):
         if y_n:
             if self.structure: self.structure.update(move, y_n)
             self.rect.move_ip(move)
+        #обновить текстуру если разрушена фракция
+        # if self.biome[4] == 'null':
+        #     self.structure.image = self.textures.destroyed_structures[self.structure][0] или [0][0]
 
     def __draw_structure(self, screen):
         self.structure.draw(screen)
