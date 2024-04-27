@@ -110,6 +110,8 @@ class Textures:
                                       'sawmill': [[self.render(f'data/structures/sawmill/anim1.png', (120, 180))]],
                                       'fisherman': [[self.render(f'data/structures/fisherman/anim{i}.png', (120, 180)) for i in range(1, 4)]]}
 
+        # self.destroyed_structures = {} для руин
+
         self.animations_main_structures = {'water': [self.render(f'data/structures/centres/water/anim{i}.png', (120, 180)) for i in range(1, 4)],
                                            'fire': [self.render(f'data/structures/centres/fire/anim{i}.png', (120, 180)) for i in range(1, 4)],
                                            'earth': [self.render(f'data/structures/centres/earth/anim{i}.png', (120, 180)) for i in range(1, 4)],

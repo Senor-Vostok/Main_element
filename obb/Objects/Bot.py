@@ -9,8 +9,8 @@ class Bot:
         self.interval = 1
         self.fraction_name = None
         self.resources = 0
-        self.exist_structers = structures
         self.fractions = ["water", "fire", "earth", "wind"]
+        self.exist_structers = structures
         self.potential_resource = 0
         self.my_ground = list()
         self.can_i_do_smth = True

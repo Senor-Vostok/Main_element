@@ -190,7 +190,7 @@ class EventHandler:
     def check_start_point(self, start_point):
         for i in range(-2, 3):
             for j in range(-2, 3):
-                if self.screen_world.biomes[start_point[0]][start_point[1]][1] != 'null':
+                if self.screen_world.biomes[start_point[0] + i][start_point[1] + j][1] != 'null':
                     return False
         return True
 
@@ -379,6 +379,10 @@ class EventHandler:
         i_to = int(self.selected_cells[1][2])
         j_to = int(self.selected_cells[1][3])
 
+        if (abs(i_to - i_from) > 1) or ((abs(j_to - j_from) > 1)):
+            self.effects.append(Information(y, "Атаковать можно только соседнюю клетку", self.textures.resizer))
+            return
+
         ground_from = self.screen_world.biomes[i_from][j_from]
         ground_to = self.screen_world.biomes[i_to][j_to]
 
@@ -390,8 +394,13 @@ class EventHandler:
             units_to = int(ground_to[5])
             delta_units_cnt = units_from - units_to
 
-            defending_ground_protection = int(self.rules['StructuresProtection'][ground_to[1]][0])
-            if delta_units_cnt > defending_ground_protection:
+            # defending_ground_protection = int(self.rules['StructuresProtection'][ground_to[1]][0])
+            if delta_units_cnt > 0:
+                if ground_to[1] == ground_to[4] and ground_to[1] != 'null': #проверка уничтожения главной структуры
+                    self.effects.append(Information(y, f"{ground_from[4]} уничтожили империю {ground_to[4]}", self.textures.resizer))
+                    ground_to[1] = 'null'
+                    self.destroy_empire(ground_to[4])
+                    return
                 if ground_to[4] == 'null':
                     self.effects.append(Information(y, f"{ground_from[4]} успешно захватили новую клетку", self.textures.resizer))
                 else:
@@ -404,6 +413,17 @@ class EventHandler:
                     self.effects.append(Information(y, f"{ground_from[4]} не смогли расширить владения", self.textures.resizer))
                 else:
                     self.effects.append(Information(y, f"{ground_from[4]} не смогли захватить клетку {ground_to[4]}", self.textures.resizer))
+
+    def destroy_empire(self, fraction):
+        for i in range(len(self.screen_world.biomes)):
+            for j in range(len(self.screen_world.biomes)):
+                if self.screen_world.biomes[i][j][4] == fraction:
+                    self.screen_world.biomes[i][j][4] = 'null'
+
+                    sq_i, sq_j = i - self.screen_world.world_coord[0], j - self.screen_world.world_coord[1]
+                    ground = self.screen_world.great_world[sq_i][sq_j]  # Объект Ground
+                    xoy = (ground.rect[0] + ground.rect[2] // 2, ground.rect[1] + ground.rect[3] // 2)
+                    self.effects.append(Effect(xoy, self.textures.effects['place'], True)) #сделать эффект постройки, но в обратную сторону
 
     def area(self, ground, buyer):
         if "tower" in ground[1]:
