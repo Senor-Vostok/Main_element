@@ -83,7 +83,7 @@ class Slicer(pygame.sprite.Sprite):
         self.rect = self.back_image.get_rect(center=xoy)
 
     def draw(self, screen):
-        delta_x = ((self.rect[2] - self.point_image.get_rect()[2]) / self.cuts) * (self.now_sector - 1)
+        delta_x = ((self.rect[2] - self.point_image.get_rect()[2]) / self.cuts) * self.now_sector
         screen.blit(self.back_image, self.rect)
         screen.blit(self.point_image, (self.rect.x + delta_x, self.rect.y - (self.point_image.get_rect()[3] // 2 - self.rect[3] // 2)))
 
@@ -96,12 +96,13 @@ class Slicer(pygame.sprite.Sprite):
             if self.now_sector != (mouse_click[0] - self.rect[0]) // (self.rect[2] / self.cuts) + 1:
                 if self.func:
                     self.func(*self.args)
-                self.now_sector = (mouse_click[0] - self.rect[0]) // (self.rect[2] / self.cuts) + 1
+                self.now_sector = int((mouse_click[0] - self.rect[0]) // (self.rect[2] / self.cuts) + 1)
 
 
 class InteractLabel(pygame.sprite.Sprite):
-    def __init__(self, image, xoy, active=True):
+    def __init__(self, image, xoy, active=True, center=False):
         pygame.sprite.Sprite.__init__(self)
+        self.center = center
         self.state = image[0]
         self.flex = image[1]
         self.image = self.state
@@ -120,7 +121,10 @@ class InteractLabel(pygame.sprite.Sprite):
         while image.get_rect()[2] < self.rect[2] - 50 and i <= len(self.text):
             image = self.font.render(self.text[-i:], False, DEFAULT_COLOR)
             i += 1
-        screen.blit(image, (self.rect[0] + 10, self.rect[1] + 6))
+        if not self.center:
+            screen.blit(image, (self.rect[0] + 10, self.rect[1] + 6))
+        else:
+            screen.blit(image, (self.rect[0] + self.rect[2] // 2 - image.get_rect()[2] // 2, self.rect[1] + 6))
 
     def connect(self, func, *args):
         self.func = func

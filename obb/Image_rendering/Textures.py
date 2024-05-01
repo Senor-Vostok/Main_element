@@ -23,7 +23,8 @@ class Textures:
 
         self.effects = {'mouse1': [self.render(f'data/effects/mouse1/anim{i}.png', (60, 60)) for i in range(1, 6)],
                         'place': [self.render(f'data/effects/place/smog{i}.png', (120, 180)) for i in range(1, 5)],
-                        'set': [self.render(f'data/effects/set/anim{i}.png', (60, 60)) for i in range(1, 4)]}
+                        'set': [self.render(f'data/effects/set/anim{i}.png', (60, 60)) for i in range(1, 4)],
+                        'information': [self.render('data/effects/information/back_information.png', (90, 90))]}
 
         self.animation_ground = {'water': [self.render(f'data/ground/water{i}.png', (60, 60)) for i in range(1, 4)]}
 

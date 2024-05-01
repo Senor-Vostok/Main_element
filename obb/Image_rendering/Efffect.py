@@ -1,4 +1,5 @@
 import pygame
+import datetime
 from obb.Constants import DEFAULT_COLOR
 
 
@@ -27,24 +28,32 @@ class Effect(pygame.sprite.Sprite):
 
 
 class Information(pygame.sprite.Sprite):
-    def __init__(self, y, text, resizer=1):
+    def __init__(self, xoy, text, resizer=1, back_image=None):
         pygame.sprite.Sprite.__init__(self)
+        self.xoy = xoy
         self.font = pygame.font.SysFont('progresspixel-bold', int(30 * resizer))
         self.resizer = resizer
-        self.speed_animation = 3
-        self.alpha = 255
+        self.speed_animation = 10
         self.image = self.font.render(text, 1, DEFAULT_COLOR)
-        self.rect = self.image.get_rect()
-        self.rect.y = y + self.rect[1] // 2
-        self.rect.x = -self.rect[2]
+        self.back_image = pygame.transform.scale(back_image, (self.image.get_rect()[2] * 1.1, back_image.get_rect()[3])).convert_alpha()
+        self.timer = datetime.datetime.now()
+        self.rect = self.back_image.get_rect()
+        self.rect.x = xoy[0] + self.back_image.get_rect()[0]
+        self.rect.y = xoy[1]
+        self.flag = False
 
     def draw(self, screen):
+        # screen.blit(self.back_image, (self.rect.x, self.rect.y))
         screen.blit(self.image, (self.rect.x, self.rect.y))
 
     def update(self, move):
-        if self.rect[0] < 1920 * self.resizer:
-            self.image.set_alpha(self.alpha)
-            self.alpha -= 3 * bool(self.rect[0] > 0)
+        if self.xoy[0] - self.rect.x < self.rect[2] and not self.flag:
+            self.rect.x -= self.speed_animation
+        elif self.xoy[0] - self.rect.x >= self.rect[2] and not self.flag:
+            self.flag = True
+            self.timer = datetime.datetime.now()
+        elif (datetime.datetime.now() - self.timer).seconds > 1 and self.flag:
             self.rect.x += self.speed_animation
-            return True
-        return False
+            if self.rect.x >= self.xoy[0]:
+                return False
+        return True

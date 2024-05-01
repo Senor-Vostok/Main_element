@@ -60,6 +60,8 @@ class EventHandler:
         self.rules = dict()
         self.read_rules()
         self.uid = self.textures.font.render(f'UID: {"0" * (9 - len(str(self.me.id))) + str(self.me.id)}', False, DEFAULT_COLOR)
+        self.__xoy_information = [self.centre[0] * 2, self.centre[1] * 2 - 60 * self.textures.resizer]
+        self.__image_information = self.textures.effects['information'][0]
 
     def change_volume(self, object, channel):
         self.volumes_channels[channel] = object.now_sector / 100
@@ -92,15 +94,16 @@ class EventHandler:
                 self.interfaces.pop('popup_menu')
             if ground.biome[0] != 'barrier':
                 show_popup_menu(self, (ground.rect[0] + ground.rect[2], ground.rect[1] + ground.rect[3]), ground, self.me.fraction_name)
-        elif self.camera.mouse_click[3] == 1:
-            if self.camera.mouse_click[2] and not self.selected_cells[0]:
-                self.selected_cells[0] = ground.biome
-            if self.camera.mouse_click[2] and self.selected_cells[0]:
-                self.selected_cells[1] = ground.biome
-        elif self.camera.mouse_click[3] != 1 and self.selected_cells != [None, None]:  # вызывается если выделили клетки
-            # если режим атаки:
-            self.attack(self.me)  # исправить attacker для ботов
-            self.selected_cells = [None, None]
+        if 'attack' not in self.interfaces:
+            if self.camera.mouse_click[3] == 1:
+                if self.camera.mouse_click[2] and not self.selected_cells[0]:
+                    self.selected_cells[0] = ground.biome
+                if self.camera.mouse_click[2] and self.selected_cells[0]:
+                    self.selected_cells[1] = ground.biome
+            elif self.camera.mouse_click[3] != 1 and self.selected_cells != [None, None]:
+                if self.selected_cells[0] != self.selected_cells[1] and int(self.selected_cells[0][5]) > 0:
+                    show_selectunions(self, self.centre, self.selected_cells)
+                self.selected_cells = [None, None]
 
     def found_board(self, index, board, flag_centre=None, block_size=0):
         boards = list()
@@ -220,6 +223,8 @@ class EventHandler:
                     self.place_structure((i, j), mess[1], False)
                 if mess[0] == 'fraction':
                     self.set_fraction((i, j), mess[1], False)
+                if mess[0] == 'update':
+                    self.screen_world.biomes[i][j] = mess
             if mess[0] == 'join':
                 if self.contact.private and mess[1].split('|')[1] not in self.contact.whitelist:
                     if self.contact.protocol == 'host':
@@ -370,17 +375,17 @@ class EventHandler:
         saves.add_saves(files, self.init_world, show_online, self)
         self.interfaces['save_menu'] = saves
 
-    def attack(self, attacker):
-        y = self.centre[1] * 2 - 60 * self.textures.resizer
-
+    def attack(self, attacker, selected):
+        count_units = self.interfaces['attack'].drag.now_sector
+        delta_units_cnt = self.interfaces['attack'].drag.now_sector - int(selected[1][5])
+        self.selected_cells = selected
+        self.interfaces.pop('attack')
         i_from = int(self.selected_cells[0][2])
         j_from = int(self.selected_cells[0][3])
-
         i_to = int(self.selected_cells[1][2])
         j_to = int(self.selected_cells[1][3])
-
-        if (abs(i_to - i_from) > 1) or ((abs(j_to - j_from) > 1)):
-            self.effects.append(Information(y, "Атаковать можно только соседнюю клетку", self.textures.resizer))
+        if (abs(i_to - i_from) > 1) or (abs(j_to - j_from) > 1):
+            self.effects.append(Information(self.__xoy_information, "Атаковать можно только соседнюю клетку", self.textures.resizer, self.__image_information))
             return
 
         ground_from = self.screen_world.biomes[i_from][j_from]
@@ -388,42 +393,45 @@ class EventHandler:
 
         if ground_from[4] == attacker.fraction_name:
             if ground_to[4] == attacker.fraction_name:
-                print('Это ваша клетка')  # Добавить сюда перемещение войск по своим клеткам (выбор кол-ва)
+                ground_to[5] = str(delta_units_cnt + int(selected[1][5]) + int(ground_to[5]))
+                ground_from[5] = f'{int(ground_from[5]) - count_units}'
+                self.contact.send(f'change-0-update|{"|".join(self.selected_cells[0])}-end-')
+                self.contact.send(f'change-0-update|{"|".join(self.selected_cells[1])}-end-')
+                self.selected_cells = [None, None]
                 return
-            units_from = int(ground_from[5]) - 1 # оставляем одного человека в атакующей клетке (для теста)
-            units_to = int(ground_to[5])
-            delta_units_cnt = units_from - units_to
+            units_from = int(ground_from[5])  # оставляем одного человека в атакующей клетке (для теста)
 
             # defending_ground_protection = int(self.rules['StructuresProtection'][ground_to[1]][0])
             if delta_units_cnt > 0:
                 if ground_to[1] == ground_to[4] and ground_to[1] != 'null': #проверка уничтожения главной структуры
-                    self.effects.append(Information(y, f"{ground_from[4]} уничтожили империю {ground_to[4]}", self.textures.resizer))
+                    self.effects.append(Information(self.__xoy_information, f"{ground_from[4]} уничтожили империю {ground_to[4]}", self.textures.resizer, self.__image_information))
                     ground_to[1] = 'null'
                     self.destroy_empire(ground_to[4])
                     return
                 if ground_to[4] == 'null':
-                    self.effects.append(Information(y, f"{ground_from[4]} успешно захватили новую клетку", self.textures.resizer))
+                    self.effects.append(Information(self.__xoy_information, f"{ground_from[4]} успешно захватили новую клетку", self.textures.resizer, self.__image_information))
                 else:
-                    self.effects.append(Information(y, f"{ground_from[4]} успешно атакуют {ground_to[4]}", self.textures.resizer))
+                    self.effects.append(Information(self.__xoy_information, f"{ground_from[4]} успешно атакуют {ground_to[4]}", self.textures.resizer, self.__image_information))
                 ground_to[4] = ground_from[4]
-                ground_from[5] = str(max(0, units_from - delta_units_cnt + 1))
+                ground_from[5] = str(max(0, units_from - delta_units_cnt))
                 ground_to[5] = str(max(0, delta_units_cnt))
             else:
                 if ground_to[4] == 'null':
-                    self.effects.append(Information(y, f"{ground_from[4]} не смогли расширить владения", self.textures.resizer))
+                    self.effects.append(Information(self.__xoy_information, f"{ground_from[4]} не смогли расширить владения", self.textures.resizer, self.__image_information))
                 else:
-                    self.effects.append(Information(y, f"{ground_from[4]} не смогли захватить клетку {ground_to[4]}", self.textures.resizer))
+                    self.effects.append(Information(self.__xoy_information, f"{ground_from[4]} не смогли захватить клетку {ground_to[4]}", self.textures.resizer, self.__image_information))
+        self.selected_cells = [None, None]
 
     def destroy_empire(self, fraction):
         for i in range(len(self.screen_world.biomes)):
             for j in range(len(self.screen_world.biomes)):
                 if self.screen_world.biomes[i][j][4] == fraction:
                     self.screen_world.biomes[i][j][4] = 'null'
-
                     sq_i, sq_j = i - self.screen_world.world_coord[0], j - self.screen_world.world_coord[1]
                     ground = self.screen_world.great_world[sq_i][sq_j]  # Объект Ground
                     xoy = (ground.rect[0] + ground.rect[2] // 2, ground.rect[1] + ground.rect[3] // 2)
-                    self.effects.append(Effect(xoy, self.textures.effects['place'], True)) #сделать эффект постройки, но в обратную сторону
+                    self.effects.append(Effect(xoy, self.textures.effects['place'], True))
+                    self.contact.send(f'change-0-update|{"|".join(ground.biome)}-end-')
 
     def area(self, ground, buyer):
         if "tower" in ground[1]:
@@ -435,23 +443,22 @@ class EventHandler:
                     self.set_fraction((x, y), buyer.fraction_name, True)
 
     def check_structure_placement(self, ground, structure, buyer):
-        y = self.centre[1] * 2 - 60 * self.textures.resizer
         if ground[4] != buyer.fraction_name:
             if buyer == self.me:
-                self.effects.append(Information(y, "Эта клетка не принадлежит Вам", self.textures.resizer))
+                self.effects.append(Information(self.__xoy_information, "Эта клетка не принадлежит Вам", self.textures.resizer, self.__image_information))
             return False
         if ground[1] != 'null':
             if buyer == self.me:
-                self.effects.append(Information(y, "Здесь стоит другая структура", self.textures.resizer))
+                self.effects.append(Information(self.__xoy_information, "Здесь стоит другая структура", self.textures.resizer, self.__image_information))
             return False
         if ground[0] not in self.rules['StructuresPermissions'][structure]:
             if buyer == self.me:
-                self.effects.append(Information(y, "Вы не можете строить в этом биоме", self.textures.resizer))
+                self.effects.append(Information(self.__xoy_information, "Вы не можете строить в этом биоме", self.textures.resizer, self.__image_information))
             return False
         struct_cost = int(self.rules['StructuresCosts'][self.structures[self.now_structure]][0])
         if buyer.resources < struct_cost:
             if buyer == self.me:
-                self.effects.append(Information(y, "Не хватает ресурсов", self.textures.resizer))
+                self.effects.append(Information(self.__xoy_information, "Не хватает ресурсов", self.textures.resizer, self.__image_information))
             return False
         if buyer == self.me:
             pygame.mixer.Channel(1).play(self.sounds.draw)

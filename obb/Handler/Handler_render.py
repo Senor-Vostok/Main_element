@@ -1,6 +1,6 @@
 from obb.Constants import UPDATE_LIMIT
 from obb.Constants import DEFAULT_COLOR
-from obb.Image_rendering.Efffect import Effect
+from obb.Image_rendering.Efffect import Effect, Information
 import pygame.display
 import itertools
 
@@ -12,10 +12,15 @@ def update_effects(self):
             self.effects.append(Effect((self.camera.mouse_click[0], self.camera.mouse_click[1]), self.textures.effects['mouse1']))
     else:
         self.pressed = False
-    for i in self.effects:
+    for i in [_ for _ in self.effects if isinstance(_, Effect)]:
         i.draw(self.screen)
         if not i.update(self.camera.move):
             self.effects.remove(i)
+    for i in [_ for _ in self.effects if isinstance(_, Information)]:
+        i.draw(self.screen)
+        if not i.update(self.camera.move):
+            self.effects.remove(i)
+        break
 
 
 def update_resource_effects(self):
