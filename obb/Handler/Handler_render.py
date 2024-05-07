@@ -35,8 +35,9 @@ def update_titles(handler):
     fps_text = handler.textures.font.render(f'fps: {int(handler.clock.get_fps())}', False, DEFAULT_COLOR)
     if 'ingame' in handler.interfaces:
         handler.interfaces['ingame'].count_resource.new_text(str(handler.me.resources))
-    handler.screen.blit(handler.uid, (10, 10))
-    handler.screen.blit(fps_text, (10, 40))
+    handler.screen.blit(handler.version, (10, 10))
+    handler.screen.blit(handler.uid, (10, 40))
+    # handler.screen.blit(fps_text, (10, 70))
 
 
 def rendering(handler, machine):

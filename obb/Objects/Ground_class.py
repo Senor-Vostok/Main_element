@@ -61,7 +61,7 @@ class Ground(pygame.sprite.Sprite):
         if self.structure:
             self.__draw_structure(screen)
         elif self.biome[5] != '0':
-            category = 'small' if int(self.biome[5]) < 10 else 'middle' if int(self.biome[5]) < 30 else 'large'
+            category = 'small' if int(self.biome[5]) < 30 else 'middle' if int(self.biome[5]) < 80 else 'large'
             screen.blit(self.textures.army[category][0], (self.rect.x, self.rect.y))
         if self.rect.colliderect(mouse_click[0], mouse_click[1], 1, 1):
             handler.check_ground_please(self)

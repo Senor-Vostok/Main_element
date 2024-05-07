@@ -1,6 +1,5 @@
 import pygame.transform
 from obb.Interface.Widgets import *
-from obb.Sond_rendering import Sounds
 import os
 
 
@@ -38,7 +37,8 @@ class Menu:
         self.button_exit = Button(textures.main_menu['button_exit'], (
             self.button_start.rect.x + 200 * textures.resizer,
             self.button_start.rect.y + self.button_start.rect[3] + 265 * textures.resizer))
-        self.surface = Surface(self.background, self.button_start, self.button_load, self.button_online, self.button_setting, self.button_exit)
+        self.bug_report = Button(textures.main_menu['bug_report'], (self.button_start.rect.x + 35 * textures.resizer, self.button_start.rect.y + self.button_start.rect[3] + 340 * textures.resizer))
+        self.surface = Surface(self.background, self.button_start, self.button_load, self.button_online, self.button_setting, self.button_exit, self.bug_report)
 
 
 class PopupMenu:

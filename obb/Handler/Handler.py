@@ -1,3 +1,5 @@
+import random
+
 import pygame.display
 from obb.Objects.Player import Player
 from obb.Objects.Bot import Bot
@@ -60,6 +62,7 @@ class EventHandler:
         self.rules = dict()
         self.read_rules()
         self.uid = self.textures.font.render(f'UID: {"0" * (9 - len(str(self.me.id))) + str(self.me.id)}', False, DEFAULT_COLOR)
+        self.version = self.textures.font.render(f'version: {self.settings["version"]}', False, DEFAULT_COLOR)
         self.__xoy_information = [self.centre[0] * 2, self.centre[1] * 2 - 60 * self.textures.resizer]
         self.__image_information = self.textures.effects['information'][0]
 
@@ -101,7 +104,7 @@ class EventHandler:
                 if self.camera.mouse_click[2] and self.selected_cells[0]:
                     self.selected_cells[1] = ground.biome
             elif self.camera.mouse_click[3] != 1 and self.selected_cells != [None, None]:
-                if self.selected_cells[0] != self.selected_cells[1] and int(self.selected_cells[0][5]) > 0:
+                if self.selected_cells[0] != self.selected_cells[1] and int(self.selected_cells[0][5]) > 0 and self.selected_cells[0][4] == self.me.fraction_name:
                     show_selectunions(self, self.centre, self.selected_cells)
                 self.selected_cells = [None, None]
 
@@ -180,10 +183,9 @@ class EventHandler:
                     if "bot" in self.info_players[c][0]:
                         self.bots[-1].my_ground.append(self.screen_world.biomes[start_point[0] + i][start_point[1] + j])
                     self.screen_world.biomes[start_point[0] + i][start_point[1] + j][4] = fraction
-                    if "bot" in self.info_players[c][0]:  # 1 человек в каждую клетку для теста
-                        self.screen_world.biomes[start_point[0] + i][start_point[1] + j][5] = '1'
-                    else:
-                        self.screen_world.biomes[start_point[0] + i][start_point[1] + j][5] = '10'
+                    count_army = f'{random.randint(0, 10)}'
+                    self.screen_world.biomes[start_point[0] + i][start_point[1] + j][5] = count_army
+                    message += f'change-0-army|{count_army}|{start_point[0] + i}|{start_point[1] + j}-end-'
                     message += f'change-0-fraction|{fraction}|{start_point[0] + i}|{start_point[1] + j}-end-'
         for c in range(1, len(self.info_players)):
             if 'bot' not in self.info_players[c][0]:
@@ -223,8 +225,10 @@ class EventHandler:
                     self.place_structure((i, j), mess[1], False)
                 if mess[0] == 'fraction':
                     self.set_fraction((i, j), mess[1], False)
+                if mess[0] == 'army':
+                    self.screen_world.biomes[i][j][5] = mess[1]
                 if mess[0] == 'update':
-                    self.screen_world.biomes[i][j] = mess
+                    self.screen_world.biomes[i][j] = mess[1:]
             if mess[0] == 'join':
                 if self.contact.private and mess[1].split('|')[1] not in self.contact.whitelist:
                     if self.contact.protocol == 'host':
@@ -248,6 +252,10 @@ class EventHandler:
                 uid = mess[1].split('|')[0]
                 delta_presource = int(mess[1].split('|')[1])
                 self.update_presource(uid, delta_presource)
+            if mess[0] == 'presource(looser)' and self.contact.protocol == 'host':
+                fraction = mess[1].split('|')[0]
+                delta_presource = int(mess[1].split('|')[1])
+                self.update_presourse_looser_edition(fraction, delta_presource)
             if mess[0] == 'host':
                 if mess[1] == 'timer':
                     self.update_resource(self.me.uid, self.me.potential_resource)
@@ -358,6 +366,8 @@ class EventHandler:
             self.init_world([[k.split('|') for k in i.split(':t:')] for i in self.contact.gen.split(':n:')])
 
     def make_save(self):
+        if not self.name_save:
+            return
         with open(f'saves/{self.name_save}.maiso', mode='w') as file:
             massive = ':n:'.join(':t:'.join('|'.join(j) for j in i) for i in self.screen_world.biomes)
             info_fractions = ':n:'.join([f'{"|".join([i[0], i[1]])}|{"|".join(map(str, i[2]))}|{i[3]}|{i[4]}' for i in self.info_players])
@@ -375,7 +385,7 @@ class EventHandler:
         saves.add_saves(files, self.init_world, show_online, self)
         self.interfaces['save_menu'] = saves
 
-    def attack(self, attacker, selected):
+    def attack(self, attacker, selected):  # TODO:онлайн
         count_units = self.interfaces['attack'].drag.now_sector
         delta_units_cnt = self.interfaces['attack'].drag.now_sector - int(selected[1][5])
         self.selected_cells = selected
@@ -387,51 +397,59 @@ class EventHandler:
         if (abs(i_to - i_from) > 1) or (abs(j_to - j_from) > 1):
             self.effects.append(Information(self.__xoy_information, "Атаковать можно только соседнюю клетку", self.textures.resizer, self.__image_information))
             return
-
         ground_from = self.screen_world.biomes[i_from][j_from]
         ground_to = self.screen_world.biomes[i_to][j_to]
-
         if ground_from[4] == attacker.fraction_name:
             if ground_to[4] == attacker.fraction_name:
                 ground_to[5] = str(delta_units_cnt + int(selected[1][5]) + int(ground_to[5]))
                 ground_from[5] = f'{int(ground_from[5]) - count_units}'
-                self.contact.send(f'change-0-update|{"|".join(self.selected_cells[0])}-end-')
-                self.contact.send(f'change-0-update|{"|".join(self.selected_cells[1])}-end-')
+                self.contact.send(f'change-0-army|{ground_to[5]}|{ground_to[2]}|{ground_to[3]}-end-')
+                self.contact.send(f'change-0-army|{ground_from[5]}|{ground_from[2]}|{ground_from[3]}-end-')
                 self.selected_cells = [None, None]
                 return
             units_from = int(ground_from[5])  # оставляем одного человека в атакующей клетке (для теста)
-
             # defending_ground_protection = int(self.rules['StructuresProtection'][ground_to[1]][0])
             if delta_units_cnt > 0:
-                if ground_to[1] == ground_to[4] and ground_to[1] != 'null': #проверка уничтожения главной структуры
+                if ground_to[1] == ground_to[4] and ground_to[1] != 'null':  # проверка уничтожения главной структуры
                     self.effects.append(Information(self.__xoy_information, f"{ground_from[4]} уничтожили империю {ground_to[4]}", self.textures.resizer, self.__image_information))
-                    ground_to[1] = 'null'
-                    self.destroy_empire(ground_to[4])
+                    self.destroy_empire(ground_to[4], ground_from[4], attacker)
                     return
                 if ground_to[4] == 'null':
                     self.effects.append(Information(self.__xoy_information, f"{ground_from[4]} успешно захватили новую клетку", self.textures.resizer, self.__image_information))
                 else:
                     self.effects.append(Information(self.__xoy_information, f"{ground_from[4]} успешно атакуют {ground_to[4]}", self.textures.resizer, self.__image_information))
+                self.update_presource(attacker.uid, int(self.rules["ResourcesFromStructures"][ground_to[1]][0]))
+                attacker.potential_resource += int(self.rules["ResourcesFromStructures"][ground_to[1]][0])
+                self.update_presourse_looser_edition(ground_to[4], -int(self.rules["ResourcesFromStructures"][ground_to[1]][0])) if ground_to[4] != 'null' else None
                 ground_to[4] = ground_from[4]
+                self.set_fraction((int(ground_to[2]), int(ground_to[3])), ground_to[4], True, None)
                 ground_from[5] = str(max(0, units_from - delta_units_cnt))
                 ground_to[5] = str(max(0, delta_units_cnt))
+                self.contact.send(f'change-0-army|{ground_to[5]}|{ground_to[2]}|{ground_to[3]}-end-')
+                self.contact.send(f'change-0-army|{ground_from[5]}|{ground_from[2]}|{ground_from[3]}-end-')
             else:
                 if ground_to[4] == 'null':
                     self.effects.append(Information(self.__xoy_information, f"{ground_from[4]} не смогли расширить владения", self.textures.resizer, self.__image_information))
                 else:
                     self.effects.append(Information(self.__xoy_information, f"{ground_from[4]} не смогли захватить клетку {ground_to[4]}", self.textures.resizer, self.__image_information))
+        self.contact.send(f'change-0-fraction|{ground_to[4]}|{ground_to[2]}|{ground_to[3]}-end-')
+        self.contact.send(f'change-0-fraction|{"|".join(ground_from)}-end-')
         self.selected_cells = [None, None]
 
-    def destroy_empire(self, fraction):
+    def destroy_empire(self, fraction_old, fraction_new, attacker):  # TODO:онлайн
         for i in range(len(self.screen_world.biomes)):
             for j in range(len(self.screen_world.biomes)):
-                if self.screen_world.biomes[i][j][4] == fraction:
-                    self.screen_world.biomes[i][j][4] = 'null'
+                if self.screen_world.biomes[i][j][4] == fraction_old:
+                    if self.screen_world.biomes[i][j][1] not in self.structures:
+                        self.place_structure((i, j), 'null')
+                    else:
+                        attacker.potential_resource += int(self.rules["ResourcesFromStructures"][self.screen_world.biomes[i][j][1]][0])
+                        self.update_presource(attacker.uid, int(self.rules["ResourcesFromStructures"][self.screen_world.biomes[i][j][1]][0]))
+                    self.set_fraction((i, j), fraction_new, True, None, False)
                     sq_i, sq_j = i - self.screen_world.world_coord[0], j - self.screen_world.world_coord[1]
                     ground = self.screen_world.great_world[sq_i][sq_j]  # Объект Ground
                     xoy = (ground.rect[0] + ground.rect[2] // 2, ground.rect[1] + ground.rect[3] // 2)
                     self.effects.append(Effect(xoy, self.textures.effects['place'], True))
-                    self.contact.send(f'change-0-update|{"|".join(ground.biome)}-end-')
 
     def area(self, ground, buyer):
         if "tower" in ground[1]:
@@ -488,7 +506,6 @@ class EventHandler:
         if buyer and not self.check_structure_placement(self.screen_world.biomes[i][j], structure, buyer):
             return
         structure = self.try_connect_structure((i, j), structure)
-        self.screen_world.biomes[i][j][1] = structure
         if structure != 'null' and in_matrix:
             pygame.mixer.Channel(2).play(self.sounds.place)
             ground = self.screen_world.great_world[sq_i][sq_j]  # Объект Ground
@@ -501,7 +518,11 @@ class EventHandler:
                 ground.structure = MainStructure(image, xoy, structure, self.textures)
         elif in_matrix and structure == 'null':
             ground = self.screen_world.great_world[sq_i][sq_j]
+            if buyer:
+                buyer.potential_resource -= int(self.rules["ResourcesFromStructures"][ground.biome[1]][0])
+                self.update_presource(buyer.uid, -int(self.rules["ResourcesFromStructures"][ground.biome[1]][0]))
             ground.structure = None
+        self.screen_world.biomes[i][j][1] = structure
         if buyer:
             self.area(self.screen_world.biomes[i][j], buyer)
         if buyer == self.me:
@@ -509,11 +530,11 @@ class EventHandler:
         if info:
             self.contact.send(f'change-0-structure|{structure}|{i}|{j}-end-')
 
-    def set_fraction(self, coord_ground, fraction, info=True, buyer=None):
+    def set_fraction(self, coord_ground, fraction, info=True, buyer=None, stability=True):
         i, j = coord_ground[0], coord_ground[1]
         sq_i, sq_j = i - self.screen_world.world_coord[0], j - self.screen_world.world_coord[1]
         in_matrix = 0 <= sq_i < self.screen_world.sq2 and 0 <= sq_j < self.screen_world.sq1
-        if self.screen_world.biomes[i][j][4] != 'null':
+        if self.screen_world.biomes[i][j][4] != 'null' and info and stability:
             return
         self.screen_world.biomes[i][j][4] = fraction
         if in_matrix:
@@ -541,6 +562,13 @@ class EventHandler:
             self.info_players[ind][4] += delta_presource
         else:
             self.contact.send(f'presource-0-{uid}|{delta_presource}-end-')
+
+    def update_presourse_looser_edition(self, fraction, delta_presource):
+        if self.contact.protocol == 'host' or self.contact.protocol == 'unknown':
+            ind = [i[1] for i in self.info_players].index(fraction)
+            self.info_players[ind][4] += delta_presource
+        else:
+            self.contact.send(f'presource(looser)-0-{fraction}|{delta_presource}-end-')
 
     def get_resource(self):
         if (datetime.now() - self.timer).seconds >= COOLDOWN:

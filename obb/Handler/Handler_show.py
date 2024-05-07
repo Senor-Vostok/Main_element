@@ -1,5 +1,6 @@
 import obb.Interface.Interfaces as Interfaces
 from obb.Image_rendering.Resources import Resource
+import webbrowser
 import pygame
 import sys
 import os
@@ -33,6 +34,7 @@ def show_menu(self, centre):
     menu.button_online.connect(show_online, self, self.centre)
     menu.button_setting.connect(show_settings, self, self.centre)
     menu.button_exit.connect(self.quit)
+    menu.bug_report.connect(webbrowser.open, 'https://forms.gle/sdNSuzHwrFXjS7rK8')
     self.interfaces['menu'] = menu
 
 
@@ -81,7 +83,7 @@ def show_popup_menu(self, centre, ground, fraction):
     popup.button_build.connect(show_buildmenu, self, self.centre, ground)
     popup.button_information.text = ground.biome[5]
     i, j = int(ground.biome[2]), int(ground.biome[3])
-    popup.button_destroy.connect(self.place_structure, (i, j), 'null', True, self.me)
+    popup.button_destroy.connect(self.place_structure, (i, j), 'null')
     popup.button_buy.connect(self.set_fraction, (i, j), fraction, True, self.me)
     self.interfaces['popup_menu'] = popup
 

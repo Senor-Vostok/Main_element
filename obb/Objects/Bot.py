@@ -79,20 +79,23 @@ class Bot:
             return 5  # строим провинцию
 
     def check_place_structure(self, handler, flag_money=False): # пофиКСЬ ДВЕ ТАВЕРКИ
-        while True:
-            if flag_money:
-                field = random.choice(self.my_ground)
-                x, y = int(field[2]), int(field[3])
-                structure = random.choice(self.exist_structers)
-                if self.guides["ResourcesFromStructures"][structure][0] != '0':
+        try:
+            while True:
+                if flag_money:
+                    field = random.choice(self.my_ground)
+                    x, y = int(field[2]), int(field[3])
+                    structure = random.choice(self.exist_structers)
+                    if self.guides["ResourcesFromStructures"][structure][0] != '0':
+                        handler.place_structure((x, y), structure, True, self)
+                        break
+                else:
+                    field = random.choice(self.my_ground)
+                    x, y = int(field[2]), int(field[3])
+                    structure = random.choice(self.exist_structers)
                     handler.place_structure((x, y), structure, True, self)
                     break
-            else:
-                field = random.choice(self.my_ground)
-                x, y = int(field[2]), int(field[3])
-                structure = random.choice(self.exist_structers)
-                handler.place_structure((x, y), structure, True, self)
-                break
+        except Exception:
+            pass
 
     def outbuild_smth(self, handler):
         y = random.randint(1, 15)

@@ -34,10 +34,6 @@ class ClassicStructure(pygame.sprite.Sprite):
             self.rect.move_ip(move)
 
 
-class CenterStructure(ClassicStructure):
-    pass
-
-
 class MainStructure(ClassicStructure):
     def __init__(self, image, xoy, name, textures):
         ClassicStructure.__init__(self, image, xoy, name, textures)

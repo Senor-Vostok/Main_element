@@ -12,7 +12,7 @@ class Textures:
         self.resizer = GetSystemMetrics(0) / 1920
         self.priority = ['water', 'sand', 'flower', 'ground', 'stone', 'snow', 'barrier']
 
-        self.font = pygame.font.SysFont('progresspixel-bold', int(20 * self.resizer))
+        self.font = pygame.font.Font('19363.ttf', int(20 * self.resizer))
 
         self.loading = self.render('data/loading/logo.png', (1920, 1080))
         self.connecting = self.render('data/loading/connecting.png', (1920, 1080))
@@ -148,7 +148,9 @@ class Textures:
                           'label_count_users': [self.render(f'data/widgets/menu/labels/count_player.png', (550, 66)),
                                                 self.render(f'data/widgets/menu/labels/count_playert.png', (550, 66))],
                           'label_port': [self.render(f'data/widgets/menu/labels/port.png', (550, 66)),
-                                         self.render(f'data/widgets/menu/labels/portt.png', (550, 66))]}
+                                         self.render(f'data/widgets/menu/labels/portt.png', (550, 66))],
+                          'bug_report': [self.render(f'data/widgets/menu/buttons/button10.png', (70, 70)),
+                                         self.render(f'data/widgets/menu/buttons/button10t.png', (70, 70))]}
 
         self.pause = {'background': [self.render(f'data/widgets/menu/labels/background.png', (1920, 1080))],
                       'button_menu': [self.render(f'data/widgets/menu/buttons/button6.png', (400, 70)),
