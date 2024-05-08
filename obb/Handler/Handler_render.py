@@ -1,3 +1,4 @@
+import obb.Objects.Structures
 from obb.Constants import UPDATE_LIMIT
 from obb.Constants import DEFAULT_COLOR
 from obb.Image_rendering.Efffect import Effect, Information
@@ -9,7 +10,8 @@ def update_effects(self):
     if self.camera.mouse_click[2] and int(self.camera.mouse_click[3]) == 1:
         if not self.pressed:
             self.pressed = True
-            self.effects.append(Effect((self.camera.mouse_click[0], self.camera.mouse_click[1]), self.textures.effects['mouse1']))
+            self.effects.append(
+                Effect((self.camera.mouse_click[0], self.camera.mouse_click[1]), self.textures.effects['mouse1']))
     else:
         self.pressed = False
     for i in [_ for _ in self.effects if isinstance(_, Effect)]:
@@ -41,6 +43,7 @@ def update_titles(handler):
 
 
 def rendering(handler, machine):
+    title_main_structures = list()
     if machine and machine.rendering:
         camera_move = handler.camera.move
         mouse_click = handler.camera.mouse_click
@@ -53,9 +56,15 @@ def rendering(handler, machine):
             camera_move[0] *= -1
             camera_move[1] *= -1
         for sprite in itertools.chain.from_iterable(machine.great_world):
+            if handler.interfaces['ingame'].state_game.active and isinstance(sprite.structure, obb.Objects.Structures.MainStructure):
+                rect = sprite.rect
+                title_main_structures.append([rect[0] + rect[2] // 2, rect[1] - rect[3] // 2, handler.info_players[[i[2] for i in handler.info_players].index(sprite.biome[4])][0]])
             sprite.update(machine.synchronous, camera_move, flag and not handler.open_some)
             sprite.draw(machine.win, mouse_click, machine.handler)
         machine.synchronous = machine.synchronous + 1 if machine.synchronous < UPDATE_LIMIT else 0
+    for title in title_main_structures:
+        image = handler.textures.font.render(f'{title[2]}', False, (0, 0, 0))
+        handler.screen.blit(image, (title[0] - image.get_rect()[2] // 2, title[1]))
     c = handler.click_handler()
     if handler.screen_world:
         handler.machine()

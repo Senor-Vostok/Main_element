@@ -111,7 +111,7 @@ class InteractLabel(pygame.sprite.Sprite):
         self.args = None
         self.active = active
         self.rect = self.image.get_rect(center=xoy)
-        self.font = pygame.font.SysFont("progresspixel-bold", self.rect[3] - self.rect[3] // 3)
+        self.font = pygame.font.Font("19363.ttf", self.rect[3] - self.rect[3] // 3)
         self.can_write = False
 
     def draw(self, screen):
@@ -175,7 +175,7 @@ class Label(pygame.sprite.Sprite):
         pygame.sprite.Sprite.__init__(self)
         self.color = color
         self.text = text
-        self.font = pygame.font.SysFont("progresspixel-bold", size)
+        self.font = pygame.font.Font("19363.ttf", size)
         self.label = self.font.render(self.text, 1, color)
         self.rect = self.label.get_rect(center=xoy)
 

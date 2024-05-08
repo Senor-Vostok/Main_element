@@ -65,7 +65,7 @@ def show_online(self, centre, t='connect', matr=None, name_save=None, info_playe
         label.count.connect(self.host_game, matr)
         if self.loaded_save:
             label.count.active = not self.loaded_save
-            label.count.text = f"{len([i for i in [j[0] for j in self.info_players] if 'bot' not in i])}/"
+            label.count.text = f"{len([i for i in [j[1] for j in self.info_players] if 'bot' not in i])}/"
         label.port.connect(self.host_game, matr)
         self.interfaces['online'] = label
 

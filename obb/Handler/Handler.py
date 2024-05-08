@@ -143,16 +143,17 @@ class EventHandler:
 
     def init_players(self):
         # Эта часть кода для загруженной игры
-        if len(self.info_players[0]) > 1:
+        if len(self.info_players[0]) > 2:
             for c in range(1, len(self.info_players)):
-                uid = self.info_players[c][0]
+                uid = self.info_players[c][1]
                 if 'bot' in uid:
-                    self.init_bot(self.info_players[c][1], self.info_players[c][2], self.info_players[c][3], self.info_players[c][4])
-                    self.bots[-1].my_ground = self.found_board(4, self.info_players[c][1])
+                    self.init_bot(self.info_players[c][2], self.info_players[c][3], self.info_players[c][4], self.info_players[c][5])
+                    self.bots[-1].my_ground = self.found_board(4, self.info_players[c][2])
                 else:
                     i = self.contact.users.index(uid)
-                    self.contact.send(f"uid-0-{self.info_players[c][1]}|{'_'.join(map(str, self.info_players[c][2]))}|{self.info_players[c][3]}|{self.info_players[c][4]}-end-", self.contact.array_clients[i - 1])
-            self.init_player(self.info_players[0][1], self.info_players[0][2], self.info_players[0][3], self.info_players[0][4])
+                    self.contact.send(f"uid-0-{self.info_players[c][2]}|{'_'.join(map(str, self.info_players[c][3]))}|{self.info_players[c][4]}|{self.info_players[c][5]}-end-", self.contact.array_clients[i - 1])
+                    self.contact.send(f'nicks-0-{"|".join(":t:".join(i[:3]) for i in self.info_players)}-end-')
+            self.init_player(self.info_players[0][2], self.info_players[0][3], self.info_players[0][4], self.info_players[0][5])
             return
         # Эта часть кода для новой игры
         whitelist = list()
@@ -176,11 +177,11 @@ class EventHandler:
             self.info_players[c].append(FIRST_RESOURCES)
             self.info_players[c].append(0)
             message += f'change-0-structure|{fraction}|{start_point[0]}|{start_point[1]}-end-'
-            if "bot" in self.info_players[c][0]:
-                self.init_bot(self.info_players[c][1], self.info_players[c][2], self.info_players[c][3], 0)
+            if "bot" in self.info_players[c][1]:
+                self.init_bot(self.info_players[c][2], self.info_players[c][3], self.info_players[c][4], 0)
             for i in range(-2, 3):
                 for j in range(-2, 3):
-                    if "bot" in self.info_players[c][0]:
+                    if "bot" in self.info_players[c][1]:
                         self.bots[-1].my_ground.append(self.screen_world.biomes[start_point[0] + i][start_point[1] + j])
                     self.screen_world.biomes[start_point[0] + i][start_point[1] + j][4] = fraction
                     count_army = f'{random.randint(0, 10)}'
@@ -188,9 +189,10 @@ class EventHandler:
                     message += f'change-0-army|{count_army}|{start_point[0] + i}|{start_point[1] + j}-end-'
                     message += f'change-0-fraction|{fraction}|{start_point[0] + i}|{start_point[1] + j}-end-'
         for c in range(1, len(self.info_players)):
-            if 'bot' not in self.info_players[c][0]:
-                self.contact.send(f"uid-0-{self.info_players[c][1]}|{'_'.join(map(str, self.info_players[c][2]))}|{self.info_players[c][3]}|{0}-end-{message}", self.contact.array_clients[c - 1])
-        self.init_player(self.info_players[0][1], self.info_players[0][2], self.info_players[0][3], 0)
+            if 'bot' not in self.info_players[c][1]:
+                self.contact.send(f"uid-0-{self.info_players[c][2]}|{'_'.join(map(str, self.info_players[c][3]))}|{self.info_players[c][4]}|{0}-end-{message}", self.contact.array_clients[c - 1])
+                self.contact.send(f'nicks-0-{"|".join(":t:".join(i[:3]) for i in self.info_players)}-end-')
+        self.init_player(self.info_players[0][2], self.info_players[0][3], self.info_players[0][4], 0)
 
     def check_start_point(self, start_point):
         for i in range(-2, 3):
@@ -213,7 +215,7 @@ class EventHandler:
         self.screen_world = World(self.screen, self.centre, [self.world_coord, self.world_coord], matr, self)  # создание динамической сетки
         self.screen_world.create()
         if not self.loaded_save:
-            self.info_players.append([self.me.uid])
+            self.info_players.append([self.me.nickname, self.me.uid])
 
     def decode_message(self, message):
         for message in message.split('-end-'):
@@ -236,7 +238,10 @@ class EventHandler:
                 elif mess[1].split('|')[1] != self.me.uid and mess[1].split('|')[1] not in self.contact.users:
                     self.contact.users.append(mess[1].split('|')[1])
                     if not self.loaded_save:
-                        self.info_players.append([mess[1].split('|')[1]])
+                        self.info_players.append(mess[1].split('|'))
+            if mess[0] == 'nicks':
+                print([i.split(':t:') for i in mess[1].split('|')])
+                self.info_players = [i.split(':t:') for i in mess[1].split('|')]
             if mess[0] == 'uid':
                 fraction = mess[1].split('|')[0]
                 coord = [int(i) for i in (mess[1].split('|')[1]).split('_')]
@@ -269,7 +274,7 @@ class EventHandler:
             self.timer = datetime.now()
             if not self.loaded_save:
                 for i in range(len(self.fractions) - len(self.contact.users)):
-                    self.info_players.append([f'bot{i}'])
+                    self.info_players.append([random.choice(['Carl', 'Maxim', 'Aleksandr', 'BArber']), f'bot{i}'])
             self.init_players()
         if not self.me.fraction_name:
             return
@@ -345,14 +350,14 @@ class EventHandler:
                             ':n:'.join(':t:'.join('|'.join(k) for k in i) for i in matr),
                             count - 1, self.loaded_save)
         self.contact.users.append(self.me.uid)
-        self.contact.whitelist = [user[0] for user in self.info_players]
+        self.contact.whitelist = [user[1] for user in self.info_players]
         self.init_world(matr)
 
     def connecting(self):
         self.screen.blit(self.textures.connecting, (self.centre[0] - self.textures.connecting.get_rect()[2] // 2, self.centre[1] - self.textures.connecting.get_rect()[3] // 2))
         pygame.display.update()
         host, port = (self.interfaces['online'].interact.text[:-1]).split(':')
-        self.contact = Client(host, port)
+        self.contact = Client(host, port, self.me.nickname)
         close(self, 'online', False, None)
         if self.contact.connecting():
             users = ''
@@ -370,7 +375,7 @@ class EventHandler:
             return
         with open(f'saves/{self.name_save}.maiso', mode='w') as file:
             massive = ':n:'.join(':t:'.join('|'.join(j) for j in i) for i in self.screen_world.biomes)
-            info_fractions = ':n:'.join([f'{"|".join([i[0], i[1]])}|{"|".join(map(str, i[2]))}|{i[3]}|{i[4]}' for i in self.info_players])
+            info_fractions = ':n:'.join([f'{i[0]}|{i[1]}|{i[2]}|{"|".join(map(str, i[3]))}|{i[4]}|{i[5]}' for i in self.info_players])
             game = 'local'
             if self.contact.protocol != 'unknown':
                 game = 'online'
@@ -551,22 +556,22 @@ class EventHandler:
 
     def update_resource(self, uid, delta_resource):
         if self.contact.protocol == 'host' or self.contact.protocol == 'unknown':
-            ind = [i[0] for i in self.info_players].index(uid)
-            self.info_players[ind][3] += delta_resource
+            ind = [i[1] for i in self.info_players].index(uid)
+            self.info_players[ind][4] += delta_resource
         else:
             self.contact.send(f'resource-0-{uid}|{delta_resource}-end-')
 
     def update_presource(self, uid, delta_presource):
         if self.contact.protocol == 'host' or self.contact.protocol == 'unknown':
-            ind = [i[0] for i in self.info_players].index(uid)
-            self.info_players[ind][4] += delta_presource
+            ind = [i[1] for i in self.info_players].index(uid)
+            self.info_players[ind][5] += delta_presource
         else:
             self.contact.send(f'presource-0-{uid}|{delta_presource}-end-')
 
     def update_presourse_looser_edition(self, fraction, delta_presource):
         if self.contact.protocol == 'host' or self.contact.protocol == 'unknown':
-            ind = [i[1] for i in self.info_players].index(fraction)
-            self.info_players[ind][4] += delta_presource
+            ind = [i[2] for i in self.info_players].index(fraction)
+            self.info_players[ind][5] += delta_presource
         else:
             self.contact.send(f'presource(looser)-0-{fraction}|{delta_presource}-end-')
 

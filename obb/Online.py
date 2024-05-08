@@ -5,9 +5,9 @@ import threading
 
 
 class Client:
-    def __init__(self, host, port):
+    def __init__(self, host, port, nickname):
         self.protocol = 'client'
-        self.nickname = str(random.randint(1, 100))
+        self.nickname = nickname
         self.host, self.port = host, int(port)
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.loaded_map = False
