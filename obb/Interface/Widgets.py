@@ -175,16 +175,21 @@ class Label(pygame.sprite.Sprite):
         pygame.sprite.Sprite.__init__(self)
         self.color = color
         self.text = text
+        self.size = size
         self.font = pygame.font.Font("19363.ttf", size)
-        self.label = self.font.render(self.text, 1, color)
-        self.rect = self.label.get_rect(center=xoy)
+        self.label = list()
+        for text in self.text.split('\n'):
+            self.label.append(self.font.render(text, 1, color))
+        self.rect = self.label[0].get_rect(center=xoy)
 
     def new_text(self, text):
-        self.text = text
-        self.label = self.font.render(text, 1, self.color)
+        self.label.clear()
+        for text in text.split('\n'):
+            self.label.append(self.font.render(text, 1, self.color))
 
     def draw(self, screen):
-        screen.blit(self.label, (self.rect.x, self.rect.y))
+        for i in range(len(self.label)):
+            screen.blit(self.label[i], (self.rect.x, self.rect.y + self.size * 1.5 * i))
 
     def update(self, mouse_click, command):
         pass

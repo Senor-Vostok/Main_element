@@ -43,6 +43,8 @@ def show_buildmenu(self, centre, ground=None):
     build.down.connect(self.next_struct, -1)
     build.up.connect(self.next_struct, 1)
     self.now_structure = 0
+    struct = self.structures[self.now_structure]
+    build.about.new_text(f'Цена: {self.rules["StructuresCosts"][struct][0]}\nДаёт: ресурс - {self.rules["ResourcesFromStructures"][struct][0]}, войско - {self.rules["ArmyFromStructures"][struct][0]}, защита - {self.rules["StructuresProtection"][struct][0]}\nИнформация: {self.about_structures[struct]}')
     i, j = int(ground.biome[2]), int(ground.biome[3])
     build.button_project.connect(self.place_structure, (i, j), None, True, self.me)
     if 'popup_menu' in self.interfaces: self.interfaces.pop('popup_menu')

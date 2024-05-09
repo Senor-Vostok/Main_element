@@ -74,7 +74,8 @@ class BuildMenu:
         self.structure = BackGround(pygame.transform.scale(textures.animations_structures[structures[0]][0][0], (240 * r, 360 * r)), (293 * r, xoy[1] - 200 * r))
         self.s1 = BackGround(textures.animations_structures[structures[-1]][0][0], (98 * r, xoy[1] - 210 * r))
         self.s2 = BackGround(textures.animations_structures[structures[1]][0][0], (488 * r, xoy[1] - 210 * r))
-        self.surface = Surface(self.background, self.select_ground, self.button_project, self.down, self.up, self.structure, self.s1, self.s2)
+        self.about = Label(f'Empty message', (90 * r, xoy[1] - 20 * r), 15)
+        self.surface = Surface(self.background, self.select_ground, self.button_project, self.down, self.up, self.structure, self.s1, self.s2, self.about)
 
 
 class Online_connect:

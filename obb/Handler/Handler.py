@@ -1,5 +1,3 @@
-import random
-
 import pygame.display
 from obb.Objects.Player import Player
 from obb.Objects.Bot import Bot
@@ -13,7 +11,7 @@ from obb.Image_rendering.Efffect import Effect
 from win32api import GetSystemMetrics
 from obb.Objects.Structures import *
 from obb.Handler.Handler_show import *
-from obb.Constants import DEFAULT_COLOR, BACKGROUND_COLOR, BARRIER_SIZE, FIRST_RESOURCES, COOLDOWN, COOLDOWN_MUSIC
+from obb.Constants import *
 from obb.Image_rendering.Efffect import Information
 from obb.Handler.Handler_render import rendering
 from datetime import datetime
@@ -24,7 +22,13 @@ class EventHandler:
         pygame.init()
         pygame.mixer.init()
         self.settings = dict()
+        self.about_structures = dict()
+        self.rules = dict()
+        self.read_rules()
         self.volumes_channels = [1] * 8
+        with open('data/structures/about.txt', mode='rt', encoding='utf-8') as file:
+            for inf in file.read().split('\n'):
+                self.about_structures[inf.split(':')[0]] = inf.split(':')[1]
         with open('data/user/information', mode='rt') as file:
             self.me = Player(int(file.read()))
         with open('data/user/settings', mode='rt', encoding='utf-8') as file:
@@ -54,13 +58,12 @@ class EventHandler:
         self.contact = Unknown()
         self.interfaces = dict()
         self.bots = list()
-        self.effects = list()  # Обрабатывает объекты класса Effects
-        self.effects_disappearance_resource = list()  # Обрабатывает объекты класса Resources
+        self.effects = list()  # Хранит объекты класса Effects
+        self.effects_disappearance_resource = list()  # Хранит объекты класса Resources
         self.structures = [i for i in self.textures.animations_structures if 'support' not in i]
         self.supports_structure = [i for i in self.textures.animations_structures if 'support' in i]
+        self.military_structure = [i for i in self.textures.animations_structures if i in self.rules['ArmyFromStructures'] and int(self.rules['ArmyFromStructures'][i][0]) > 0]
         self.now_structure = 0
-        self.rules = dict()
-        self.read_rules()
         self.uid = self.textures.font.render(f'UID: {"0" * (9 - len(str(self.me.id))) + str(self.me.id)}', False, DEFAULT_COLOR)
         self.version = self.textures.font.render(f'version: {self.settings["version"]}', False, DEFAULT_COLOR)
         self.__xoy_information = [self.centre[0] * 2, self.centre[1] * 2 - 60 * self.textures.resizer]
@@ -113,12 +116,12 @@ class EventHandler:
         if flag_centre:
             for i in range(flag_centre[0] - block_size, flag_centre[0] + block_size):
                 for j in range(flag_centre[1] - block_size, flag_centre[1] + block_size):
-                    if self.screen_world.biomes[i][j][index] == board:
+                    if self.screen_world.biomes[i][j][index] in board:
                         boards.append(self.screen_world.biomes[i][j])
         else:
             for i in range(len(self.screen_world.biomes)):
                 for j in range(len(self.screen_world.biomes)):
-                    if self.screen_world.biomes[i][j][index] == board:
+                    if self.screen_world.biomes[i][j][index] in board:
                         boards.append(self.screen_world.biomes[i][j])
         return boards
 
@@ -265,6 +268,7 @@ class EventHandler:
                 if mess[1] == 'timer':
                     self.update_resource(self.me.uid, self.me.potential_resource)
                     self.me.resources += self.me.potential_resource
+                    show_resources(self, self.me.potential_resource)
             # запрос от таймера
 
     def load_world(self):
@@ -336,6 +340,10 @@ class EventHandler:
         self.interfaces['buildmenu'].structure.image = pygame.transform.scale(self.textures.animations_structures[self.structures[self.now_structure]][0][0], (240 * self.textures.resizer, 360 * self.textures.resizer))
         self.interfaces['buildmenu'].s2.image = self.textures.animations_structures[self.structures[fs1]][0][0]
         self.interfaces['buildmenu'].s1.image = self.textures.animations_structures[self.structures[fs2]][0][0]
+        struct = self.structures[self.now_structure]
+        about = "\n".join(self.about_structures[struct].split("|n|"))
+        print(about)
+        self.interfaces['buildmenu'].about.new_text(f'Цена: {self.rules["StructuresCosts"][struct][0]}\nДаёт: ресурс - {self.rules["ResourcesFromStructures"][struct][0]}, войско - {self.rules["ArmyFromStructures"][struct][0]}, защита - {self.rules["StructuresProtection"][struct][0]}\nИнформация: {about}')
 
     def host_game(self, matr):
         if not matr:
@@ -582,10 +590,12 @@ class EventHandler:
             self.update_resource(self.me.uid, self.me.potential_resource)
             self.me.resources += self.me.potential_resource
             show_resources(self, self.me.potential_resource)
-            if self.contact.protocol == 'host' or self.contact.protocol == 'unknown':
-                for bot in self.bots:
-                    self.update_resource(bot.uid, bot.potential_resource)
-                    bot.resources += bot.potential_resource
+            for bot in self.bots:
+                self.update_resource(bot.uid, bot.potential_resource)
+                bot.resources += bot.potential_resource
+            for board in self.found_board(1, self.military_structure):
+                board[5] = f'{int(board[5]) + int(self.rules["ArmyFromStructures"]["homes"][0])}'
+                self.contact.send(f'change-0-army|{int(board[5]) + int(self.rules["ArmyFromStructures"]["homes"][0])}|{board[2]}|{board[3]}-end-')
 
     def click_handler(self):
         c = None
