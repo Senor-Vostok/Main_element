@@ -1,7 +1,7 @@
-StructuresList:mill,mine,tower,homes,sawmill,fisherman
-StructuresCosts:mill_10,tower_20,mine_15,homes_5,sawmill_10,fisherman_10
-StructuresPermissions:mill_sand_flower,tower_sand_flower_ground,mine_stone_snow,homes_sand_flower_ground_snow,sawmill_ground,fisherman_water
-GroundsCosts:ground_2,flower_2,sand_2,snow_3,stone_3,water_3
-ResourcesFromStructures:null_0,mill_5,tower_0,mine_5,homes_0,sawmill_5,fisherman_5
-ArmyFromStructures:null_0,mill_0,tower_2,mine_0,homes_10,sawmill_0,fisherman_0
-StructuresProtection:mill_1,tower_10,mine_3,homes_0,sawmill_2,fisherman_0,null_0,air_15,earth_15,fire_15,water_15
+StructuresList:mill,mine,tower,homes,sawmill,fisherman,polygon
+StructuresCosts:mill_10,tower_23,mine_40,homes_15,sawmill_32,fisherman_20,polygon_27
+StructuresPermissions:mill_sand_flower,tower_sand_flower_ground,mine_stone_snow,homes_sand_flower_ground_snow,sawmill_ground,fisherman_water,polygon_sand_flower_ground
+GroundsCosts:ground_2,flower_2,sand_2,snow_6,stone_3,water_2
+ResourcesFromStructures:null_0,mill_5,tower_0,mine_15,homes_3,sawmill_10,fisherman_7,polygon_0
+ArmyFromStructures:null_0,mill_0,tower_2,mine_0,homes_3,sawmill_0,fisherman_0,polygon_10
+StructuresProtection:mill_12,tower_15,mine_22,homes_10,sawmill_10,fisherman_15,null_5,air_50,earth_50,fire_50,water_50,polygon_40

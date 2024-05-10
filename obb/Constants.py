@@ -21,5 +21,10 @@ ANIMATION_SLOWDOWN_STRUCTURES = 30
 Y_TEXT_INFORMATION = 1040
 
 FIRST_RESOURCES = 50
-COOLDOWN = 10  # раз во сколько секунд выдаётся ресурс
+COOLDOWN = 60  # раз во сколько секунд выдаётся ресурс
 COOLDOWN_MUSIC = 600
+
+MAX_UID = 100000000
+MIN_UID = 4
+
+SEEDS = 100000

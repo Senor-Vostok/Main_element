@@ -1,5 +1,7 @@
 import random
 import pygame
+
+import obb.Constants
 from obb.Image_rendering.Textures import Textures
 from numpy import floor
 from perlin_noise import PerlinNoise
@@ -39,7 +41,7 @@ class Generation:
         return 5
 
     def generation(self):
-        seed = random.randint(1000, 9000)
+        seed = random.randint(0, obb.Constants.SEEDS)
         noise = PerlinNoise(octaves=OCTAVES_G, seed=seed)
         landscale = [[0 for _ in range(self.massive)] for _ in range(self.massive)]
         for x in range(self.massive):

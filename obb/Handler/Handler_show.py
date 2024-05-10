@@ -85,13 +85,13 @@ def show_popup_menu(self, centre, ground, fraction):
     popup.button_build.connect(show_buildmenu, self, self.centre, ground)
     popup.button_information.text = ground.biome[5]
     i, j = int(ground.biome[2]), int(ground.biome[3])
-    popup.button_destroy.connect(self.place_structure, (i, j), 'null')
+    popup.button_destroy.connect(self.place_structure, (i, j), 'null', True, self.me)
     popup.button_buy.connect(self.set_fraction, (i, j), fraction, True, self.me)
     self.interfaces['popup_menu'] = popup
 
 
 def show_selectunions(self, center, selected):
-    select = Interfaces.SelectUnions(center, self.textures, int(selected[0][5]))
+    select = Interfaces.SelectUnions(center, self.textures, selected)
     select.confirm.connect(self.attack, self.me, selected)
     self.interfaces['attack'] = select
 

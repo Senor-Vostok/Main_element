@@ -18,7 +18,7 @@ from datetime import datetime
 
 
 class EventHandler:
-    def __init__(self):  # TODO: исправить присваивание bot_id и id
+    def __init__(self):
         pygame.init()
         pygame.mixer.init()
         self.settings = dict()
@@ -66,7 +66,7 @@ class EventHandler:
         self.now_structure = 0
         self.uid = self.textures.font.render(f'UID: {"0" * (9 - len(str(self.me.id))) + str(self.me.id)}', False, DEFAULT_COLOR)
         self.version = self.textures.font.render(f'version: {self.settings["version"]}', False, DEFAULT_COLOR)
-        self.__xoy_information = [self.centre[0] * 2, self.centre[1] * 2 - 60 * self.textures.resizer]
+        self.__xoy_information = [self.centre[0] * 2, self.centre[1] * 2 - self.textures.land['barrier'][0].get_rect()[2]]
         self.__image_information = self.textures.effects['information'][0]
 
     def change_volume(self, object, channel):
@@ -103,9 +103,9 @@ class EventHandler:
         if 'attack' not in self.interfaces:
             if self.camera.mouse_click[3] == 1:
                 if self.camera.mouse_click[2] and not self.selected_cells[0]:
-                    self.selected_cells[0] = ground.biome
+                    self.selected_cells[0] = ground.biome + [ground.rect[0] + ground.rect[2] // 2, ground.rect[1] + ground.rect[3] // 2]
                 if self.camera.mouse_click[2] and self.selected_cells[0]:
-                    self.selected_cells[1] = ground.biome
+                    self.selected_cells[1] = ground.biome + [ground.rect[0] + ground.rect[2] // 2, ground.rect[1] + ground.rect[3] // 2]
             elif self.camera.mouse_click[3] != 1 and self.selected_cells != [None, None]:
                 if self.selected_cells[0] != self.selected_cells[1] and int(self.selected_cells[0][5]) > 0 and self.selected_cells[0][4] == self.me.fraction_name:
                     show_selectunions(self, self.centre, self.selected_cells)
@@ -125,7 +125,7 @@ class EventHandler:
                         boards.append(self.screen_world.biomes[i][j])
         return boards
 
-    def generation(self, size=200, barrier=BARRIER_SIZE):
+    def generation(self, size, barrier=BARRIER_SIZE):
         gen = Generation(size, self.screen, self.centre)
         self.world_coord = (size + barrier * 2) // 2
         gen.generation()
@@ -168,7 +168,7 @@ class EventHandler:
                 fraction = random.choice(self.fractions)
             whitelist.append(fraction)
             self.info_players[c].append(fraction)
-            barrier = BARRIER_SIZE + 5
+            barrier = BARRIER_SIZE + 3
             start_point = [random.randint(barrier, len(self.screen_world.biomes) - barrier),
                            random.randint(barrier, len(self.screen_world.biomes) - barrier)]
             while (start_point in start_points) or (not self.check_start_point(start_point)):
@@ -212,7 +212,7 @@ class EventHandler:
         self.open_some = False
         self.interfaces = dict()
         if not matr:
-            self.generation(100)
+            self.generation(50)
             matr = self.matr
         self.world_coord = BARRIER_SIZE
         self.screen_world = World(self.screen, self.centre, [self.world_coord, self.world_coord], matr, self)  # создание динамической сетки
@@ -398,7 +398,7 @@ class EventHandler:
         saves.add_saves(files, self.init_world, show_online, self)
         self.interfaces['save_menu'] = saves
 
-    def attack(self, attacker, selected):  # TODO:онлайн
+    def attack(self, attacker, selected):
         count_units = self.interfaces['attack'].drag.now_sector
         delta_units_cnt = self.interfaces['attack'].drag.now_sector - int(selected[1][5])
         self.selected_cells = selected
@@ -412,6 +412,9 @@ class EventHandler:
             return
         ground_from = self.screen_world.biomes[i_from][j_from]
         ground_to = self.screen_world.biomes[i_to][j_to]
+        if ground_to[0] == "water":
+            self.effects.append(Information(self.__xoy_information, "Ходить по воде нельзя", self.textures.resizer, self.__image_information))
+            return
         if ground_from[4] == attacker.fraction_name:
             if ground_to[4] == attacker.fraction_name:
                 ground_to[5] = str(delta_units_cnt + int(selected[1][5]) + int(ground_to[5]))
@@ -421,15 +424,13 @@ class EventHandler:
                 self.selected_cells = [None, None]
                 return
             units_from = int(ground_from[5])  # оставляем одного человека в атакующей клетке (для теста)
-            # defending_ground_protection = int(self.rules['StructuresProtection'][ground_to[1]][0])
-            if delta_units_cnt > 0:
+            defending_ground_protection = int(self.rules['StructuresProtection'][ground_to[1]][0])
+            if delta_units_cnt > defending_ground_protection:
                 if ground_to[1] == ground_to[4] and ground_to[1] != 'null':  # проверка уничтожения главной структуры
                     self.effects.append(Information(self.__xoy_information, f"{ground_from[4]} уничтожили империю {ground_to[4]}", self.textures.resizer, self.__image_information))
                     self.destroy_empire(ground_to[4], ground_from[4], attacker)
                     return
-                if ground_to[4] == 'null':
-                    self.effects.append(Information(self.__xoy_information, f"{ground_from[4]} успешно захватили новую клетку", self.textures.resizer, self.__image_information))
-                else:
+                if ground_to[4] != 'null':
                     self.effects.append(Information(self.__xoy_information, f"{ground_from[4]} успешно атакуют {ground_to[4]}", self.textures.resizer, self.__image_information))
                 self.update_presource(attacker.uid, int(self.rules["ResourcesFromStructures"][ground_to[1]][0]))
                 attacker.potential_resource += int(self.rules["ResourcesFromStructures"][ground_to[1]][0])
@@ -445,11 +446,12 @@ class EventHandler:
                     self.effects.append(Information(self.__xoy_information, f"{ground_from[4]} не смогли расширить владения", self.textures.resizer, self.__image_information))
                 else:
                     self.effects.append(Information(self.__xoy_information, f"{ground_from[4]} не смогли захватить клетку {ground_to[4]}", self.textures.resizer, self.__image_information))
+                    ground_from[5] = f'{int(int(ground_from[5]) * 0.1)}'
         self.contact.send(f'change-0-fraction|{ground_to[4]}|{ground_to[2]}|{ground_to[3]}-end-')
         self.contact.send(f'change-0-fraction|{"|".join(ground_from)}-end-')
         self.selected_cells = [None, None]
 
-    def destroy_empire(self, fraction_old, fraction_new, attacker):  # TODO:онлайн
+    def destroy_empire(self, fraction_old, fraction_new, attacker):
         for i in range(len(self.screen_world.biomes)):
             for j in range(len(self.screen_world.biomes)):
                 if self.screen_world.biomes[i][j][4] == fraction_old:
@@ -478,7 +480,7 @@ class EventHandler:
             if buyer == self.me:
                 self.effects.append(Information(self.__xoy_information, "Эта клетка не принадлежит Вам", self.textures.resizer, self.__image_information))
             return False
-        if ground[1] != 'null':
+        if ground[1] != 'null' and structure != 'null':
             if buyer == self.me:
                 self.effects.append(Information(self.__xoy_information, "Здесь стоит другая структура", self.textures.resizer, self.__image_information))
             return False
@@ -516,7 +518,7 @@ class EventHandler:
         in_matrix = 0 <= sq_i < self.screen_world.sq2 and 0 <= sq_j < self.screen_world.sq1
         if not structure:
             structure = self.structures[self.now_structure]
-        if buyer and not self.check_structure_placement(self.screen_world.biomes[i][j], structure, buyer):
+        if buyer and structure != 'null' and not self.check_structure_placement(self.screen_world.biomes[i][j], structure, buyer):
             return
         structure = self.try_connect_structure((i, j), structure)
         if structure != 'null' and in_matrix:
@@ -531,10 +533,14 @@ class EventHandler:
                 ground.structure = MainStructure(image, xoy, structure, self.textures)
         elif in_matrix and structure == 'null':
             ground = self.screen_world.great_world[sq_i][sq_j]
-            if buyer:
+            if buyer and not isinstance(ground.structure, MainStructure) and buyer.fraction_name == ground.biome[4]:
                 buyer.potential_resource -= int(self.rules["ResourcesFromStructures"][ground.biome[1]][0])
                 self.update_presource(buyer.uid, -int(self.rules["ResourcesFromStructures"][ground.biome[1]][0]))
-            ground.structure = None
+                ground.structure = None
+            elif not buyer:
+                ground.structure = None
+            else:
+                structure = ground.biome[1]
         self.screen_world.biomes[i][j][1] = structure
         if buyer:
             self.area(self.screen_world.biomes[i][j], buyer)
@@ -547,6 +553,8 @@ class EventHandler:
         i, j = coord_ground[0], coord_ground[1]
         sq_i, sq_j = i - self.screen_world.world_coord[0], j - self.screen_world.world_coord[1]
         in_matrix = 0 <= sq_i < self.screen_world.sq2 and 0 <= sq_j < self.screen_world.sq1
+        if self.screen_world.biomes[i][j][0] == 'barrier':
+            return
         if self.screen_world.biomes[i][j][4] != 'null' and info and stability:
             return
         self.screen_world.biomes[i][j][4] = fraction

@@ -109,7 +109,8 @@ class Textures:
                                                 [self.render(f'data/structures/homes/home2_{i}.png', (120, 180)) for i in range(1, 4)],
                                                 [self.render(f'data/structures/homes/home3_{i}.png', (120, 180)) for i in range(1, 4)]],
                                       'sawmill': [[self.render(f'data/structures/sawmill/anim1.png', (120, 180))]],
-                                      'fisherman': [[self.render(f'data/structures/fisherman/anim{i}.png', (120, 180)) for i in range(1, 4)]]}
+                                      'fisherman': [[self.render(f'data/structures/fisherman/anim{i}.png', (120, 180)) for i in range(1, 4)]],
+                                      'polygon': [[self.render(f'data/structures/polygon/anim{i}.png', (120, 180)) for i in range(1, 4)]]}
 
         # self.destroyed_structures = {} для руин
 
@@ -197,7 +198,9 @@ class Textures:
                         'switch': [self.render(f'data/widgets/setting/labels/button1.png', (42, 60)),
                                    self.render(f'data/widgets/setting/labels/button1t.png', (42, 60))]}
 
-        self.army = {'small': [self.render(f'data/army/small.png', (60, 60))],
+        self.army = {'way': [self.render(f'data/army/way.png', (180, 180))],
+                     'shield': [self.render(f'data/army/shield.png', (60, 60))],
+                     'small': [self.render(f'data/army/small.png', (60, 60))],
                      'middle': [self.render(f'data/army/midle.png', (60, 60))],
                      'large': [self.render(f'data/army/large.png', (60, 60))]}
 

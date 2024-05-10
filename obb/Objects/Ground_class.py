@@ -11,7 +11,7 @@ class Ground(pygame.sprite.Sprite):
             self.animation = textures.animation_ground[biome[0]]
         else:
             self.animation = None
-        self.biome = biome #0-биом 1-структура 2,3-координаты 4-фракция 5-кол-во юнитов
+        self.biome = biome  # 0-биом 1-структура 2,3-координаты 4-фракция 5-кол-во юнитов
         self.units_count = 0
         self.tile_image = image  # изначальная текстура клетки
         self.image = image  # текущая текстура клетки
@@ -63,6 +63,8 @@ class Ground(pygame.sprite.Sprite):
             screen.blit(self.select_image, (self.rect.x, self.rect.y))
         if self.structure:
             self.__draw_structure(screen)
+            if self.biome[5] != '0':
+                screen.blit(self.textures.army['shield'][0], (self.rect.x + self.rect[2] // 3, self.rect.y + self.rect[3] // 3))
         elif self.biome[5] != '0':
             category = 'small' if int(self.biome[5]) < 30 else 'middle' if int(self.biome[5]) < 80 else 'large'
             screen.blit(self.textures.army[category][0], (self.rect.x, self.rect.y))
@@ -76,9 +78,6 @@ class Ground(pygame.sprite.Sprite):
         if y_n:
             if self.structure: self.structure.update(move, y_n)
             self.rect.move_ip(move)
-        #обновить текстуру если разрушена фракция
-        # if self.biome[4] == 'null':
-        #     self.structure.image = self.textures.destroyed_structures[self.structure][0] или [0][0]
 
     def __draw_structure(self, screen):
         self.structure.draw(screen)
