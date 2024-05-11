@@ -18,11 +18,21 @@ def show_ingame(self, centre):
     self.interfaces['ingame'] = game
 
 
+def show_end_game(self, centre, status):
+    end = Interfaces.EndGame(centre, self.textures, status)
+    self.interfaces['end'] = end
+
+
 def show_create_save(self, centre):
     close_useless(self)
     name = Interfaces.CreateSave(centre, self.textures)
     name.name.connect(show_choicegame, self, centre, None)
     self.interfaces['create_save'] = name
+
+
+def show_hello_menu(self, centre):
+    hello = Interfaces.HelloMenu(centre, self.textures)
+    self.interfaces['hello'] = hello
 
 
 def show_menu(self, centre):

@@ -10,7 +10,7 @@ class Bot:
         self.id = id
         self.guides = guides
         self.uid = f'bot{id}'
-        self.interval = 1
+        self.interval = 0.5
         self.fraction_name = None
         self.resources = 0
         self.fractions = ["water", "fire", "earth", "air"]
@@ -80,7 +80,7 @@ class Bot:
 
     def monkey_war(self, handler):
         go = [[], []]
-        if self.my_coord == []:
+        if not self.my_coord:
             return
         if self.my_coord == self.coord_to:
             self.can_i_monkey_attack = False

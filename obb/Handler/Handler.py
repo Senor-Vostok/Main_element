@@ -269,6 +269,10 @@ class EventHandler:
                     self.update_resource(self.me.uid, self.me.potential_resource)
                     self.me.resources += self.me.potential_resource
                     show_resources(self, self.me.potential_resource)
+            if mess[0] == 'game_over':
+                if mess[1] == self.me.fraction_name:
+                    self.me.resources = 0
+                    show_end_game(self, self.centre, 'lose')
             # запрос от таймера
 
     def load_world(self):
@@ -435,6 +439,8 @@ class EventHandler:
                     if attacker == self.me:
                         self.effects.append(Information(self.__xoy_information, f"{ground_from[4]} уничтожили империю {ground_to[4]}", self.textures.resizer, self.__image_information))
                     self.destroy_empire(ground_to[4], ground_from[4], attacker)
+                    self.contact.send(f'change-0-army|{ground_to[5]}|{ground_to[2]}|{ground_to[3]}-end-')
+                    self.contact.send(f'change-0-army|{ground_from[5]}|{ground_from[2]}|{ground_from[3]}-end-')
                     return
                 if ground_to[4] != 'null' and attacker == self.me:
                     self.effects.append(Information(self.__xoy_information, f"{ground_from[4]} успешно атакуют {ground_to[4]}", self.textures.resizer, self.__image_information))
@@ -454,7 +460,7 @@ class EventHandler:
                     self.effects.append(Information(self.__xoy_information, f"{ground_from[4]} не смогли захватить клетку {ground_to[4]}", self.textures.resizer, self.__image_information))
                     ground_from[5] = f'{int(int(ground_from[5]) * 0.1)}'
         self.contact.send(f'change-0-fraction|{ground_to[4]}|{ground_to[2]}|{ground_to[3]}-end-')
-        self.contact.send(f'change-0-fraction|{"|".join(ground_from)}-end-')
+        self.contact.send(f'change-0-fraction|{ground_from[4]}|{ground_from[2]}|{ground_from[3]}-end-')
         if attacker != self.me:
             for bot in self.bots:
                 for ground in bot.my_ground:
@@ -484,6 +490,22 @@ class EventHandler:
                         ground = self.screen_world.great_world[sq_i][sq_j]  # Объект Ground
                         xoy = (ground.rect[0] + ground.rect[2] // 2, ground.rect[1] + ground.rect[3] // 2)
                         self.effects.append(Effect(xoy, self.textures.effects['place'], True))
+        self.contact.send(f'game_over-0-{fraction_old}-end-')
+        if fraction_old == self.me.fraction_name:
+            show_end_game(self, self.centre, 'lose')
+        if self.contact.protocol == 'host' or self.contact.protocol == 'unknown':
+            self.info_players[[i[2] for i in self.info_players].index(fraction_old)][5] = 0
+            for bot in self.bots:
+                if bot.fraction_name == fraction_old:
+                    bot.resources = 0
+                    bot.potential_resource = 0
+        fractions = [0] * (len(self.fractions))
+        for i in self.screen_world.biomes:
+            for j in i:
+                if j[4] != 'null':
+                    fractions[self.fractions.index(j[4])] += 1
+        if fractions.count(0) == len(self.fractions) - 1:
+            show_end_game(self, self.centre, 'win')
 
     def area(self, ground, buyer):
         if "tower" in ground[1]:

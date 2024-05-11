@@ -12,6 +12,14 @@ class Pause:
         self.surface = Surface(self.background, self.button_menu, self.button_setting, self.title_world)
 
 
+class EndGame:
+    def __init__(self, xoy, textures, status='lose'):
+        r = textures.resizer
+        self.title = Label('ВАША ФРАКЦИЯ ПОТЕРПЕЛА ПОРАЖЕНИЕ ToT' if status == 'lose' else 'ВЫ СТАЛИ ПОВЕЛИТЕЛЕМ СТИХИЙ', xoy, int(50 * r), (52, 35, 11) if status == 'lose' else (182, 116, 20))
+        self.ico = BackGround(textures.main_menu['winner_ico' if status != 'lose' else 'loser_ico'][0], (xoy[0], xoy[1] - 100 * r))
+        self.surface = Surface(self.title, self.ico)
+
+
 class SelectUnions:
     def __init__(self, xoy, textures, selected):
         r = textures.resizer
@@ -24,6 +32,18 @@ class SelectUnions:
             self.surface = Surface(self.way, self.drag, self.confirm)
         else:
             self.surface = Surface(self.drag, self.confirm)
+
+
+class HelloMenu:
+    def __init__(self, xoy, textures):
+        r = textures.resizer
+        self.background = BackGround(textures.main_menu['hello_background'][0], xoy)
+        self.main_ico = BackGround(textures.main_menu['name'][0], (xoy[0], xoy[1] - 430 * r))
+        with open('data/user/about_world', mode='rt', encoding='utf-8') as file:
+            file = file.read()
+            self.hello_text = Label(file, (20 * r, xoy[1] - 240 * r), int(20 * r), DEFAULT_COLOR, centric=False)
+        self.info = Label('Нажмите ESC для продолжения', (xoy[0], xoy[1] + 440 * r), int(30 * r))
+        self.surface = Surface(self.background, self.main_ico, self.hello_text, self.info)
 
 
 class Menu:
@@ -80,7 +100,7 @@ class BuildMenu:
         self.structure = BackGround(pygame.transform.scale(textures.animations_structures[structures[0]][0][0], (240 * r, 360 * r)), (293 * r, xoy[1] - 200 * r))
         self.s1 = BackGround(textures.animations_structures[structures[-1]][0][0], (98 * r, xoy[1] - 210 * r))
         self.s2 = BackGround(textures.animations_structures[structures[1]][0][0], (488 * r, xoy[1] - 210 * r))
-        self.about = Label(f'Empty message', (90 * r, xoy[1] - 20 * r), 15)
+        self.about = Label(f'Empty message', (90 * r, xoy[1] - 20 * r), int(15 * r))
         self.surface = Surface(self.background, self.select_ground, self.button_project, self.down, self.up, self.structure, self.s1, self.s2, self.about)
 
 
@@ -144,7 +164,7 @@ class Save_menu:
         for i in saves:
             try:
                 spisok = [BackGround(self.t.save_menu['variant_save'][0], (self.xoy[0] - 30 * r, self.xoy[1] - y * r)),
-                          Label(i[:-6], (self.xoy[0] - 30 * r, self.xoy[1] - y * r), 30),
+                          Label(i[:-6], (self.xoy[0] - 30 * r, self.xoy[1] - y * r), int(30 * r)),
                           Button(self.t.save_menu['button_play'], (self.xoy[0] + 235 * r, self.xoy[1] - 25 * r - y * r)),
                           Button(self.t.save_menu['button_delete'], (self.xoy[0] + 235 * r, self.xoy[1] + 25 * r - y * r))]
                 decode, game = self.__decode_world(i)

@@ -131,6 +131,7 @@ class Textures:
                                              self.render('data/widgets/popupmenu/buttons/button5t.png', (250, 50))]}
 
         self.main_menu = {'background': [self.render(f'data/widgets/menu/background.png', (1920, 1080))],
+                          'hello_background': [self.render(f'data/widgets/menu/hello_menu.png', (1920, 1080))],
                           'name': [self.render(f'data/widgets/menu/main element.png', (466, 194))],
                           'button_start': [self.render(f'data/widgets/menu/buttons/button.png', (500, 90)),
                                            self.render(f'data/widgets/menu/buttons/buttont.png', (500, 90))],
@@ -151,7 +152,9 @@ class Textures:
                           'label_port': [self.render(f'data/widgets/menu/labels/port.png', (550, 66)),
                                          self.render(f'data/widgets/menu/labels/portt.png', (550, 66))],
                           'bug_report': [self.render(f'data/widgets/menu/buttons/button10.png', (70, 70)),
-                                         self.render(f'data/widgets/menu/buttons/button10t.png', (70, 70))]}
+                                         self.render(f'data/widgets/menu/buttons/button10t.png', (70, 70))],
+                          'winner_ico': [self.render(f'data/widgets/menu/winner.png', (100, 100))],
+                          'loser_ico': [self.render(f'data/widgets/menu/loser.png', (100, 100))]}
 
         self.pause = {'background': [self.render(f'data/widgets/menu/labels/background.png', (1920, 1080))],
                       'button_menu': [self.render(f'data/widgets/menu/buttons/button6.png', (400, 70)),

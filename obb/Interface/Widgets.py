@@ -171,8 +171,9 @@ class Surface:
 
 
 class Label(pygame.sprite.Sprite):
-    def __init__(self, text, xoy, size, color=DEFAULT_COLOR):
+    def __init__(self, text, xoy, size, color=DEFAULT_COLOR, centric=True):
         pygame.sprite.Sprite.__init__(self)
+        text = str(text)
         self.color = color
         self.text = text
         self.size = size
@@ -181,8 +182,11 @@ class Label(pygame.sprite.Sprite):
         for text in self.text.split('\n'):
             self.label.append(self.font.render(text, 1, color))
         self.rect = self.label[0].get_rect(center=xoy)
+        if not centric:
+            self.rect.x, self.rect.y = xoy
 
     def new_text(self, text):
+        text = str(text)
         self.label.clear()
         for text in text.split('\n'):
             self.label.append(self.font.render(text, 1, self.color))
