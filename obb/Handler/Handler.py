@@ -456,16 +456,16 @@ class EventHandler:
         self.contact.send(f'change-0-fraction|{ground_to[4]}|{ground_to[2]}|{ground_to[3]}-end-')
         self.contact.send(f'change-0-fraction|{"|".join(ground_from)}-end-')
         if attacker != self.me:
-            attacker.my_ground.append(selected[1])
-            ok = False
             for bot in self.bots:
                 for ground in bot.my_ground:
-                    if ground[2] == selected[1][2] and ground[3] == selected[1][3]:
+                    if ground[2:4] == ground_to[2:4] and ground_to[5] != selected[1][5]:
                         bot.my_ground.remove(ground)
-                        ok = True
-                        break
-                if ok:
-                    break
+                    elif ground_to[5] == selected[1][5] and ground[2:4] == ground_to[2:4]:
+                        bot.my_ground[bot.my_ground.index(ground)] = ground_to
+                    if ground[2:4] == ground_from[2:4]:
+                        bot.my_ground[bot.my_ground.index(ground)] = ground_from
+            if ground_to[5] != selected[1][5]:
+                attacker.my_ground.append(ground_to)
         if attacker == self.me:
             self.selected_cells = [None, None]
 

@@ -24,6 +24,8 @@ class Bot:
         self.monkeys = list()
         self.my_coord = []
         self.coord_to = []
+        self.my_monkey_coord = []
+        self.my_monkey_ground = []
         self.start_point = (None, None)  # точка спавна фракции
 
     def think_smth_please(self, handler):
@@ -36,25 +38,6 @@ class Bot:
     def cooldown(self):
         self.can_i_do_smth = True
 
-    def destroy(self, handler):
-        monkeys_enemy = list()
-        war = [[], []]
-        t = 0
-        end_war = False
-        for monkey in self.monkeys:
-            for i in range(-1, 2):
-                for j in range(-1, 2):
-                    monkeys_enemy = handler.screen_world.biomes[int(monkey[2]) + i][int(monkey[3]) + j]
-                    if monkeys_enemy[4] != self.fraction_name and monkeys_enemy in self.fractions:
-                        war = [monkey, monkeys_enemy]
-                        handler.attack(self, war)
-                        self.monkeys[t] = monkeys_enemy
-                        end_war = True
-                        break
-            if end_war:
-                break
-            t += 1
-
     def go_to_attack(self, handler, coord):
         x, y = int(coord[0]), int(coord[1])
         ok = True
@@ -63,60 +46,37 @@ class Bot:
             for j in range(-3, 6):
                 if handler.screen_world.biomes[x + i][y + j][4] not in self.fractions:
                     handler.set_fraction((x + i, y + j), self.fraction_name, True, self)
-                    a = random.choice(["tower", "homes"])
+                    a = random.choice(["tower", "polygon", "homes"])
                     handler.place_structure((x + i, y + j), a, True, self)
                     ok = False
                     break
             if not ok:
                 break
 
-    def monkey_stregth(self, handler, monkey, ground):
-        ans = [[], []]
-        for i in range(7):
-            if monkey == ground:
-                break
-            x, y = int(monkey[2]), int(monkey[3])
-            z, w = int(ground[2]), int(ground[3])
-            if z > x and w > y:
-                ans = [monkey, handler.screen_world.biomes[x + 1][y + 1]]
-                handler.attack(self, ans)
-                monkey = handler.screen_world.biomes[x + 1][y + 1]
-            if z < x and w > y:
-                ans = [monkey, handler.screen_world.biomes[x - 1][y + 1]]
-                handler.attack(self, ans)
-                monkey = handler.screen_world.biomes[x - 1][y + 1]
-            if z > x and w < y:
-                ans = [monkey, handler.screen_world.biomes[x + 1][y - 1]]
-                handler.attack(self, ans)
-                monkey = handler.screen_world.biomes[x + 1][y - 1]
-            if z < x and w < y:
-                ans = [monkey, handler.screen_world.biomes[x - 1][y - 1]]
-                handler.attack(self, ans)
-                monkey = handler.screen_world.biomes[x - 1][y - 1]
-            if x == z and w < y:
-                ans = [monkey, handler.screen_world.biomes[x][y - 1]]
-                handler.attack(self, ans)
-                monkey = handler.screen_world.biomes[x][y - 1]
-            if x == z and w > y:
-                ans = [monkey, handler.screen_world.biomes[x][y + 1]]
-                handler.attack(self, ans)
-                monkey = handler.screen_world.biomes[x][y + 1]
-            if z < x and y == w:
-                ans = [monkey, handler.screen_world.biomes[x - 1][y]]
-                handler.attack(self, ans)
-                monkey = handler.screen_world.biomes[x - 1][y]
-            if z > x and y == w:
-                ans = [monkey, handler.screen_world.biomes[x + 1][y]]
-                handler.attack(self, ans)
-                monkey = handler.screen_world.biomes[x + 1][y]
+    def monkey_unite(self, handler):
+        self.coord_to = self.my_coord
+        coord = self.find_monkey(handler, self.my_coord)
+        if coord == self.my_coord:
+            self.can_i_monkey_attack = False
+        else:
+            self.my_coord = coord
+            self.monkey_war(handler)
 
     def find_monkey(self, handler, ground):
-        for i in range(-5, 6):
-            for j in range(-5, 6):
-                monkey = handler.screen_world.biomes[int(ground[2]) + i][int(ground[3]) + j]
-                if monkey[5] != '0' and monkey[4] == self.fraction_name:
-                    self.monkey_stregth(handler, monkey, ground)
-                    return
+        x, y = int(ground[2]), int(ground[3])
+        min = 1000
+        max = -1000
+        monkey = list()
+        for monkey_find in self.my_ground:
+            a, b = int(monkey_find[2]), int(monkey_find[3])
+            if abs(x - a) + abs(y - b) < min and int(monkey_find[5]) > max:
+                max = int(monkey_find[5])
+                min = abs(x - a) + abs(y - b)
+                monkey = monkey_find
+        if monkey == list():
+            return ground
+        else:
+            return monkey
 
     def monkey_war(self, handler):
         go = [[], []]
@@ -132,44 +92,55 @@ class Bot:
                 go = [self.my_coord, handler.screen_world.biomes[x + 1][y + 1]]
                 handler.attack(self, go)
                 self.my_coord = handler.screen_world.biomes[x + 1][y + 1]
-            if z < x and w > y:
+                return
+            elif z < x and w > y:
                 go = [self.my_coord, handler.screen_world.biomes[x - 1][y + 1]]
                 handler.attack(self, go)
                 self.my_coord = handler.screen_world.biomes[x - 1][y + 1]
-            if z > x and w < y:
+                return
+            elif z > x and w < y:
                 go = [self.my_coord, handler.screen_world.biomes[x + 1][y - 1]]
                 handler.attack(self, go)
                 self.my_coord = handler.screen_world.biomes[x + 1][y - 1]
-            if z < x and w < y:
+                return
+            elif z < x and w < y:
                 go = [self.my_coord, handler.screen_world.biomes[x - 1][y - 1]]
                 handler.attack(self, go)
                 self.my_coord = handler.screen_world.biomes[x - 1][y - 1]
-            if z == x and w > y:
+                return
+            elif z == x and w > y:
                 go = [self.my_coord, handler.screen_world.biomes[x][y + 1]]
                 handler.attack(self, go)
                 self.my_coord = handler.screen_world.biomes[x][y + 1]
-            if z == x and w < y:
+                return
+            elif z == x and w < y:
                 go = [self.my_coord, handler.screen_world.biomes[x][y - 1]]
                 handler.attack(self, go)
                 self.my_coord = handler.screen_world.biomes[x][y - 1]
-            if z > x and w == y:
+                return
+            elif z > x and w == y:
                 go = [self.my_coord, handler.screen_world.biomes[x + 1][y]]
                 handler.attack(self, go)
                 self.my_coord = handler.screen_world.biomes[x + 1][y]
-            if z < x and w == y:
+                return
+            elif z < x and w == y:
                 go = [self.my_coord, handler.screen_world.biomes[x - 1][y]]
                 handler.attack(self, go)
                 self.my_coord = handler.screen_world.biomes[x - 1][y]
+                return
 
     def attack_fraction(self, handler):
         if not self.coord_to:
             return
-        for ground in self.my_ground:
-            if int(ground[5]) <= int(self.coord_to[5]):
-                self.find_monkey(handler, ground)
+        for i in range(obb.Constants.SEARCH_CELL):
+            ground = random.choice(self.my_ground)
+            if int(ground[5]) <= int(self.coord_to[5]) and self.can_i_monkey_attack:
+                self.monkey_unite(handler)
+                break
             else:
                 self.my_coord = ground
                 self.monkey_war(handler)
+                break
 
     def goto_fraction(self, handler, attack=False, destroy=False):
         min = 1e7
@@ -177,44 +148,48 @@ class Bot:
         coord.append(0)
         coord.append(0)
         cell = list()
+        my_place = []
         for i in range(0, 4):
             if self.fraction_name != self.fractions[i]:
                 board = handler.found_board(4, self.fractions[i])
                 for bord in board:
                     for place in self.my_ground:
-                        if not destroy:
-                            x_bord, y_bord = int(bord[2]), int(bord[3])
-                            x_place, y_place = int(place[2]), int(place[3])
-                            if min > abs(x_bord - x_place) + abs(y_bord - y_place):
-                                min = abs(x_bord - x_place) + abs(y_bord - y_place)
-                                coord[0] = x_bord
-                                coord[1] = y_bord
-                                cell = bord
-                        elif destroy and bord[1] in self.fractions:
-                            x_bord, y_bord = int(bord[2]), int(bord[3])
-                            x_place, y_place = int(place[2]), int(place[3])
-                            if min > abs(x_bord - x_place) + abs(y_bord - y_place):
-                                min = abs(x_bord - x_place) + abs(y_bord - y_place)
-                                coord[0] = x_bord
-                                coord[1] = y_bord
-                                cell = bord
+                        x_bord, y_bord = int(bord[2]), int(bord[3])
+                        x_place, y_place = int(place[2]), int(place[3])
+                        if min > abs(x_bord - x_place) + abs(y_bord - y_place):
+                            min = abs(x_bord - x_place) + abs(y_bord - y_place)
+                            coord[0] = x_bord
+                            coord[1] = y_bord
+                            cell = bord
+                            my_place = place
+        if destroy:
+            return (my_place, cell)
         if not attack:
             self.go_to_attack(handler, coord)
         else:
             self.coord_to = cell
             self.attack_fraction(handler)
+        return cell
+
+    def monkey_scouts(self, handler):
+        monkey_map = self.goto_fraction(handler, False, True)
+        self.my_coord = monkey_map[0]
+        self.coord_to = monkey_map[1]
+        self.monkey_war(handler)
 
     def __get_event(self, y):
-        if y < 4 or self.resources <= obb.Constants.RESORCE_CONST:  # строим фарм строения Todo 50 20 300 не константы
+        if y < 5 or self.resources <= obb.Constants.RESORCE_CONST:  # строим фарм строения
             return 1
-        elif 7 < y < 9:  # строимся к врагам
+        elif 5 < y < 8:  # строимся к врагам
             return 2
-        elif 9 < y < 11:  # пупупу
+        elif 8 < y < 10:  # пупупу
             return 3
-        elif 11 < y < 14 or y == 6:  # атакуем врагов
+        elif 10 < y < 14:  # атакуем врагов
             return 4
-        else:
+        elif 14 < y < 17:
             return 5
+        else:
+            return 6
 
     def check_place_structure(self, handler, flag_money=False):  # пофиКСЬ ДВЕ ТАВЕРКИ
         try:
@@ -236,7 +211,7 @@ class Bot:
             pass
 
     def outbuild_smth(self, handler):
-        y = random.randint(1, 17)
+        y = random.randint(1, 20)
         key = self.__get_event(int(y))
         if self.can_i_monkey_attack:
             self.monkey_war(handler)
@@ -251,4 +226,6 @@ class Bot:
                 self.goto_fraction(handler, True)
                 self.can_i_monkey_attack = True
             elif key == 5:
-                self.destroy(handler)  # сделать функцию где бот вдалеке около выгодного места(снег, вода) строит башню и добывающие здания
+                self.monkey_scouts(handler)  # сделать функцию где бот вдалеке около выгодного места(снег, вода) строит башню и добывающие здания
+            elif key == 6:
+                self.my_coord = handler.found_board(4, self.fraction_name)
