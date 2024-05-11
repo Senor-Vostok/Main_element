@@ -147,6 +147,7 @@ class EventHandler:
     def init_players(self):
         # Эта часть кода для загруженной игры
         if len(self.info_players[0]) > 2:
+            nicks = f'nicks-0-{"|".join(":t:".join(i[:3]) for i in self.info_players)}-end-'
             for c in range(1, len(self.info_players)):
                 uid = self.info_players[c][1]
                 if 'bot' in uid:
@@ -154,8 +155,7 @@ class EventHandler:
                     self.bots[-1].my_ground = self.found_board(4, self.info_players[c][2])
                 else:
                     i = self.contact.users.index(uid)
-                    self.contact.send(f"uid-0-{self.info_players[c][2]}|{'_'.join(map(str, self.info_players[c][3]))}|{self.info_players[c][4]}|{self.info_players[c][5]}-end-", self.contact.array_clients[i - 1])
-                    self.contact.send(f'nicks-0-{"|".join(":t:".join(i[:3]) for i in self.info_players)}-end-')
+                    self.contact.send(f"uid-0-{self.info_players[c][2]}|{'_'.join(map(str, self.info_players[c][3]))}|{self.info_players[c][4]}|{self.info_players[c][5]}-end-{nicks}", self.contact.array_clients[i - 1])
             self.init_player(self.info_players[0][2], self.info_players[0][3], self.info_players[0][4], self.info_players[0][5])
             return
         # Эта часть кода для новой игры
@@ -191,10 +191,11 @@ class EventHandler:
                     self.screen_world.biomes[start_point[0] + i][start_point[1] + j][5] = count_army
                     message += f'change-0-army|{count_army}|{start_point[0] + i}|{start_point[1] + j}-end-'
                     message += f'change-0-fraction|{fraction}|{start_point[0] + i}|{start_point[1] + j}-end-'
+        nicks = f'nicks-0-{"|".join(":t:".join(i[:3]) for i in self.info_players)}-end-'
         for c in range(1, len(self.info_players)):
             if 'bot' not in self.info_players[c][1]:
-                self.contact.send(f"uid-0-{self.info_players[c][2]}|{'_'.join(map(str, self.info_players[c][3]))}|{self.info_players[c][4]}|{0}-end-{message}", self.contact.array_clients[c - 1])
-                self.contact.send(f'nicks-0-{"|".join(":t:".join(i[:3]) for i in self.info_players)}-end-')
+                print(self.info_players[c][2])
+                self.contact.send(f"uid-0-{self.info_players[c][2]}|{'_'.join(map(str, self.info_players[c][3]))}|{self.info_players[c][4]}|{0}-end-{nicks}{message}", self.contact.array_clients[c - 1])
         self.init_player(self.info_players[0][2], self.info_players[0][3], self.info_players[0][4], 0)
 
     def check_start_point(self, start_point):
@@ -222,57 +223,60 @@ class EventHandler:
 
     def decode_message(self, message):
         for message in message.split('-end-'):
-            mess = message.split('-0-')
-            if mess[0] == 'change':
-                mess = mess[1].split('|')
-                i, j = int(mess[2]), int(mess[3])
-                if mess[0] == 'structure':
-                    self.place_structure((i, j), mess[1], False)
-                if mess[0] == 'fraction':
-                    self.set_fraction((i, j), mess[1], False)
-                if mess[0] == 'army':
-                    self.screen_world.biomes[i][j][5] = mess[1]
-                if mess[0] == 'update':
-                    self.screen_world.biomes[i][j] = mess[1:]
-            if mess[0] == 'join':
-                if self.contact.private and mess[1].split('|')[1] not in self.contact.whitelist:
-                    if self.contact.protocol == 'host':
-                        self.contact.array_clients.pop(-1).close()
-                elif mess[1].split('|')[1] != self.me.uid and mess[1].split('|')[1] not in self.contact.users:
-                    self.contact.users.append(mess[1].split('|')[1])
-                    if not self.loaded_save:
-                        self.info_players.append(mess[1].split('|'))
-            if mess[0] == 'nicks':
-                print([i.split(':t:') for i in mess[1].split('|')])
-                self.info_players = [i.split(':t:') for i in mess[1].split('|')]
-            if mess[0] == 'uid':
-                fraction = mess[1].split('|')[0]
-                coord = [int(i) for i in (mess[1].split('|')[1]).split('_')]
-                resource = int(mess[1].split('|')[2])
-                potential_resource = int(mess[1].split('|')[3])
-                self.init_player(fraction, coord, resource, potential_resource)
-                self.contact.users.append(self.me.uid)
-            if mess[0] == 'resource' and self.contact.protocol == 'host':
-                uid = mess[1].split('|')[0]
-                delta_resource = int(mess[1].split('|')[1])
-                self.update_resource(uid, delta_resource)
-            if mess[0] == 'presource' and self.contact.protocol == 'host':
-                uid = mess[1].split('|')[0]
-                delta_presource = int(mess[1].split('|')[1])
-                self.update_presource(uid, delta_presource)
-            if mess[0] == 'presource(looser)' and self.contact.protocol == 'host':
-                fraction = mess[1].split('|')[0]
-                delta_presource = int(mess[1].split('|')[1])
-                self.update_presourse_looser_edition(fraction, delta_presource)
-            if mess[0] == 'host':
-                if mess[1] == 'timer':
-                    self.update_resource(self.me.uid, self.me.potential_resource)
-                    self.me.resources += self.me.potential_resource
-                    show_resources(self, self.me.potential_resource)
-            if mess[0] == 'game_over':
-                if mess[1] == self.me.fraction_name:
-                    self.me.resources = 0
-                    show_end_game(self, self.centre, 'lose')
+            try:
+                mess = message.split('-0-')
+                if mess[0] == 'change':
+                    mess = mess[1].split('|')
+                    i, j = int(mess[2]), int(mess[3])
+                    if mess[0] == 'structure':
+                        self.place_structure((i, j), mess[1], False)
+                    if mess[0] == 'fraction':
+                        self.set_fraction((i, j), mess[1], False)
+                    if mess[0] == 'army':
+                        self.screen_world.biomes[i][j][5] = mess[1]
+                    if mess[0] == 'update':
+                        self.screen_world.biomes[i][j] = mess[1:]
+                if mess[0] == 'join':
+                    if self.contact.private and mess[1].split('|')[1] not in self.contact.whitelist:
+                        if self.contact.protocol == 'host':
+                            self.contact.array_clients.pop(-1).close()
+                    elif mess[1].split('|')[1] != self.me.uid and mess[1].split('|')[1] not in self.contact.users:
+                        self.contact.users.append(mess[1].split('|')[1])
+                        if not self.loaded_save:
+                            self.info_players.append(mess[1].split('|'))
+                if mess[0] == 'nicks':
+                    print([i.split(':t:') for i in mess[1].split('|')])
+                    self.info_players = [i.split(':t:') for i in mess[1].split('|')]
+                if mess[0] == 'uid':
+                    fraction = mess[1].split('|')[0]
+                    coord = [int(i) for i in (mess[1].split('|')[1]).split('_')]
+                    resource = int(mess[1].split('|')[2])
+                    potential_resource = int(mess[1].split('|')[3])
+                    self.init_player(fraction, coord, resource, potential_resource)
+                    self.contact.users.append(self.me.uid)
+                if mess[0] == 'resource' and self.contact.protocol == 'host':
+                    uid = mess[1].split('|')[0]
+                    delta_resource = int(mess[1].split('|')[1])
+                    self.update_resource(uid, delta_resource)
+                if mess[0] == 'presource' and self.contact.protocol == 'host':
+                    uid = mess[1].split('|')[0]
+                    delta_presource = int(mess[1].split('|')[1])
+                    self.update_presource(uid, delta_presource)
+                if mess[0] == 'presource(looser)' and self.contact.protocol == 'host':
+                    fraction = mess[1].split('|')[0]
+                    delta_presource = int(mess[1].split('|')[1])
+                    self.update_presourse_looser_edition(fraction, delta_presource)
+                if mess[0] == 'host':
+                    if mess[1] == 'timer':
+                        self.update_resource(self.me.uid, self.me.potential_resource)
+                        self.me.resources += self.me.potential_resource
+                        show_resources(self, self.me.potential_resource)
+                if mess[0] == 'game_over':
+                    if mess[1] == self.me.fraction_name:
+                        self.me.resources = 0
+                        show_end_game(self, self.centre, 'lose')
+            except Exception as e:
+                print(e)
             # запрос от таймера
 
     def load_world(self):
@@ -283,6 +287,7 @@ class EventHandler:
             if not self.loaded_save:
                 for i in range(len(self.fractions) - len(self.contact.users)):
                     self.info_players.append([random.choice(['Carl', 'Maxim', 'Aleksandr', 'BArber']), f'bot{i}'])
+            print('innit_players')
             self.init_players()
         if not self.me.fraction_name:
             return
@@ -297,8 +302,8 @@ class EventHandler:
             if self.contact.protocol == 'client': self.decode_message(self.contact.check_message())
         except Exception:
             pass
-        if len(self.contact.users) + int(bool(self.contact.protocol == "client")) >= self.contact.maxclient + 1:
-            if not self.screen_world.rendering:
+        if len(self.contact.users) + int(bool(self.contact.protocol == "client")) >= self.contact.maxclient + 1 or self.screen_world.rendering:
+            if 'ingame' not in self.interfaces:
                 self.load_world()
             if self.contact.protocol == 'unknown' or self.contact.protocol == 'host':
                 self.get_resource()
@@ -351,7 +356,7 @@ class EventHandler:
 
     def host_game(self, matr):
         if not matr:
-            self.generation(100)
+            self.generation(50)
             matr = self.matr
         count = int(self.interfaces['online'].count.text[:-1])
         if count < 2:

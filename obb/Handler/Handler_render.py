@@ -56,7 +56,7 @@ def rendering(handler, machine):
             camera_move[0] *= -1
             camera_move[1] *= -1
         for sprite in itertools.chain.from_iterable(machine.great_world):
-            if handler.interfaces['ingame'].state_game.active and isinstance(sprite.structure, obb.Objects.Structures.MainStructure):
+            if 'ingame' in handler.interfaces and handler.interfaces['ingame'].state_game.active and isinstance(sprite.structure, obb.Objects.Structures.MainStructure):
                 rect = sprite.rect
                 title_main_structures.append([rect[0] + rect[2] // 2, rect[1] - rect[3] // 2, handler.info_players[[i[2] for i in handler.info_players].index(sprite.biome[4])][0]])
             sprite.update(machine.synchronous, camera_move, flag and not handler.open_some)
