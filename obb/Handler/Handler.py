@@ -351,7 +351,6 @@ class EventHandler:
         self.interfaces['buildmenu'].s1.image = self.textures.animations_structures[self.structures[fs2]][0][0]
         struct = self.structures[self.now_structure]
         about = "\n".join(self.about_structures[struct].split("|n|"))
-        print(about)
         self.interfaces['buildmenu'].about.new_text(f'Цена: {self.rules["StructuresCosts"][struct][0]}\nДаёт: ресурс - {self.rules["ResourcesFromStructures"][struct][0]}, войско - {self.rules["ArmyFromStructures"][struct][0]}, защита - {self.rules["StructuresProtection"][struct][0]}\nИнформация: {about}')
 
     def host_game(self, matr):
@@ -571,10 +570,11 @@ class EventHandler:
             ground = self.screen_world.great_world[sq_i][sq_j]  # Объект Ground
             xoy = (ground.rect[0] + ground.rect[2] // 2, ground.rect[1] + ground.rect[3] // 2)
             self.effects.append(Effect(xoy, self.textures.effects['place'], True))
-            image = self.textures.animations_structures[structure][0][0]
             if structure in self.structures + self.supports_structure:
+                image = self.textures.animations_structures[structure][0][0]
                 ground.structure = ClassicStructure(image, xoy, structure, self.textures)
             else:
+                image = self.textures.animations_main_structures[structure][0][0]
                 ground.structure = MainStructure(image, xoy, structure, self.textures)
         elif in_matrix and structure == 'null':
             ground = self.screen_world.great_world[sq_i][sq_j]
