@@ -274,7 +274,15 @@ class EventHandler:
                 if mess[0] == 'game_over':
                     if mess[1] == self.me.fraction_name:
                         self.me.resources = 0
+                        self.me.potential_resource = 0
                         show_end_game(self, self.centre, 'lose')
+                    if self.contact.protocol == 'host':
+                        self.info_players[[i[2] for i in self.info_players].index(mess[1])][5] = 0
+                        self.info_players[[i[2] for i in self.info_players].index(mess[1])][6] = 0
+                        for bot in self.bots:
+                            if bot.fraction_name == mess[1]:
+                                bot.potential_resource = 0
+                                bot.resources = 0
             except Exception as e:
                 print(e)
             # запрос от таймера
@@ -498,6 +506,7 @@ class EventHandler:
             show_end_game(self, self.centre, 'lose')
         if self.contact.protocol == 'host' or self.contact.protocol == 'unknown':
             self.info_players[[i[2] for i in self.info_players].index(fraction_old)][5] = 0
+            self.info_players[[i[2] for i in self.info_players].index(fraction_old)][6] = 0
             for bot in self.bots:
                 if bot.fraction_name == fraction_old:
                     bot.resources = 0
@@ -565,6 +574,7 @@ class EventHandler:
         if buyer and structure != 'null' and not self.check_structure_placement(self.screen_world.biomes[i][j], structure, buyer):
             return
         structure = self.try_connect_structure((i, j), structure)
+        self.screen_world.biomes[i][j][1] = structure
         if structure != 'null' and in_matrix:
             pygame.mixer.Channel(2).play(self.sounds.place)
             ground = self.screen_world.great_world[sq_i][sq_j]  # Объект Ground
@@ -586,7 +596,6 @@ class EventHandler:
                 ground.structure = None
             else:
                 structure = ground.biome[1]
-        self.screen_world.biomes[i][j][1] = structure
         if buyer:
             self.area(self.screen_world.biomes[i][j], buyer)
         if buyer == self.me:
@@ -647,8 +656,8 @@ class EventHandler:
                 self.update_resource(bot.uid, bot.potential_resource)
                 bot.resources += bot.potential_resource
             for board in self.found_board(1, self.military_structure):
-                board[5] = f'{int(board[5]) + int(self.rules["ArmyFromStructures"]["homes"][0])}'
-                self.contact.send(f'change-0-army|{int(board[5]) + int(self.rules["ArmyFromStructures"]["homes"][0])}|{board[2]}|{board[3]}-end-')
+                board[5] = f'{int(board[5]) + int(self.rules["ArmyFromStructures"][board[1]][0])}'
+                self.contact.send(f'change-0-army|{int(board[5]) + int(self.rules["ArmyFromStructures"][board[1]][0])}|{board[2]}|{board[3]}-end-')
 
     def click_handler(self):
         c = None
