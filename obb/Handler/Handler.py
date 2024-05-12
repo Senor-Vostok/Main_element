@@ -611,7 +611,6 @@ class EventHandler:
             return
         if self.screen_world.biomes[i][j][4] != 'null' and info and stability:
             return
-        self.screen_world.biomes[i][j][4] = fraction
         if in_matrix:
             ground = self.screen_world.great_world[sq_i][sq_j]  # Объект Ground
             xoy = (ground.rect[0] + ground.rect[2] // 2, ground.rect[1] + ground.rect[3] // 2)
@@ -620,7 +619,10 @@ class EventHandler:
             ground_cost = int(self.rules['GroundsCosts'][self.screen_world.biomes[i][j][0]][0])
             if buyer.resources >= ground_cost:
                 self.update_resource(buyer.uid, -ground_cost)  # Мы не можем заглянуть в me у другого игрока (ПРОБЛМЕА)
-                buyer.resources -= ground_cost                 # А это решение этого (выше смотри строчку)
+                buyer.resources -= ground_cost
+                self.screen_world.biomes[i][j][4] = fraction # А это решение этого (выше смотри строчку)
+        else:
+            self.screen_world.biomes[i][j][4] = fraction
         if info:
             self.contact.send(f'change-0-fraction|{fraction}|{i}|{j}-end-')
 
