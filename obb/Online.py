@@ -89,9 +89,15 @@ class Host:
     def send(self, message, client=None):
         if not client:
             for client in self.array_clients:
-                client.sendall(bytes(message, 'utf-8'))
+                try:
+                    client.sendall(bytes(message, 'utf-8'))
+                except Exception:
+                    print(f'Не удаётся связаться с игроком {client}')
         else:
-            client.sendall(bytes(message, 'utf-8'))
+            try:
+                client.sendall(bytes(message, 'utf-8'))
+            except Exception:
+                print(f'Не удаётся связаться с игроком {client}')
 
     def hosting(self):
         if len(self.array_clients) < self.maxclient and not self.in_other_thread:
