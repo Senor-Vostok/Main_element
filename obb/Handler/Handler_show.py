@@ -1,3 +1,4 @@
+import obb.Constants
 import obb.Interface.Interfaces as Interfaces
 from obb.Image_rendering.Resources import Resource
 import webbrowser
@@ -119,7 +120,7 @@ def show_settings(self, centre, active=True):
     close_useless(self)
     setting = Interfaces.Setting(centre, self.textures)
     setting.nickname.connect(self.save_settings, 'nickname')
-    setting.sound_loud.now_sector = 100 * self.volumes_channels[0]
+    setting.sound_loud.now_sector = 100 * self.volumes_channels[0]  # Проценты
     setting.sound_loud.connect(self.change_volume, setting.sound_loud, 0)
     setting.nickname.text = self.me.nickname + "/"
     setting.nickname.active = active
@@ -129,7 +130,7 @@ def show_settings(self, centre, active=True):
 def show_resources(self, count):
     if count <= 0:
         return
-    count = 10 if count > 10 else count
+    count = obb.Constants.MAX_RESOURCE_ON_SCREEN if count > obb.Constants.MAX_RESOURCE_ON_SCREEN else count
     y = self.interfaces['ingame'].back2.rect[1]
     interval = self.size[0] // count
     for i in range(self.size[0], self.size[0] * 2, interval):

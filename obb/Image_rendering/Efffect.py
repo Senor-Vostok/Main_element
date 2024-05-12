@@ -1,5 +1,7 @@
 import pygame
 import datetime
+
+import obb.Constants
 from obb.Constants import DEFAULT_COLOR
 
 
@@ -33,7 +35,7 @@ class Information(pygame.sprite.Sprite):
         self.xoy = xoy
         self.font = pygame.font.SysFont('progresspixel-bold', int(30 * resizer))
         self.resizer = resizer
-        self.speed_animation = 10
+        self.speed_animation = obb.Constants.SPEED_ANIMATION_TEXT
         self.image = self.font.render(text, 1, DEFAULT_COLOR)
         self.back_image = pygame.transform.scale(back_image, (self.image.get_rect()[2] * 1.1, back_image.get_rect()[3])).convert_alpha()
         self.timer = datetime.datetime.now()

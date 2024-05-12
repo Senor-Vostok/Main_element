@@ -5,3 +5,4 @@ GroundsCosts:ground_2,flower_2,sand_2,snow_6,stone_3,water_2
 ResourcesFromStructures:null_0,mill_5,mill-support_5,tower_0,mine_15,homes_3,sawmill_10,fisherman_7,polygon_0,earth_5,water_5,fire_5,air_5
 ArmyFromStructures:null_0,mill_0,tower_2,mine_0,homes_3,sawmill_0,fisherman_0,polygon_10
 StructuresProtection:mill_12,mill-support_12,tower_15,mine_22,homes_10,sawmill_10,fisherman_15,null_5,air_50,earth_50,fire_50,water_50,polygon_40
+RadiusAreaForStructures:tower_2

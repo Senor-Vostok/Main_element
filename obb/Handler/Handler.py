@@ -1,4 +1,6 @@
 import pygame.display
+
+import obb.Constants
 from obb.Objects.Player import Player
 from obb.Objects.Bot import Bot
 from obb.Image_rendering.Textures import Textures
@@ -64,13 +66,13 @@ class EventHandler:
         self.supports_structure = [i for i in self.textures.animations_structures if 'support' in i]
         self.military_structure = [i for i in self.textures.animations_structures if i in self.rules['ArmyFromStructures'] and int(self.rules['ArmyFromStructures'][i][0]) > 0]
         self.now_structure = 0
-        self.uid = self.textures.font.render(f'UID: {"0" * (9 - len(str(self.me.id))) + str(self.me.id)}', False, DEFAULT_COLOR)
+        self.uid = self.textures.font.render(f'UID: {"0" * (len(str(obb.Constants.MAX_UID)) - len(str(self.me.id))) + str(self.me.id)}', False, DEFAULT_COLOR)
         self.version = self.textures.font.render(f'version: {self.settings["version"]}', False, DEFAULT_COLOR)
         self.__xoy_information = [self.centre[0] * 2, self.centre[1] * 2 - self.textures.land['barrier'][0].get_rect()[2]]
         self.__image_information = self.textures.effects['information'][0]
 
     def change_volume(self, object, channel):
-        self.volumes_channels[channel] = object.now_sector / 100
+        self.volumes_channels[channel] = object.now_sector / 100  # Проценты
         pygame.mixer.Channel(channel).set_volume(self.volumes_channels[channel])
 
     def save_settings(self, do='all'):
@@ -95,7 +97,7 @@ class EventHandler:
                         self.rules[props[0]][x[0]].append(i)
 
     def check_ground_please(self, ground):
-        if self.camera.mouse_click[3] == 3:
+        if self.camera.mouse_click[3] == obb.Constants.MOUSE_CLICK_RIGHT:
             if 'popup_menu' in self.interfaces:
                 self.interfaces.pop('popup_menu')
             if ground.biome[0] != 'barrier':
@@ -146,7 +148,7 @@ class EventHandler:
 
     def init_players(self):
         # Эта часть кода для загруженной игры
-        if len(self.info_players[0]) > 2:
+        if self.loaded_save:
             nicks = f'nicks-0-{"|".join(":t:".join(i[:3]) for i in self.info_players)}-end-'
             for c in range(1, len(self.info_players)):
                 uid = self.info_players[c][1]
@@ -187,7 +189,7 @@ class EventHandler:
                     if "bot" in self.info_players[c][1]:
                         self.bots[-1].my_ground.append(self.screen_world.biomes[start_point[0] + i][start_point[1] + j])
                     self.screen_world.biomes[start_point[0] + i][start_point[1] + j][4] = fraction
-                    count_army = f'{random.randint(0, 10)}'
+                    count_army = f'{random.randint(0, 5)}'
                     self.screen_world.biomes[start_point[0] + i][start_point[1] + j][5] = count_army
                     message += f'change-0-army|{count_army}|{start_point[0] + i}|{start_point[1] + j}-end-'
                     message += f'change-0-fraction|{fraction}|{start_point[0] + i}|{start_point[1] + j}-end-'
@@ -213,7 +215,7 @@ class EventHandler:
         self.open_some = False
         self.interfaces = dict()
         if not matr:
-            self.generation(50)
+            self.generation(obb.Constants.SIZE_WORLD)
             matr = self.matr
         self.world_coord = BARRIER_SIZE
         self.screen_world = World(self.screen, self.centre, [self.world_coord, self.world_coord], matr, self)  # создание динамической сетки
@@ -331,16 +333,17 @@ class EventHandler:
     def go_back_to_menu(self, save=True):
         if save:
             self.make_save()
-        self.matr, self.screen_world, self.name_save, self.timer = None, None, None, None
-        self.loaded_save, self.pressed = False, False
+        self.matr, self.screen_world, self.name_save, self.timer, self.timer_backmusic, self.last_interface = None, None, None, None, None, None
+        self.selected_cells = [None, None]
+        self.loaded_save = False
         self.world_coord = 0
         self.open_some, self.flag = True, True
         self.info_players = list()
         self.contact = Unknown()
         self.interfaces = dict()
         self.bots = list()
-        self.effects = list()  # Обрабатывает объекты класса Effects
-        self.effects_disappearance_resource = list()  # Обрабатывает объекты класса Resources
+        self.effects = list()  # Хранит объекты класса Effects
+        self.effects_disappearance_resource = list()  # Хранит объекты класса Resources
         self.now_structure = 0
         pygame.mixer.Channel(0).play(self.sounds.menu, -1)
         show_menu(self, self.centre)
@@ -363,13 +366,13 @@ class EventHandler:
 
     def host_game(self, matr):
         if not matr:
-            self.generation(50)
+            self.generation(obb.Constants.SIZE_WORLD)
             matr = self.matr
         count = int(self.interfaces['online'].count.text[:-1])
-        if count < 2:
-            count = 2
-        if count > 4:
-            count = 4
+        if count < obb.Constants.MIN_COUNT_USERS:
+            count = obb.Constants.MIN_COUNT_USERS
+        if count > obb.Constants.MAX_COUNT_USERS:
+            count = obb.Constants.MAX_COUNT_USERS
         self.contact = Host('0.0.0.0', int(self.interfaces['online'].port.text[:-1]),
                             ':n:'.join(':t:'.join('|'.join(k) for k in i) for i in matr),
                             count - 1, self.loaded_save)
@@ -479,7 +482,7 @@ class EventHandler:
                         bot.my_ground.remove(ground)
                     elif ground_to[5] == selected[1][5] and ground[2:4] == ground_to[2:4]:
                         bot.my_ground[bot.my_ground.index(ground)] = ground_to
-                    if ground[2:4] == ground_from[2:4]:
+                    elif ground[2:4] == ground_from[2:4]:
                         bot.my_ground[bot.my_ground.index(ground)] = ground_from
             if ground_to[5] != selected[1][5]:
                 attacker.my_ground.append(ground_to)
@@ -521,8 +524,9 @@ class EventHandler:
 
     def area(self, ground, buyer):
         if "tower" in ground[1]:
-            for i in range(-2, 3):
-                for j in range(-2, 3):
+            r = int(self.rules['RadiusAreaForStructures']['tower'][0])
+            for i in range(-r, r + 1):
+                for j in range(-r, r + 1):
                     x, y = int(ground[2]) + i, int(ground[3]) + j
                     if 'bot' in buyer.uid and self.screen_world.biomes[x][y] not in buyer.my_ground and buyer.fraction_name == self.screen_world.biomes[x][y][4]:
                         buyer.my_ground.append(self.screen_world.biomes[x][y])

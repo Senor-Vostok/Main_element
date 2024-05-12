@@ -1,6 +1,8 @@
 import random
 import pygame
 
+import obb.Constants
+
 
 class Resource(pygame.sprite.Sprite):
     def __init__(self, xoy, image, flag=True):
@@ -8,15 +10,13 @@ class Resource(pygame.sprite.Sprite):
         self.image = image
         self.start = xoy
         self.rect = self.image.get_rect(center=xoy)
-
         self.drop_second = 0
-        self.drop_speed = random.randint(1, 5)
-        self.drop_move = 25
-        self.drop_delta = 1
+        self.drop_speed = random.randint(1, obb.Constants.RESOURCE_SPEED_ANIMATION_MAX)
+        self.drop_move = obb.Constants.RESOURCE_DROP_MOVE
+        self.drop_delta = obb.Constants.RESOURCE_DROP_DELTA
         self.animation = flag
-
-        self.take_cake = 20
-        self.deviation = random.randint(-10, 11)
+        self.take_cake = obb.Constants.RESOURCE_CUT_TO
+        self.deviation = random.randint(-obb.Constants.RESOURCE_DEVIATION, obb.Constants.RESOURCE_DEVIATION + 1)
 
     def take(self, move):
         if not self.animation and self.take_cake != 0:

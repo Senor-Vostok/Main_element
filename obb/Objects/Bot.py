@@ -41,9 +41,8 @@ class Bot:
     def go_to_attack(self, handler, coord):
         x, y = int(coord[0]), int(coord[1])
         ok = True
-        a = str()
-        for i in range(-3, 6):
-            for j in range(-3, 6):
+        for i in range(-obb.Constants.ATTACK_RANGE_BOT, obb.Constants.ATTACK_RANGE_BOT + 1):
+            for j in range(-obb.Constants.ATTACK_RANGE_BOT, obb.Constants.ATTACK_RANGE_BOT + 1):
                 if handler.screen_world.biomes[x + i][y + j][4] not in self.fractions:
                     handler.set_fraction((x + i, y + j), self.fraction_name, True, self)
                     a = random.choice(["tower", "polygon", "homes"])
@@ -64,14 +63,14 @@ class Bot:
 
     def find_monkey(self, handler, ground):
         x, y = int(ground[2]), int(ground[3])
-        min = 1000
-        max = -1000
+        minimum = obb.Constants.MAX
+        maximum = obb.Constants.MIN
         monkey = list()
         for monkey_find in self.my_ground:
             a, b = int(monkey_find[2]), int(monkey_find[3])
-            if abs(x - a) + abs(y - b) < min and int(monkey_find[5]) > max:
-                max = int(monkey_find[5])
-                min = abs(x - a) + abs(y - b)
+            if abs(x - a) + abs(y - b) < minimum and int(monkey_find[5]) > maximum:
+                maximum = int(monkey_find[5])
+                minimum = abs(x - a) + abs(y - b)
                 monkey = monkey_find
         if monkey == list():
             return ground
@@ -79,7 +78,6 @@ class Bot:
             return monkey
 
     def monkey_war(self, handler):
-        go = [[], []]
         if not self.my_coord:
             return
         if self.my_coord == self.coord_to:
@@ -143,27 +141,27 @@ class Bot:
                 break
 
     def goto_fraction(self, handler, attack=False, destroy=False):
-        min = 1e7
+        minimum = obb.Constants.MAX
         coord = list()
         coord.append(0)
         coord.append(0)
         cell = list()
         my_place = []
-        for i in range(0, 4):
+        for i in range(len(handler.fractions)):
             if self.fraction_name != self.fractions[i]:
                 board = handler.found_board(4, self.fractions[i])
                 for bord in board:
                     for place in self.my_ground:
                         x_bord, y_bord = int(bord[2]), int(bord[3])
                         x_place, y_place = int(place[2]), int(place[3])
-                        if min > abs(x_bord - x_place) + abs(y_bord - y_place):
-                            min = abs(x_bord - x_place) + abs(y_bord - y_place)
+                        if minimum > abs(x_bord - x_place) + abs(y_bord - y_place):
+                            minimum = abs(x_bord - x_place) + abs(y_bord - y_place)
                             coord[0] = x_bord
                             coord[1] = y_bord
                             cell = bord
                             my_place = place
         if destroy:
-            return (my_place, cell)
+            return my_place, cell
         if not attack:
             self.go_to_attack(handler, coord)
         else:
@@ -180,18 +178,18 @@ class Bot:
     def __get_event(self, y):
         if y < 5 or self.resources <= obb.Constants.RESORCE_CONST:  # строим фарм строения
             return 1
-        elif 5 < y < 8:  # строимся к врагам
+        elif 5 < y < 8:  # Дарим врагу свои строения
             return 2
-        elif 8 < y < 10:  # пупупу
+        elif 8 < y < 10:  # Строим любое здание
             return 3
-        elif 10 < y < 14:  # атакуем врагов
+        elif 10 < y < 14:  # Атакуем ближайшего врага
             return 4
-        elif 14 < y < 17:
+        elif 14 < y < 17:  # Пытаемся захватить ближайшую клетку врага к войску
             return 5
-        else:
+        else:  # Обновляем наши данные карты
             return 6
 
-    def check_place_structure(self, handler, flag_money=False):  # пофиКСЬ ДВЕ ТАВЕРКИ
+    def check_place_structure(self, handler, flag_money=False):
         try:
             while True:
                 if flag_money:
@@ -226,6 +224,6 @@ class Bot:
                 self.goto_fraction(handler, True)
                 self.can_i_monkey_attack = True
             elif key == 5:
-                self.monkey_scouts(handler)  # сделать функцию где бот вдалеке около выгодного места(снег, вода) строит башню и добывающие здания
+                self.monkey_scouts(handler)
             elif key == 6:
                 self.my_coord = handler.found_board(4, self.fraction_name)

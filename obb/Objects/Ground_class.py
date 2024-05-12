@@ -1,4 +1,6 @@
 import pygame.sprite
+
+import obb.Constants
 from obb.Objects.Structures import ClassicStructure, MainStructure
 from obb.Constants import ANIMATION_SLOWDOWN, TILE_SIZE
 
@@ -12,8 +14,6 @@ class Ground(pygame.sprite.Sprite):
         else:
             self.animation = None
         self.biome = biome  # 0-биом 1-структура 2,3-координаты 4-фракция 5-кол-во юнитов
-        self.units_count = 0
-        self.tile_image = image  # изначальная текстура клетки
         self.image = image  # текущая текстура клетки
         self.select_image = textures.select
         self.rect = self.image.get_rect(center=xoy)
@@ -33,7 +33,7 @@ class Ground(pygame.sprite.Sprite):
         border = 0
         i, j = int(self.biome[2]), int(self.biome[3])
         around = [all_screen[i - 1][j], all_screen[i][j - 1], all_screen[i + 1][j], all_screen[i][j + 1]]
-        indexes = [5, 2, 3, 4]
+        indexes = obb.Constants.INDEXES_FOR_CONNECTING_WITH_GROUND
         flag = False
         for board in around + around:
             if self.biome[4] != board[4]:
@@ -43,13 +43,13 @@ class Ground(pygame.sprite.Sprite):
             elif self.biome[4] == board[4] and flag:
                 border = border + indexes[around.index(board)] if border == 0 else border + 4
         if border == 0 and flag:
-            border = 1
+            border = obb.Constants.BORDER_1
         elif not flag:
-            border = 0
+            border = obb.Constants.BORDER_0
         if border in range(2, 6) and self.biome[4] == around[0][4] and self.biome[4] == around[2][4]:
-            border = 14
+            border = obb.Constants.BORDER_14
         elif border in range(2, 6) and self.biome[4] == around[1][4] and self.biome[4] == around[3][4]:
-            border = 15
+            border = obb.Constants.BORDER_15
         return border
 
     def draw(self, screen, mouse_click, handler):
@@ -66,7 +66,7 @@ class Ground(pygame.sprite.Sprite):
             if self.biome[5] != '0':
                 screen.blit(self.textures.army['shield'][0], (self.rect.x + self.rect[2] // 3, self.rect.y + self.rect[3] // 3))
         elif self.biome[5] != '0':
-            category = 'small' if int(self.biome[5]) < 30 else 'middle' if int(self.biome[5]) < 80 else 'large'
+            category = 'small' if int(self.biome[5]) < obb.Constants.LARGE_ARMY else 'middle' if int(self.biome[5]) < obb.Constants.HEIGHT_ARMY else 'large'
             screen.blit(self.textures.army[category][0], (self.rect.x, self.rect.y))
         if self.rect.colliderect(mouse_click[0], mouse_click[1], 1, 1):
             handler.check_ground_please(self)

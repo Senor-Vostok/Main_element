@@ -7,7 +7,7 @@ import itertools
 
 
 def update_effects(self):
-    if self.camera.mouse_click[2] and int(self.camera.mouse_click[3]) == 1:
+    if self.camera.mouse_click[2] and int(self.camera.mouse_click[3]) == obb.Constants.MOUSE_CLICK_LEFT:
         if not self.pressed:
             self.pressed = True
             self.effects.append(
@@ -34,12 +34,11 @@ def update_resource_effects(self):
 
 
 def update_titles(handler):
-    fps_text = handler.textures.font.render(f'fps: {int(handler.clock.get_fps())}', False, DEFAULT_COLOR)
+    r = handler.textures.resizer
     if 'ingame' in handler.interfaces:
         handler.interfaces['ingame'].count_resource.new_text(str(handler.me.resources))
-    handler.screen.blit(handler.version, (10, 10))
-    handler.screen.blit(handler.uid, (10, 40))
-    # handler.screen.blit(fps_text, (10, 70))
+    handler.screen.blit(handler.version, (10 * r, 10 * r))
+    handler.screen.blit(handler.uid, (10 * r, 40 * r))
 
 
 def rendering(handler, machine):

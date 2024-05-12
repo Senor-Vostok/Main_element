@@ -1,4 +1,6 @@
 import pygame
+
+import obb.Constants
 from obb.Constants import DEFAULT_COLOR
 from obb.Sond_rendering.Sounds import Sounds
 sounds = Sounds()
@@ -148,7 +150,7 @@ class InteractLabel(pygame.sprite.Sprite):
                 self.text = self.text[:-1] + ("".join(str(pygame.scrap.get(pygame.SCRAP_TEXT))[2:].split(r"\x00")))[:-1] + "/"
             elif command.key == pygame.K_BACKSPACE:
                 self.text = self.text[:-2] + "/"
-            elif int(command.key) == 13:
+            elif int(command.key) == obb.Constants.KEY_ENTER:
                 if self.func:
                     self.func(*self.args)
             elif len(str(command.unicode)) > 0 and command.type == pygame.KEYDOWN:

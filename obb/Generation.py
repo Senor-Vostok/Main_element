@@ -49,9 +49,9 @@ class Generation:
                 y = floor(noise([x / PERIOD_G, z / PERIOD_G]) * AMP_G)
                 landscale[int(x)][int(z)] = self.__get_key(int(y))
 
-            procent = int(((x / self.massive) * 100) // 1)
+            percent = int(((x / self.massive) * 100) // 1)
             self.win.blit(self.textures.loading, (self.centre[0] - self.textures.loading.get_rect()[2] // 2, self.centre[1] - self.textures.loading.get_rect()[3] // 2))
-            self.win.blit(self.textures.font.render(f'{procent}%', False, DEFAULT_COLOR), (self.centre[0], self.centre[1] + PERCENT_MOVE_Y * self.textures.resizer))
+            self.win.blit(self.textures.font.render(f'{percent}%', False, DEFAULT_COLOR), (self.centre[0], self.centre[1] + PERCENT_MOVE_Y * self.textures.resizer))
             pygame.display.update()
 
         for i in range(self.massive):
