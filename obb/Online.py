@@ -72,8 +72,8 @@ class Host:
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.sock.bind((self.host, self.port))
         self.sock.listen()
-        self.thread = None
         self.in_other_thread = False
+        self.thread = None
         self.private = private
         self.array_clients = list()
         self.users = list()
