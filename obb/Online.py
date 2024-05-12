@@ -30,9 +30,9 @@ class Client:
         for info in ready_socks:
             message = self.__encoding(info)
             self.cache += message
-            if self.cache[-5:] == '-end-':
-                info = self.cache[:-5]
-                self.cache = ''
+            if '-end-' in self.cache:
+                info = '-end-'.join((self.cache.split('-end-'))[:-1]) + '-end-'
+                self.cache = (self.cache.split('-end-'))[-1]
                 if not self.loaded_map:
                     mess = info.split('-0-')
                     self.loaded_map = True

@@ -291,6 +291,7 @@ class EventHandler:
             self.init_players()
         if not self.me.fraction_name:
             return
+        self.screen_world.rendering = True
         show_ingame(self, self.centre)
         self.move_to_coord(self.me.start_point)
         if self.name_save:
@@ -305,14 +306,13 @@ class EventHandler:
         if len(self.contact.users) + int(bool(self.contact.protocol == "client")) >= self.contact.maxclient + 1 or self.screen_world.rendering:
             if 'ingame' not in self.interfaces:
                 self.load_world()
-            if self.contact.protocol == 'unknown' or self.contact.protocol == 'host':
+            if self.contact.protocol == 'unknown' or self.contact.protocol == 'host' and self.screen_world.rendering:
                 self.get_resource()
-            for bot in self.bots:
-                bot.think_smth_please(self)
+                for bot in self.bots:
+                    bot.think_smth_please(self)
             if (datetime.now() - self.timer_backmusic).seconds >= COOLDOWN_MUSIC:
                 pygame.mixer.Channel(0).play(random.choice(self.sounds.background))
                 self.timer_backmusic = datetime.now()
-            self.screen_world.rendering = True
             self.camera.speed = (self.camera.normal_fps + 1) / (self.clock.get_fps() + 1)
             self.camera.inter()
         else:
@@ -415,7 +415,6 @@ class EventHandler:
         else:
             count_units = int(selected[0][5])
             delta_units_cnt = int(selected[0][5]) - int(selected[1][5])
-
         i_from = int(selected[0][2])
         j_from = int(selected[0][3])
         i_to = int(selected[1][2])

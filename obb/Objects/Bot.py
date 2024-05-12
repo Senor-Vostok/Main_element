@@ -10,14 +10,14 @@ class Bot:
         self.id = id
         self.guides = guides
         self.uid = f'bot{id}'
-        self.interval = 0.5
+        self.interval = 1
         self.fraction_name = None
         self.resources = 0
         self.fractions = ["water", "fire", "earth", "air"]
         self.exist_structers = structures
         self.potential_resource = 0
         self.my_ground = list()
-        self.can_i_do_smth = True
+        self.can_i_do_smth = False
         self.thread = None
         self.thread_attack = None
         self.can_i_monkey_attack = False
