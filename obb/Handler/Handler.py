@@ -1,5 +1,7 @@
-import pygame.display
+import copy
 
+import pygame.display
+import math
 import obb.Constants
 from obb.Objects.Player import Player
 from obb.Objects.Bot import Bot
@@ -49,8 +51,9 @@ class EventHandler:
         self.sounds = Sounds()
         pygame.mouse.set_visible(False)
         pygame.mixer.Channel(0).play(self.sounds.menu, -1)
-        self.matr, self.screen_world, self.name_save, self.timer, self.timer_backmusic, self.last_interface = None, None, None, None, None, None
-        self.selected_cells = [None, None]  # Начальная и конечная выбранные клетки
+        self.matr, self.screen_world, self.name_save, self.timer, self.timer_backmusic, self.timer_attack, self.last_interface = None, None, None, None, None, None, None
+        self.selected_cells = list()  # Начальная и конечная выбранные клетки
+        self.selected_cell = [None, None]
         self.loaded_save = False
         self.world_coord = 0
         self.camera = Cam()
@@ -104,14 +107,14 @@ class EventHandler:
                 show_popup_menu(self, (ground.rect[0] + ground.rect[2], ground.rect[1] + ground.rect[3]), ground, self.me.fraction_name)
         if 'attack' not in self.interfaces:
             if self.camera.mouse_click[3] == 1:
-                if self.camera.mouse_click[2] and not self.selected_cells[0]:
-                    self.selected_cells[0] = ground.biome + [ground.rect[0] + ground.rect[2] // 2, ground.rect[1] + ground.rect[3] // 2]
-                if self.camera.mouse_click[2] and self.selected_cells[0]:
-                    self.selected_cells[1] = ground.biome + [ground.rect[0] + ground.rect[2] // 2, ground.rect[1] + ground.rect[3] // 2]
-            elif self.camera.mouse_click[3] != 1 and self.selected_cells != [None, None]:
-                if self.selected_cells[0] != self.selected_cells[1] and int(self.selected_cells[0][5]) > 0 and self.selected_cells[0][4] == self.me.fraction_name:
-                    show_selectunions(self, self.centre, self.selected_cells)
-                self.selected_cells = [None, None]
+                if self.camera.mouse_click[2] and not self.selected_cell[0]:
+                    self.selected_cell[0] = ground.biome + [ground.rect[0] + ground.rect[2] // 2, ground.rect[1] + ground.rect[3] // 2]
+                if self.camera.mouse_click[2] and self.selected_cell[0]:
+                    self.selected_cell[1] = ground.biome + [ground.rect[0] + ground.rect[2] // 2, ground.rect[1] + ground.rect[3] // 2]
+            elif self.camera.mouse_click[3] != 1 and self.selected_cell != [None, None]:
+                if self.selected_cell[0] != self.selected_cell[1] and int(self.selected_cell[0][5]) > 0 and self.selected_cell[0][4] == self.me.fraction_name:
+                    show_selectunions(self, self.centre, self.selected_cell)
+                self.selected_cell = [None, None]
 
     def found_board(self, index, board, flag_centre=None, block_size=0):
         boards = list()
@@ -292,6 +295,7 @@ class EventHandler:
     def load_world(self):
         pygame.mixer.Channel(0).play(random.choice(self.sounds.background))
         self.timer_backmusic = datetime.now()
+        self.timer_attack = datetime.now()
         if self.contact.protocol == 'unknown' or self.contact.protocol == 'host':
             self.timer = datetime.now()
             if not self.loaded_save:
@@ -320,6 +324,10 @@ class EventHandler:
                 self.get_resource()
                 for bot in self.bots:
                     bot.think_smth_please(self)
+            if (datetime.now() - self.timer_attack).seconds >= 0.5 and self.selected_cells:
+                for cells in self.selected_cells:
+                    self.attack(self.me, cells, False)
+                self.timer_attack = datetime.now()
             if (datetime.now() - self.timer_backmusic).seconds >= COOLDOWN_MUSIC:
                 pygame.mixer.Channel(0).play(random.choice(self.sounds.background))
                 self.timer_backmusic = datetime.now()
@@ -334,7 +342,8 @@ class EventHandler:
         if save:
             self.make_save()
         self.matr, self.screen_world, self.name_save, self.timer, self.timer_backmusic, self.last_interface = None, None, None, None, None, None
-        self.selected_cells = [None, None]
+        self.selected_cells = list()
+        self.selected_cell = [None, None]
         self.loaded_save = False
         self.world_coord = 0
         self.open_some, self.flag = True, True
@@ -417,10 +426,16 @@ class EventHandler:
         saves.add_saves(files, self.init_world, show_online, self)
         self.interfaces['save_menu'] = saves
 
-    def attack(self, attacker, selected):
-        if attacker == self.me:
+    def attack(self, attacker, selected, exist=True):
+        if int(selected[0][5]) <= int(self.rules['StructuresProtection']['null'][0]):
+            return
+        prom = copy.deepcopy(selected[1])
+        selected[1] = self.nearby_section(selected[0], selected[1])
+        first_there = False
+        if attacker == self.me and exist:
             count_units = self.interfaces['attack'].drag.now_sector
             delta_units_cnt = self.interfaces['attack'].drag.now_sector - int(selected[1][5])
+            first_there = True
             self.interfaces.pop('attack')
         else:
             count_units = int(selected[0][5])
@@ -429,34 +444,24 @@ class EventHandler:
         j_from = int(selected[0][3])
         i_to = int(selected[1][2])
         j_to = int(selected[1][3])
-        if ((abs(i_to - i_from) > 1) or (abs(j_to - j_from) > 1)) and attacker == self.me:
-            self.effects.append(Information(self.__xoy_information, "Атаковать можно только соседнюю клетку", self.textures.resizer, self.__image_information))
-            return
         ground_from = self.screen_world.biomes[i_from][j_from]
         ground_to = self.screen_world.biomes[i_to][j_to]
-        if ground_to[0] == "water" and attacker == self.me:
-            self.effects.append(Information(self.__xoy_information, "Ходить по воде нельзя", self.textures.resizer, self.__image_information))
-            return
         if ground_from[4] == attacker.fraction_name:
+            units_from = int(ground_from[5])
+            defending_ground_protection = int(self.rules['StructuresProtection'][ground_to[1]][0])
             if ground_to[4] == attacker.fraction_name:
                 ground_to[5] = str(delta_units_cnt + int(selected[1][5]) + int(ground_to[5]))
                 ground_from[5] = f'{int(ground_from[5]) - count_units}'
                 self.contact.send(f'change-0-army|{ground_to[5]}|{ground_to[2]}|{ground_to[3]}-end-')
                 self.contact.send(f'change-0-army|{ground_from[5]}|{ground_from[2]}|{ground_from[3]}-end-')
-                if attacker == self.me:
-                    self.selected_cells = [None, None]
-                return
-            units_from = int(ground_from[5])  # оставляем одного человека в атакующей клетке (для теста)
-            defending_ground_protection = int(self.rules['StructuresProtection'][ground_to[1]][0])
-            if delta_units_cnt > defending_ground_protection:
+            elif delta_units_cnt > defending_ground_protection:
                 if ground_to[1] == ground_to[4] and ground_to[1] != 'null':  # проверка уничтожения главной структуры
                     if attacker == self.me:
                         self.effects.append(Information(self.__xoy_information, f"{ground_from[4]} уничтожили империю {ground_to[4]}", self.textures.resizer, self.__image_information))
                     self.destroy_empire(ground_to[4], ground_from[4], attacker)
                     self.contact.send(f'change-0-army|{ground_to[5]}|{ground_to[2]}|{ground_to[3]}-end-')
                     self.contact.send(f'change-0-army|{ground_from[5]}|{ground_from[2]}|{ground_from[3]}-end-')
-                    return
-                if ground_to[4] != 'null' and attacker == self.me:
+                elif ground_to[4] != 'null' and attacker == self.me:
                     self.effects.append(Information(self.__xoy_information, f"{ground_from[4]} успешно атакуют {ground_to[4]}", self.textures.resizer, self.__image_information))
                 self.update_presource(attacker.uid, int(self.rules["ResourcesFromStructures"][ground_to[1]][0]))
                 attacker.potential_resource += int(self.rules["ResourcesFromStructures"][ground_to[1]][0])
@@ -486,8 +491,14 @@ class EventHandler:
                         bot.my_ground[bot.my_ground.index(ground)] = ground_from
             if ground_to[5] != selected[1][5]:
                 attacker.my_ground.append(ground_to)
-        if attacker == self.me:
-            self.selected_cells = [None, None]
+        else:
+            selected[0] = selected[1]
+            selected[1] = prom
+            if selected[0][2:4] == selected[1][2:4]:
+                self.selected_cells.remove(selected)
+            if first_there and selected not in self.selected_cells:
+                self.timer_attack = datetime.now()
+                self.selected_cells.append(selected)
 
     def destroy_empire(self, fraction_old, fraction_new, attacker):
         for i in range(len(self.screen_world.biomes)):
@@ -508,8 +519,8 @@ class EventHandler:
         if fraction_old == self.me.fraction_name:
             show_end_game(self, self.centre, 'lose')
         if self.contact.protocol == 'host' or self.contact.protocol == 'unknown':
+            self.info_players[[i[2] for i in self.info_players].index(fraction_old)][4] = 0
             self.info_players[[i[2] for i in self.info_players].index(fraction_old)][5] = 0
-            self.info_players[[i[2] for i in self.info_players].index(fraction_old)][6] = 0
             for bot in self.bots:
                 if bot.fraction_name == fraction_old:
                     bot.resources = 0
@@ -624,11 +635,38 @@ class EventHandler:
             if buyer.resources >= ground_cost:
                 self.update_resource(buyer.uid, -ground_cost)  # Мы не можем заглянуть в me у другого игрока (ПРОБЛМЕА)
                 buyer.resources -= ground_cost
-                self.screen_world.biomes[i][j][4] = fraction # А это решение этого (выше смотри строчку)
+                self.screen_world.biomes[i][j][4] = fraction  # А это решение этого (выше смотри строчку)
         else:
             self.screen_world.biomes[i][j][4] = fraction
         if info:
             self.contact.send(f'change-0-fraction|{fraction}|{i}|{j}-end-')
+
+    def nearby_section(self, start, end):
+        dx = int(end[2]) - int(start[2])
+        dy = int(end[3]) - int(start[3])
+        delta_x = 0
+        delta_y = 0
+        v1 = (int(end[2]) - int(start[2]), int(end[3]) - int(start[3]))
+        if abs(dx) < abs(dy):
+            helppoint = [int(end[2]), int(start[3])]
+        else:
+            helppoint = [int(start[2]), int(end[3])]
+        v2 = (helppoint[0] - int(start[2]), helppoint[1] - int(start[3]))
+        if v2 != (0, 0):
+            cosl = (v1[0] * v2[0] + v1[1] * v2[1]) / (((v1[0] ** 2 + v1[1] ** 2) ** 0.5) * ((v2[0] ** 2 + v2[1] ** 2) ** 0.5))
+            l = math.acos(cosl) * (180 / math.pi)
+        else:
+            l = 0
+        if l > 73 or l == 0:
+            if abs(dx) > abs(dy):
+                delta_x = 1 if dx > 0 else -1
+            else:
+                delta_y = 1 if dy > 0 else -1
+            return self.screen_world.biomes[int(start[2]) + delta_x][int(start[3]) + delta_y]
+        else:
+            delta_x = 1 if dx > 0 else -1
+            delta_y = 1 if dy > 0 else -1
+            return self.screen_world.biomes[int(start[2]) + delta_x][int(start[3]) + delta_y]
 
     def update_resource(self, uid, delta_resource):
         if self.contact.protocol == 'host' or self.contact.protocol == 'unknown':

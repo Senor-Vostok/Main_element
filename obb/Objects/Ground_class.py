@@ -66,8 +66,11 @@ class Ground(pygame.sprite.Sprite):
             if self.biome[5] != '0':
                 screen.blit(self.textures.army['shield'][0], (self.rect.x + self.rect[2] // 3, self.rect.y + self.rect[3] // 3))
         elif self.biome[5] != '0':
-            category = 'small' if int(self.biome[5]) < obb.Constants.LARGE_ARMY else 'middle' if int(self.biome[5]) < obb.Constants.HEIGHT_ARMY else 'large'
-            screen.blit(self.textures.army[category][0], (self.rect.x, self.rect.y))
+            if int(self.biome[5]) < 0:
+                pygame.draw.rect(screen, (255, 0, 0), (self.rect.x, self.rect.y, 30, 30), 2)
+            else:
+                category = 'small' if int(self.biome[5]) < obb.Constants.LARGE_ARMY else 'middle' if int(self.biome[5]) < obb.Constants.HEIGHT_ARMY else 'large'
+                screen.blit(self.textures.army[category][0], (self.rect.x, self.rect.y))
         if self.rect.colliderect(mouse_click[0], mouse_click[1], 1, 1):
             handler.check_ground_please(self)
 

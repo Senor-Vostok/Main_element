@@ -23,15 +23,9 @@ class EndGame:
 class SelectUnions:
     def __init__(self, xoy, textures, selected):
         r = textures.resizer
-        rotates = {'10': 0, '11': 45, '01': 90, '-11': 135, '-10': 180, '-1-1': 225, '0-1': 270, '1-1': 315}
         self.drag = Slicer(textures.setting['slicer'], xoy, int(selected[0][5]), int(selected[0][5]))
         self.confirm = Button(textures.popup_menu['button_fight'], (xoy[0], xoy[1] + 50 * r))
-        if f'{int(selected[0][2]) - int(selected[1][2])}{int(selected[0][3]) - int(selected[1][3])}' in rotates:
-            image = pygame.transform.rotate(textures.army['way'][0], rotates[f'{int(selected[0][2]) - int(selected[1][2])}{int(selected[0][3]) - int(selected[1][3])}'])
-            self.way = BackGround(image, (selected[0][6], selected[0][7]))
-            self.surface = Surface(self.way, self.drag, self.confirm)
-        else:
-            self.surface = Surface(self.drag, self.confirm)
+        self.surface = Surface(self.drag, self.confirm)
 
 
 class HelloMenu:
