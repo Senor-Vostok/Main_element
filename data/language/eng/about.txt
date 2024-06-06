@@ -1,0 +1,7 @@
+mill:A simple mill used to|n|get a resource
+tower:... Expanding boundaries
+mine:Mine, extracts a resource. and that's all
+homes:Residential buildings, the place of life for your|n|citizens
+sawmill:Removes unnecessary trees
+fisherman:Great place for fishing
+polygon:The main place for training|n|not like your Gym

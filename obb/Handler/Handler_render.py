@@ -81,7 +81,7 @@ def rendering(handler, machine):
         size = handler.textures.land['barrier'][0].get_rect()[2]
         y1, x1 = dr[1] + (int(selected_cell[0][2]) - cord[0]) * size, dr[0] + (int(selected_cell[0][3]) - cord[1]) * size
         y2, x2 = dr[1] + (int(selected_cell[1][2]) - cord[0]) * size, dr[0] + (int(selected_cell[1][3]) - cord[1]) * size
-        pygame.draw.line(handler.screen, (112, 112, 112), (x1 + size / 2, y1 + size / 2), (x2 + size / 2, y2 + size / 2), 5)
+        pygame.draw.line(handler.screen, (190, 152, 118), (x1 + size / 2, y1 + size / 2), (x2 + size / 2, y2 + size / 2), 5)
     try:
         for interface in handler.interfaces.values():
             interface.surface.update(handler.camera.mouse_click, handler.screen, c)

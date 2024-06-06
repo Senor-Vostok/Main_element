@@ -1,5 +1,5 @@
 import pygame
-
+from datetime import datetime
 import obb.Constants
 from obb.Constants import DEFAULT_COLOR
 from obb.Sond_rendering.Sounds import Sounds
@@ -7,19 +7,27 @@ sounds = Sounds()
 
 
 class Button(pygame.sprite.Sprite):
-    def __init__(self, image, xoy, active=True):
+    def __init__(self, image, xoy, active=True, text=None, colors=(obb.Constants.TEXT_ENABLE, obb.Constants.TEXT_DISABLE)):
         pygame.sprite.Sprite.__init__(self)
+        self.xoy = xoy
+        self.colors = colors
+        self.main_color = self.colors[0]
         self.state = image[0]
         self.trigger = image[1]
         self.image = self.state
+        self.text = text
         self.func = None
         self.args = None
         self.active = active
         self.rect = self.image.get_rect(center=xoy)
+        self.font = pygame.font.Font("19363.ttf", self.rect[3] - self.rect[3] // 3)
         self.one_press = True
 
     def draw(self, screen):
         screen.blit(self.image, (self.rect.x, self.rect.y))
+        text = self.font.render(self.text, 1, self.main_color)
+        center = text.get_rect(center=self.xoy)
+        screen.blit(text, (center.x, center.y))
 
     def connect(self, func, *args):
         self.func = func
@@ -30,6 +38,7 @@ class Button(pygame.sprite.Sprite):
             return
         if self.rect.colliderect(mouse_click[0], mouse_click[1], 1, 1):
             self.image = self.trigger
+            self.main_color = self.colors[0]
             if mouse_click[2] and mouse_click[3] == 1 and self.func:
                 if self.one_press:
                     self.one_press = False
@@ -39,6 +48,7 @@ class Button(pygame.sprite.Sprite):
                 self.one_press = True
         else:
             self.image = self.state
+            self.main_color = self.colors[1]
 
 
 class Switch(pygame.sprite.Sprite):
@@ -108,20 +118,22 @@ class InteractLabel(pygame.sprite.Sprite):
         self.state = image[0]
         self.flex = image[1]
         self.image = self.state
-        self.text = "/"
+        self.text = ''
         self.func = None
         self.args = None
         self.active = active
         self.rect = self.image.get_rect(center=xoy)
         self.font = pygame.font.Font("19363.ttf", self.rect[3] - self.rect[3] // 3)
+        self.timer = datetime.now()
+        self.visible = True
         self.can_write = False
 
     def draw(self, screen):
         screen.blit(self.image, (self.rect.x, self.rect.y))
-        image = self.font.render(self.text[-1:], False, DEFAULT_COLOR)
+        image = self.font.render(self.text, False, DEFAULT_COLOR if self.can_write else obb.Constants.TEXT_DISABLE)
         i = 1
         while image.get_rect()[2] < self.rect[2] - 50 and i <= len(self.text):
-            image = self.font.render(self.text[-i:], False, DEFAULT_COLOR)
+            image = self.font.render(self.text[-i:], False,  DEFAULT_COLOR if self.can_write else obb.Constants.TEXT_DISABLE)
             i += 1
         if not self.center:
             screen.blit(image, (self.rect[0] + 10, self.rect[1] + 6))
@@ -135,7 +147,11 @@ class InteractLabel(pygame.sprite.Sprite):
     def update(self, mouse_click, command=None):
         if not self.active:
             return
-        if not self.rect.colliderect(mouse_click[0], mouse_click[1], 1, 1) and mouse_click[2] and mouse_click[3] == 1:
+        elif (datetime.now() - self.timer).seconds > 0.15 and not ''.join(self.text.split('/')):
+            self.text = self.text + '/' if self.visible else self.text[:-1]
+            self.timer = datetime.now()
+            self.visible = not self.visible
+        elif not self.rect.colliderect(mouse_click[0], mouse_click[1], 1, 1) and mouse_click[2] and mouse_click[3] == 1:
             self.can_write = False
             self.image = self.state
         elif self.rect.colliderect(mouse_click[0], mouse_click[1], 1, 1) and mouse_click[2] and mouse_click[3] == 1:
@@ -146,15 +162,16 @@ class InteractLabel(pygame.sprite.Sprite):
 
     def go_write(self, command):
         if command:
+            self.text = ''.join(self.text.split('/'))
             if (command.key == pygame.K_v) and (command.mod & pygame.KMOD_CTRL):
-                self.text = self.text[:-1] + ("".join(str(pygame.scrap.get(pygame.SCRAP_TEXT))[2:].split(r"\x00")))[:-1] + "/"
+                self.text = self.text + ("".join(str(pygame.scrap.get(pygame.SCRAP_TEXT))[2:].split(r"\x00")))
             elif command.key == pygame.K_BACKSPACE:
-                self.text = self.text[:-2] + "/"
+                self.text = self.text[:-1]
             elif int(command.key) == obb.Constants.KEY_ENTER:
                 if self.func:
                     self.func(*self.args)
             elif len(str(command.unicode)) > 0 and command.type == pygame.KEYDOWN:
-                self.text = self.text[:-1] + command.unicode + "/"
+                self.text = self.text + command.unicode
 
 
 class Surface:

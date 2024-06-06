@@ -120,52 +120,32 @@ class Textures:
                                            'air': [self.render(f'data/structures/centres/air/anim{i}.png', (120, 180)) for i in range(1, 4)]}
 
         self.popup_menu = {'button_information': [self.render('data/widgets/popupmenu/buttons/button1.png', (250, 50)),
-                                                  self.render('data/widgets/popupmenu/buttons/button1t.png', (250, 50))],
-                           'button_build': [self.render('data/widgets/popupmenu/buttons/button2.png', (250, 50)),
-                                            self.render('data/widgets/popupmenu/buttons/button2t.png', (250, 50))],
+                                                  self.render('data/widgets/popupmenu/buttons/button1.png', (250, 50))],
                            'button_destroy': [self.render('data/widgets/popupmenu/buttons/button3.png', (250, 50)),
-                                              self.render('data/widgets/popupmenu/buttons/button3t.png', (250, 50))],
-                           'button_fight': [self.render('data/widgets/popupmenu/buttons/button4.png', (250, 50)),
-                                            self.render('data/widgets/popupmenu/buttons/button4t.png', (250, 50))],
-                           'button_cancel': [self.render('data/widgets/popupmenu/buttons/button5.png', (250, 50)),
-                                             self.render('data/widgets/popupmenu/buttons/button5t.png', (250, 50))]}
+                                              self.render('data/widgets/popupmenu/buttons/button3t.png', (250, 50))]}
 
         self.main_menu = {'background': [self.render(f'data/widgets/menu/background.png', (1920, 1080))],
                           'hello_background': [self.render(f'data/widgets/menu/hello_menu.png', (1920, 1080))],
                           'name': [self.render(f'data/widgets/menu/main element.png', (466, 194))],
-                          'button_start': [self.render(f'data/widgets/menu/buttons/button.png', (500, 90)),
-                                           self.render(f'data/widgets/menu/buttons/buttont.png', (500, 90))],
-                          'button_loading': [self.render(f'data/widgets/menu/buttons/button2.png', (400, 70)),
-                                             self.render(f'data/widgets/menu/buttons/button2t.png', (400, 70))],
-                          'button_online': [self.render(f'data/widgets/menu/buttons/button3.png', (400, 70)),
-                                            self.render(f'data/widgets/menu/buttons/button3t.png', (400, 70))],
-                          'button_setting': [self.render(f'data/widgets/menu/buttons/button4.png', (400, 70)),
-                                             self.render(f'data/widgets/menu/buttons/button4t.png', (400, 70))],
-                          'button_exit': [self.render(f'data/widgets/menu/buttons/button5.png', (400, 70)),
-                                          self.render(f'data/widgets/menu/buttons/button5t.png', (400, 70))],
-                          'button_local': [self.render(f'data/widgets/menu/buttons/button8.png', (400, 70)),
-                                           self.render(f'data/widgets/menu/buttons/button8t.png', (400, 70))],
-                          'label_online': [self.render(f'data/widgets/menu/labels/ipv4_port.png', (1100, 66)),
-                                           self.render(f'data/widgets/menu/labels/ipv4_portt.png', (1100, 66))],
-                          'label_count_users': [self.render(f'data/widgets/menu/labels/count_player.png', (550, 66)),
-                                                self.render(f'data/widgets/menu/labels/count_playert.png', (550, 66))],
-                          'label_port': [self.render(f'data/widgets/menu/labels/port.png', (550, 66)),
-                                         self.render(f'data/widgets/menu/labels/portt.png', (550, 66))],
+                          'button1': [self.render(f'data/widgets/menu/buttons/button.png', (500, 90)),
+                                      self.render(f'data/widgets/menu/buttons/buttont.png', (500, 90))],
+                          'button2': [self.render(f'data/widgets/menu/buttons/button2.png', (400, 70)),
+                                      self.render(f'data/widgets/menu/buttons/button2t.png', (400, 70))],
+                          'button3': [self.render(f'data/widgets/popupmenu/buttons/button3.png', (250, 50)),
+                                      self.render(f'data/widgets/popupmenu/buttons/button3t.png', (250, 50))],
+                          'label2': [self.render(f'data/widgets/menu/labels/label2.png', (1100, 66)),
+                                     self.render(f'data/widgets/menu/labels/label2t.png', (1100, 66))],
+                          'label1': [self.render(f'data/widgets/menu/labels/label1.png', (550, 66)),
+                                     self.render(f'data/widgets/menu/labels/label1t.png', (550, 66))],
                           'bug_report': [self.render(f'data/widgets/menu/buttons/button10.png', (70, 70)),
                                          self.render(f'data/widgets/menu/buttons/button10t.png', (70, 70))],
                           'winner_ico': [self.render(f'data/widgets/menu/winner.png', (100, 100))],
                           'loser_ico': [self.render(f'data/widgets/menu/loser.png', (100, 100))]}
 
         self.pause = {'background': [self.render(f'data/widgets/menu/labels/background.png', (1920, 1080))],
-                      'button_menu': [self.render(f'data/widgets/menu/buttons/button6.png', (400, 70)),
-                                      self.render(f'data/widgets/menu/buttons/button6t.png', (400, 70))],
-                      'button_setting': self.main_menu['button_setting'],
-                      'button_save': [self.render(f'data/widgets/menu/buttons/button9.png', (400, 70)),
-                                      self.render(f'data/widgets/menu/buttons/button9t.png', (400, 70))]}
+                      'button_setting': self.main_menu['button2']}
 
-        self.ingame = {'button_end': [self.render(f'data/widgets/menu/buttons/button7.png', (400, 50)),
-                                      self.render(f'data/widgets/menu/buttons/button7t.png', (400, 50))],
-                       'back_water': [self.render(f'data/ico/fractions/water.png', (60, 60)),
+        self.ingame = {'back_water': [self.render(f'data/ico/fractions/water.png', (60, 60)),
                                       self.render(f'data/ico/fractions/watert.png', (60, 60))],
                        'back_fire': [self.render(f'data/ico/fractions/fire.png', (60, 60)),
                                      self.render(f'data/ico/fractions/firet.png', (60, 60))],
@@ -178,8 +158,6 @@ class Textures:
                        'back': [self.render('data/ico/fractions/test.png', (1920, 80))]}
 
         self.buildmenu = {'background': [self.render(f'data/widgets/buildmenu/labels/background.png', (566, 532))],
-                          'button_project': [self.render(f'data/widgets/buildmenu/buttons/button1.png', (400, 50)),
-                                             self.render(f'data/widgets/buildmenu/buttons/button1t.png', (400, 50))],
                           'button': [self.render(f'data/widgets/buildmenu/buttons/button2.png', (130, 130)),
                                      self.render(f'data/widgets/buildmenu/buttons/button2t.png', (130, 130))]}
 
@@ -189,9 +167,7 @@ class Textures:
                           'button_play': [self.render(f'data/widgets/save menu/buttons/button1.png', (50, 50)),
                                           self.render(f'data/widgets/save menu/buttons/button1t.png', (50, 50))],
                           'button_delete': [self.render(f'data/widgets/save menu/buttons/button2.png', (50, 50)),
-                                            self.render(f'data/widgets/save menu/buttons/button2t.png', (50, 50))],
-                          'label_save': [self.render(f'data/widgets/menu/labels/name_of_save.png', (1100, 66)),
-                                         self.render(f'data/widgets/menu/labels/name_of_savet.png', (1100, 66))]}
+                                            self.render(f'data/widgets/save menu/buttons/button2t.png', (50, 50))]}
 
         self.setting = {"background": self.save_menu['background'],
                         'nickname': [self.render(f'data/widgets/setting/labels/nickname.png', (560, 50)),

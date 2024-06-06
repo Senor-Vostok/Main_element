@@ -26,13 +26,9 @@ class EventHandler:
         pygame.init()
         pygame.mixer.init()
         self.settings = dict()
-        self.about_structures = dict()
         self.rules = dict()
         self.read_rules()
         self.volumes_channels = [1] * 8
-        with open('data/structures/about.txt', mode='rt', encoding='utf-8') as file:
-            for inf in file.read().split('\n'):
-                self.about_structures[inf.split(':')[0]] = inf.split(':')[1]
         with open('data/user/information', mode='rt') as file:
             self.me = Player(int(file.read()))
         with open('data/user/settings', mode='rt', encoding='utf-8') as file:
@@ -41,6 +37,8 @@ class EventHandler:
             self.me.nickname = self.settings['nickname']
             self.volumes_channels[0] = float(self.settings['volume'])
             pygame.mixer.Channel(0).set_volume(float(self.settings['volume']))
+        self.language_data = dict()
+        self.export_language(self.settings['language'])
         self.size = GetSystemMetrics(0), GetSystemMetrics(1)
         self.centre = (self.size[0] // 2, self.size[1] // 2)
         self.clock = pygame.time.Clock()
@@ -74,13 +72,27 @@ class EventHandler:
         self.__xoy_information = [self.centre[0] * 2, self.centre[1] * 2 - self.textures.land['barrier'][0].get_rect()[2]]
         self.__image_information = self.textures.effects['information'][0]
 
+    def export_language(self, lang):
+        self.settings['language'] = lang
+        with open(f'data/language/{self.settings["language"]}/widgets.txt', mode='rt', encoding='utf-8') as file:
+            for info in file.read().split('\n'):
+                self.language_data[info.split(':')[0]] = info.split(':')[1]
+        with open(f'data/language/{self.settings["language"]}/about.txt', mode='rt', encoding='utf-8') as file:
+            for inf in file.read().split('\n'):
+                self.language_data[inf.split(':')[0]] = inf.split(':')[1]
+        try:
+            self.interfaces = dict()
+            show_menu(self, self.centre)
+        except Exception:
+            pass
+
     def change_volume(self, object, channel):
         self.volumes_channels[channel] = object.now_sector / 100  # Проценты
         pygame.mixer.Channel(channel).set_volume(self.volumes_channels[channel])
 
     def save_settings(self, do='all'):
         if do == 'nickname':
-            self.settings[do] = self.interfaces['setting'].nickname.text[:-1]
+            self.settings[do] = self.interfaces['setting'].nickname.text
             self.me.nickname = self.settings[do]
         if do == 'all':
             self.settings['volume'] = str(self.volumes_channels[0])
@@ -370,19 +382,19 @@ class EventHandler:
         self.interfaces['buildmenu'].s2.image = self.textures.animations_structures[self.structures[fs1]][0][0]
         self.interfaces['buildmenu'].s1.image = self.textures.animations_structures[self.structures[fs2]][0][0]
         struct = self.structures[self.now_structure]
-        about = "\n".join(self.about_structures[struct].split("|n|"))
-        self.interfaces['buildmenu'].about.new_text(f'Цена: {self.rules["StructuresCosts"][struct][0]}\nДаёт: ресурс - {self.rules["ResourcesFromStructures"][struct][0]}, войско - {self.rules["ArmyFromStructures"][struct][0]}, защита - {self.rules["StructuresProtection"][struct][0]}\nИнформация: {about}')
+        about = "\n".join(self.language_data[struct].split("|n|"))
+        self.interfaces['buildmenu'].about.new_text(f'{self.language_data["price"]}: {self.rules["StructuresCosts"][struct][0]}\n{self.language_data["gives"]}: {self.language_data["resource"]} - {self.rules["ResourcesFromStructures"][struct][0]}, {self.language_data["army"]} - {self.rules["ArmyFromStructures"][struct][0]}, {self.language_data["def"]} - {self.rules["StructuresProtection"][struct][0]}\n{self.language_data["info"]}: {about}')
 
     def host_game(self, matr):
         if not matr:
             self.generation(obb.Constants.SIZE_WORLD)
             matr = self.matr
-        count = int(self.interfaces['online'].count.text[:-1])
+        count = int(self.interfaces['online'].count.text)
         if count < obb.Constants.MIN_COUNT_USERS:
             count = obb.Constants.MIN_COUNT_USERS
         if count > obb.Constants.MAX_COUNT_USERS:
             count = obb.Constants.MAX_COUNT_USERS
-        self.contact = Host('0.0.0.0', int(self.interfaces['online'].port.text[:-1]),
+        self.contact = Host('0.0.0.0', int(self.interfaces['online'].port.text),
                             ':n:'.join(':t:'.join('|'.join(k) for k in i) for i in matr),
                             count - 1, self.loaded_save)
         self.contact.users.append(self.me.uid)
@@ -392,7 +404,7 @@ class EventHandler:
     def connecting(self):
         self.screen.blit(self.textures.connecting, (self.centre[0] - self.textures.connecting.get_rect()[2] // 2, self.centre[1] - self.textures.connecting.get_rect()[3] // 2))
         pygame.display.update()
-        host, port = (self.interfaces['online'].interact.text[:-1]).split(':')
+        host, port = (self.interfaces['online'].interact.text).split(':')
         self.contact = Client(host, port, self.me.nickname)
         close(self, 'online', False, None)
         if self.contact.connecting():
@@ -420,15 +432,13 @@ class EventHandler:
     def open_save(self):
         self.interfaces = dict()
         show_menu(self, self.centre)
-        saves = Interfaces.Save_menu(self.centre, self.textures)
+        saves = Interfaces.Save_menu(self.language_data, self.centre, self.textures)
         files = [i for i in os.listdir('saves') if len(i.split('.maiso')) > 1]
         saves.handler = self
         saves.add_saves(files, self.init_world, show_online, self)
         self.interfaces['save_menu'] = saves
 
     def attack(self, attacker, selected, exist=True):
-        if int(selected[0][5]) <= int(self.rules['StructuresProtection']['null'][0]):
-            return
         prom = copy.deepcopy(selected[1])
         selected[1] = self.nearby_section(selected[0], selected[1])
         first_there = False
@@ -446,6 +456,12 @@ class EventHandler:
         j_to = int(selected[1][3])
         ground_from = self.screen_world.biomes[i_from][j_from]
         ground_to = self.screen_world.biomes[i_to][j_to]
+        if int(ground_from[5]) == 0:
+            selected[0] = selected[1]
+            selected[1] = prom
+            if selected in self.selected_cells:
+                self.selected_cells.remove(selected)
+            return
         if ground_from[4] == attacker.fraction_name:
             units_from = int(ground_from[5])
             defending_ground_protection = int(self.rules['StructuresProtection'][ground_to[1]][0])
@@ -586,7 +602,7 @@ class EventHandler:
         in_matrix = 0 <= sq_i < self.screen_world.sq2 and 0 <= sq_j < self.screen_world.sq1
         if not structure:
             structure = self.structures[self.now_structure]
-        if buyer and structure != 'null' and not self.check_structure_placement(self.screen_world.biomes[i][j], structure, buyer):
+        if buyer and structure != 'null' and not self.check_structure_placement(self.screen_world.biomes[i][j], structure, buyer) or (buyer and buyer == self.me and self.screen_world.biomes[i][j][4] != self.me.fraction_name) or self.screen_world.biomes[i][j][1] in self.fractions:
             return
         structure = self.try_connect_structure((i, j), structure)
         self.screen_world.biomes[i][j][1] = structure

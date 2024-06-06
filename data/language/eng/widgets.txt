@@ -1,0 +1,26 @@
+new_game:New game
+name_world:Give your world a name
+download_game:Saves
+online:Online
+ip_port:Enter IP and port
+count_players:Enter the count of players
+port:Enter port number
+local:Local
+settings:Options
+volume:Music volume
+lang:Languages
+quit:Quit
+menu:menu
+attack:attack
+bild:build
+destroy:destroy
+buy:buy
+create:Create
+price:Price
+gives:Gives
+resource:resource
+army:army
+def:defence
+info:Information
+win:YOU HAVE BECOME A LORD OF THE ELEMENTS
+lose:YOUR FACTION IS DEFEATED
