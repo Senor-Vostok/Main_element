@@ -5,12 +5,13 @@ from obb.Constants import ANIMATION_SLOWDOWN_STRUCTURES
 
 
 class ClassicStructure(pygame.sprite.Sprite):
-    def __init__(self, image, xoy, name, textures):
+    def __init__(self, image, xoy, name, textures, scale):
         pygame.sprite.Sprite.__init__(self)
-        self.image = image
+        self.scale = scale
+        self.image = self.__scale(image, scale)
         self.name = name
         try:
-            self.animation = random.choice(textures.animations_structures[name])
+            self.animation = [self.__scale(image, scale) for image in random.choice(textures.animations_structures[name])]
         except Exception:
             pass
         self.rect = self.image.get_rect(center=xoy)
@@ -28,6 +29,10 @@ class ClassicStructure(pygame.sprite.Sprite):
     def draw(self, screen):
         screen.blit(self.image, (self.rect.x, self.rect.y))
 
+    def __scale(self, image, scale):
+        image = pygame.transform.scale(image, (image.get_rect()[2] * scale, image.get_rect()[3] * scale))
+        return image
+
     def update(self, move, y_n):
         self.__start_animation()
         if y_n:
@@ -35,6 +40,10 @@ class ClassicStructure(pygame.sprite.Sprite):
 
 
 class MainStructure(ClassicStructure):
-    def __init__(self, image, xoy, name, textures):
-        ClassicStructure.__init__(self, image, xoy, name, textures)
-        self.animation = textures.animations_main_structures[name]
+    def __init__(self, image, xoy, name, textures, scale):
+        ClassicStructure.__init__(self, image, xoy, name, textures, scale)
+        self.animation = [self.__scale(image, scale) for image in textures.animations_main_structures[name]]
+
+    def __scale(self, image, scale):
+        image = pygame.transform.scale(image, (image.get_rect()[2] * scale, image.get_rect()[3] * scale))
+        return image

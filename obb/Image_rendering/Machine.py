@@ -1,15 +1,17 @@
 import random
+import pygame
 from obb.Objects.Ground_class import Ground
 from obb.Constants import TILE_SIZE, OFFSET_X, OFFSET_Y
 
 
 class World:
-    def __init__(self, win, centre, coord, biomes, handler):
+    def __init__(self, win, centre, coord, biomes, handler, scale=1):
         self.handler = handler
         self.textures = handler.textures
         self.land = self.textures.land
         self.biomes = biomes  # Получение данных о матрице мира
-        self.gr_main = int(TILE_SIZE * self.textures.resizer)
+        self.scale = scale
+        self.gr_main = int(TILE_SIZE * self.textures.resizer * self.scale)
         self.sq1 = centre[0] * 2 // self.gr_main + OFFSET_X[0] if centre[0] * 2 // self.gr_main % 2 == 0 else centre[0] * 2 // self.gr_main + OFFSET_X[1]  # Разбиение экрана на секторы, с помощью которых строится динамическая сетка
         self.sq2 = centre[1] * 2 // self.gr_main + OFFSET_Y[0] if centre[1] * 2 // self.gr_main % 2 == 0 else centre[1] * 2 // self.gr_main + OFFSET_Y[1]
         self.win = win
@@ -86,5 +88,5 @@ class World:
         return True
 
     def add_ground(self, i, j, biome):  # Вспомогательная функция для добавления спрайта земля на сетку
-        sprite = Ground(random.choice(self.land[biome[0]]), (self.now_dr[0] + j * self.gr_main + self.gr_main / 2, self.now_dr[1] + i * self.gr_main + self.gr_main / 2), biome, self.textures)
+        sprite = Ground(random.choice(self.land[biome[0]]), (self.now_dr[0] + j * self.gr_main + self.gr_main / 2, self.now_dr[1] + i * self.gr_main + self.gr_main / 2), biome, self.textures, self.scale)
         self.great_world[i][j] = sprite

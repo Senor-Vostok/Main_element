@@ -25,6 +25,8 @@ class EventHandler:
     def __init__(self):
         pygame.init()
         pygame.mixer.init()
+        pygame.display.set_caption('Main element')
+        pygame.display.set_icon(pygame.image.load(r'data\widgets\menu\ico.png'))
         self.settings = dict()
         self.rules = dict()
         self.read_rules()
@@ -48,7 +50,7 @@ class EventHandler:
         pygame.display.flip()
         self.sounds = Sounds()
         pygame.mouse.set_visible(False)
-        pygame.mixer.Channel(0).play(self.sounds.menu, -1)
+        #pygame.mixer.Channel(0).play(self.sounds.menu, -1)
         self.matr, self.screen_world, self.name_save, self.timer, self.timer_backmusic, self.timer_attack, self.last_interface = None, None, None, None, None, None, None
         self.selected_cells = list()  # Начальная и конечная выбранные клетки
         self.selected_cell = [None, None]
@@ -305,7 +307,7 @@ class EventHandler:
             # запрос от таймера
 
     def load_world(self):
-        pygame.mixer.Channel(0).play(random.choice(self.sounds.background))
+        #pygame.mixer.Channel(0).play(random.choice(self.sounds.background))
         self.timer_backmusic = datetime.now()
         self.timer_attack = datetime.now()
         if self.contact.protocol == 'unknown' or self.contact.protocol == 'host':
@@ -341,7 +343,7 @@ class EventHandler:
                     self.attack(self.me, cells, False)
                 self.timer_attack = datetime.now()
             if (datetime.now() - self.timer_backmusic).seconds >= COOLDOWN_MUSIC:
-                pygame.mixer.Channel(0).play(random.choice(self.sounds.background))
+                #pygame.mixer.Channel(0).play(random.choice(self.sounds.background))
                 self.timer_backmusic = datetime.now()
             self.camera.speed = (self.camera.normal_fps + 1) / (self.clock.get_fps() + 1)
             self.camera.inter()
@@ -366,7 +368,7 @@ class EventHandler:
         self.effects = list()  # Хранит объекты класса Effects
         self.effects_disappearance_resource = list()  # Хранит объекты класса Resources
         self.now_structure = 0
-        pygame.mixer.Channel(0).play(self.sounds.menu, -1)
+        #pygame.mixer.Channel(0).play(self.sounds.menu, -1)
         show_menu(self, self.centre)
 
     def move_to_coord(self, coord):
@@ -472,13 +474,13 @@ class EventHandler:
                 self.contact.send(f'change-0-army|{ground_from[5]}|{ground_from[2]}|{ground_from[3]}-end-')
             elif delta_units_cnt > defending_ground_protection:
                 if ground_to[1] == ground_to[4] and ground_to[1] != 'null':  # проверка уничтожения главной структуры
-                    if attacker == self.me:
-                        self.effects.append(Information(self.__xoy_information, f"{ground_from[4]} уничтожили империю {ground_to[4]}", self.textures.resizer, self.__image_information))
+                    #if attacker == self.me:
+                    #    self.effects.append(Information(self.__xoy_information, f"{ground_from[4]} уничтожили империю {ground_to[4]}", self.textures.resizer, self.__image_information))
                     self.destroy_empire(ground_to[4], ground_from[4], attacker)
                     self.contact.send(f'change-0-army|{ground_to[5]}|{ground_to[2]}|{ground_to[3]}-end-')
                     self.contact.send(f'change-0-army|{ground_from[5]}|{ground_from[2]}|{ground_from[3]}-end-')
-                elif ground_to[4] != 'null' and attacker == self.me:
-                    self.effects.append(Information(self.__xoy_information, f"{ground_from[4]} успешно атакуют {ground_to[4]}", self.textures.resizer, self.__image_information))
+                #elif ground_to[4] != 'null' and attacker == self.me:
+                    #self.effects.append(Information(self.__xoy_information, f"{ground_from[4]} успешно атакуют {ground_to[4]}", self.textures.resizer, self.__image_information))
                 self.update_presource(attacker.uid, int(self.rules["ResourcesFromStructures"][ground_to[1]][0]))
                 attacker.potential_resource += int(self.rules["ResourcesFromStructures"][ground_to[1]][0])
                 self.update_presourse_looser_edition(ground_to[4], -int(self.rules["ResourcesFromStructures"][ground_to[1]][0])) if ground_to[4] != 'null' else None
@@ -490,9 +492,10 @@ class EventHandler:
                 self.contact.send(f'change-0-army|{ground_from[5]}|{ground_from[2]}|{ground_from[3]}-end-')
             else:
                 if ground_to[4] == 'null' and attacker == self.me:
-                    self.effects.append(Information(self.__xoy_information, f"{ground_from[4]} не смогли расширить владения", self.textures.resizer, self.__image_information))
+                   # self.effects.append(Information(self.__xoy_information, f"{ground_from[4]} не смогли расширить владения", self.textures.resizer, self.__image_information))
+                    pass
                 elif attacker == self.me:
-                    self.effects.append(Information(self.__xoy_information, f"{ground_from[4]} не смогли захватить клетку {ground_to[4]}", self.textures.resizer, self.__image_information))
+                    #self.effects.append(Information(self.__xoy_information, f"{ground_from[4]} не смогли захватить клетку {ground_to[4]}", self.textures.resizer, self.__image_information))
                     ground_from[5] = f'{int(int(ground_from[5]) * 0.1)}'
         self.contact.send(f'change-0-fraction|{ground_to[4]}|{ground_to[2]}|{ground_to[3]}-end-')
         self.contact.send(f'change-0-fraction|{ground_from[4]}|{ground_from[2]}|{ground_from[3]}-end-')
@@ -561,21 +564,21 @@ class EventHandler:
 
     def check_structure_placement(self, ground, structure, buyer):
         if ground[4] != buyer.fraction_name:
-            if buyer == self.me:
-                self.effects.append(Information(self.__xoy_information, "Эта клетка не принадлежит Вам", self.textures.resizer, self.__image_information))
+            #if buyer == self.me:
+            #    self.effects.append(Information(self.__xoy_information, "Эта клетка не принадлежит Вам", self.textures.resizer, self.__image_information))
             return False
         if ground[1] != 'null' and structure != 'null':
-            if buyer == self.me:
-                self.effects.append(Information(self.__xoy_information, "Здесь стоит другая структура", self.textures.resizer, self.__image_information))
+            #if buyer == self.me:
+            #    self.effects.append(Information(self.__xoy_information, "Здесь стоит другая структура", self.textures.resizer, self.__image_information))
             return False
         if ground[0] not in self.rules['StructuresPermissions'][structure]:
-            if buyer == self.me:
-                self.effects.append(Information(self.__xoy_information, "Вы не можете строить в этом биоме", self.textures.resizer, self.__image_information))
+            #if buyer == self.me:
+            #    self.effects.append(Information(self.__xoy_information, "Вы не можете строить в этом биоме", self.textures.resizer, self.__image_information))
             return False
         struct_cost = int(self.rules['StructuresCosts'][self.structures[self.now_structure]][0])
         if buyer.resources < struct_cost:
-            if buyer == self.me:
-                self.effects.append(Information(self.__xoy_information, "Не хватает ресурсов", self.textures.resizer, self.__image_information))
+           # if buyer == self.me:
+            #    self.effects.append(Information(self.__xoy_information, "Не хватает ресурсов", self.textures.resizer, self.__image_information))
             return False
         if buyer == self.me:
             pygame.mixer.Channel(1).play(self.sounds.draw)
@@ -613,10 +616,10 @@ class EventHandler:
             self.effects.append(Effect(xoy, self.textures.effects['place'], True))
             if structure in self.structures + self.supports_structure:
                 image = self.textures.animations_structures[structure][0][0]
-                ground.structure = ClassicStructure(image, xoy, structure, self.textures)
+                ground.structure = ClassicStructure(image, xoy, structure, self.textures, ground.scale)
             else:
                 image = self.textures.animations_main_structures[structure][0][0]
-                ground.structure = MainStructure(image, xoy, structure, self.textures)
+                ground.structure = MainStructure(image, xoy, structure, self.textures, ground.scale)
         elif in_matrix and structure == 'null':
             ground = self.screen_world.great_world[sq_i][sq_j]
             if buyer and not isinstance(ground.structure, MainStructure) and buyer.fraction_name == ground.biome[4]:
@@ -736,6 +739,12 @@ class EventHandler:
             if i.type == pygame.QUIT:
                 self.quit()
             if i.type == pygame.MOUSEWHEEL:
+                if 'ingame' in self.interfaces and self.last_interface == self.interfaces['ingame']:
+                    x, y = self.screen_world.world_coord[0] + self.screen_world.sq2 // 2, self.screen_world.world_coord[1] + self.screen_world.sq1 // 2
+                    scale = self.screen_world.scale + int(i.precise_y) / 10 if 0.5 <= self.screen_world.scale + int(i.precise_y) / 10 <= 3 else self.screen_world.scale
+                    self.screen_world = World(self.screen, self.centre, self.screen_world.world_coord, self.screen_world.biomes, self, scale)
+                    self.screen_world.rendering = True
+                    self.move_to_coord((x, y))
                 self.next_struct(int(i.precise_y)) if 'buildmenu' in self.interfaces else None
         return c
 

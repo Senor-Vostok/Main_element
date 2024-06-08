@@ -2,7 +2,7 @@ import random
 
 import obb.Constants
 from obb.Handler.Handler import EventHandler
-from obb.Handler.Handler_show import show_menu, show_hello_menu
+from obb.Handler.Handler_show import show_menu
 import pygame
 
 
@@ -17,7 +17,5 @@ if __name__ == '__main__':
                 file.write('0' * (len(str(obb.Constants.MAX_UID)) - len(str(uid))) + str(uid))
     handler = EventHandler()
     show_menu(handler, handler.centre)
-    if first_play:
-        show_hello_menu(handler, handler.centre)
     while 1:
         handler.update()

@@ -71,14 +71,14 @@ def rendering(handler, machine):
     if None not in handler.selected_cell:
         dr = handler.screen_world.now_dr
         cord = handler.screen_world.world_coord
-        size = handler.textures.land['barrier'][0].get_rect()[2]
+        size = handler.screen_world.great_world[0][0].image.get_rect()[2]
         y1, x1 = dr[1] + (int(handler.selected_cell[0][2]) - cord[0]) * size, dr[0] + (int(handler.selected_cell[0][3]) - cord[1]) * size
         y2, x2 = dr[1] + (int(handler.selected_cell[1][2]) - cord[0]) * size, dr[0] + (int(handler.selected_cell[1][3]) - cord[1]) * size
         pygame.draw.line(handler.screen, (212, 112, 78), (x1 + size / 2, y1 + size / 2), (x2 + size / 2, y2 + size / 2), 5)
     for selected_cell in handler.selected_cells:
         dr = handler.screen_world.now_dr
         cord = handler.screen_world.world_coord
-        size = handler.textures.land['barrier'][0].get_rect()[2]
+        size = handler.screen_world.great_world[0][0].image.get_rect()[2]
         y1, x1 = dr[1] + (int(selected_cell[0][2]) - cord[0]) * size, dr[0] + (int(selected_cell[0][3]) - cord[1]) * size
         y2, x2 = dr[1] + (int(selected_cell[1][2]) - cord[0]) * size, dr[0] + (int(selected_cell[1][3]) - cord[1]) * size
         pygame.draw.line(handler.screen, (190, 152, 118), (x1 + size / 2, y1 + size / 2), (x2 + size / 2, y2 + size / 2), 5)

@@ -94,7 +94,7 @@ def show_popup_menu(self, centre, ground, fraction):
     close_useless(self)
     popup = Interfaces.PopupMenu(self.language_data, centre, self.textures)
     popup.button_build.connect(show_buildmenu, self, self.centre, ground)
-    popup.button_information.text = ground.biome[5]
+    popup.button_information.text = f'{ground.biome[5]} ({int(ground.biome[5]) + int(self.rules["StructuresProtection"][ground.biome[1]][0])})'
     i, j = int(ground.biome[2]), int(ground.biome[3])
     popup.button_destroy.connect(self.place_structure, (i, j), 'null', True, self.me)
     popup.button_buy.connect(self.set_fraction, (i, j), fraction, True, self.me)

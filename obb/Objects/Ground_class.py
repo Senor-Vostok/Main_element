@@ -6,22 +6,23 @@ from obb.Constants import ANIMATION_SLOWDOWN, TILE_SIZE
 
 
 class Ground(pygame.sprite.Sprite):
-    def __init__(self, image, xoy, biome, textures):
+    def __init__(self, image, xoy, biome, textures, scale):
         pygame.sprite.Sprite.__init__(self)
+        self.scale = scale
         self.textures = textures
         if biome[0] in textures.animation_ground:
-            self.animation = textures.animation_ground[biome[0]]
+            self.animation = [self.__scale(im, scale) for im in textures.animation_ground[biome[0]]]
         else:
             self.animation = None
         self.biome = biome  # 0-биом 1-структура 2,3-координаты 4-фракция 5-кол-во юнитов
-        self.image = image  # текущая текстура клетки
-        self.select_image = textures.select
+        self.image = self.__scale(image, scale)  # текущая текстура клетки
+        self.select_image = self.__scale(textures.select, scale)
         self.rect = self.image.get_rect(center=xoy)
         self.select = False
         if biome[1] in textures.animations_structures:
-            self.structure = ClassicStructure(textures.animations_structures[biome[1]][0][0], (self.rect[0] + self.rect[2] // 2, self.rect[1] + self.rect[3] // 2), biome[1], self.textures)
+            self.structure = ClassicStructure(textures.animations_structures[biome[1]][0][0], (self.rect[0] + self.rect[2] // 2, self.rect[1] + self.rect[3] // 2), biome[1], self.textures, self.scale)
         elif biome[1] in textures.animations_main_structures:
-            self.structure = MainStructure(textures.animations_main_structures[biome[1]][0], (self.rect[0] + self.rect[2] // 2, self.rect[1] + self.rect[3] // 2), biome[1], self.textures)
+            self.structure = MainStructure(textures.animations_main_structures[biome[1]][0], (self.rect[0] + self.rect[2] // 2, self.rect[1] + self.rect[3] // 2), biome[1], self.textures, self.scale)
         else:
             self.structure = None
         self.second_animation = 0
@@ -54,23 +55,23 @@ class Ground(pygame.sprite.Sprite):
 
     def draw(self, screen, mouse_click, handler):
         if self.biome[1] != 'null' or self.biome[5] != '0':
-            screen.blit(self.textures.land['barrier'][0], (self.rect.x, self.rect.y))
+            screen.blit(self.__scale(self.textures.land['barrier'][0], self.scale), (self.rect.x, self.rect.y))
         else:
             screen.blit(self.image, (self.rect.x, self.rect.y))
         if self.biome[4] != 'null' and handler.interfaces['ingame'].state_game.active:
-            screen.blit(self.textures.border_fractions[self.biome[4]][self.connect_border(handler.screen_world.biomes)], (self.rect.x, self.rect.y))
+            screen.blit(self.__scale(self.textures.border_fractions[self.biome[4]][self.connect_border(handler.screen_world.biomes)], self.scale), (self.rect.x, self.rect.y))
         if self.rect.colliderect(mouse_click[0], mouse_click[1], 1, 1) and self.biome[0] != 'barrier':
             screen.blit(self.select_image, (self.rect.x, self.rect.y))
         if self.structure:
             self.__draw_structure(screen)
             if self.biome[5] != '0':
-                screen.blit(self.textures.army['shield'][0], (self.rect.x + self.rect[2] // 3, self.rect.y + self.rect[3] // 3))
+                screen.blit(self.__scale(self.textures.army['shield'][0], self.scale), (self.rect.x + self.rect[2] // 3, self.rect.y + self.rect[3] // 3))
         elif self.biome[5] != '0':
             if int(self.biome[5]) < 0:
                 pygame.draw.rect(screen, (255, 0, 0), (self.rect.x, self.rect.y, 30, 30), 2)
             else:
                 category = 'small' if int(self.biome[5]) < obb.Constants.LARGE_ARMY else 'middle' if int(self.biome[5]) < obb.Constants.HEIGHT_ARMY else 'large'
-                screen.blit(self.textures.army[category][0], (self.rect.x, self.rect.y))
+                screen.blit(self.__scale(self.textures.army[category][0], self.scale), (self.rect.x, self.rect.y))
         if self.rect.colliderect(mouse_click[0], mouse_click[1], 1, 1):
             handler.check_ground_please(self)
 
@@ -81,6 +82,10 @@ class Ground(pygame.sprite.Sprite):
         if y_n:
             if self.structure: self.structure.update(move, y_n)
             self.rect.move_ip(move)
+
+    def __scale(self, image, scale):
+        image = pygame.transform.scale(image, (image.get_rect()[2] * scale, image.get_rect()[3] * scale))
+        return image
 
     def __draw_structure(self, screen):
         self.structure.draw(screen)
