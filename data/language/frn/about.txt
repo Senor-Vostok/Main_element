@@ -1,0 +1,7 @@
+mill:Un moulin simple, utilisé pour|n|obtenir des ressources
+tower:... Extension des frontières
+mine:Mine, extrait des ressources.|n|Et c'est tout
+homes:Maisons résidentielles, lieu de|n|vie de vos citoyens
+sawmill:Enlève les arbres en excès
+fisherman:Un excellent endroit pour pêcher
+polygon:Lieu principal pour les entraînements|n|pas comme votre gymnase

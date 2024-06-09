@@ -47,6 +47,7 @@ class Generation:
         for x in range(self.massive):
             for z in range(self.massive):
                 y = floor(noise([x / PERIOD_G, z / PERIOD_G]) * AMP_G)
+                d = ((self.massive // 2 - x) ** 2 + (self.massive // 2 - z) ** 2) ** 0.5
                 landscale[int(x)][int(z)] = self.__get_key(int(y))
 
             percent = int(((x / self.massive) * 100) // 1)

@@ -5,3 +5,4 @@ homes:Residential buildings, the place of life for your|n|citizens
 sawmill:Removes unnecessary trees
 fisherman:Great place for fishing
 polygon:The main place for training|n|not like your Gym
+institute:Get new blueprint for your protection

@@ -1,0 +1,26 @@
+new_game:Nouveau jeu
+name_world:Donnez un nom à la nouvelle sauvegarde
+download_game:Télécharger
+online:En ligne
+ip_port:Pour vous connecter à un hôte distant, saisissez l'adresse IP et le port
+count_players:Entrez le nombre de joueurs
+port:Entrez le code du port
+local:Local
+settings:Paramètres
+volume:Volume de la musique
+lang:Langue
+quit:Quitter
+menu:Menu
+attack:Attaquer
+bild:Construire
+destroy:Détruire
+buy:Acheter
+create:Créer
+price:Prix
+gives:Donne
+resource:Ressource
+army:Armée
+def:Défense
+info:Information
+win:VOUS ÊTES DEVENUS LE MAÎTRE DES ÉLÉMENTS
+lose:VOTRE FACTION A SUBI UNE DÉFAITE

@@ -1,0 +1,26 @@
+new_game: Nuevo juego
+name_world: Nombra el nuevo guardado
+download_game:Descargar
+online:En línea
+ip_port:Para conectar a un host remoto, ingrese IP y puerto
+count_players:Ingrese la cantidad de jugadores
+port:Ingrese el código del puerto
+local:Local
+settings:Configuraciones
+volume:Volumen de la música
+lang:Idioma
+quit:Salir
+menu:Menú
+attack:Atacar
+bild:Construir
+destroy:Destruir
+buy:Comprar
+create:Crear
+price:Precio
+gives:Da
+resource:Recurso
+army:Ejército
+def:Defensa
+info:Información
+win:TE HAS CONVERTIDO EN EL SEÑOR DE LOS ELEMENTOS
+lose:TU FRACCIÓN HA SUFRIDO UNA DERROTA

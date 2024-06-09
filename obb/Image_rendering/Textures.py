@@ -24,7 +24,8 @@ class Textures:
         self.effects = {'mouse1': [self.render(f'data/effects/mouse1/anim{i}.png', (60, 60)) for i in range(1, 6)],
                         'place': [self.render(f'data/effects/place/smog{i}.png', (120, 180)) for i in range(1, 5)],
                         'set': [self.render(f'data/effects/set/anim{i}.png', (60, 60)) for i in range(1, 4)],
-                        'information': [self.render('data/effects/information/back_information.png', (90, 90))]}
+                        'information': [self.render('data/effects/information/back_information.png', (90, 90))],
+                        'music_anim': [self.render(f'data/effects/music/anim{i}.png', (160, 160)) for i in range(1, 23)]}
 
         self.animation_ground = {'water': [self.render(f'data/ground/water{i}.png', (60, 60)) for i in range(1, 4)]}
 
@@ -110,7 +111,8 @@ class Textures:
                                                 [self.render(f'data/structures/homes/home3_{i}.png', (120, 180)) for i in range(1, 4)]],
                                       'sawmill': [[self.render(f'data/structures/sawmill/anim1.png', (120, 180))]],
                                       'fisherman': [[self.render(f'data/structures/fisherman/anim{i}.png', (120, 180)) for i in range(1, 4)]],
-                                      'polygon': [[self.render(f'data/structures/polygon/anim{i}.png', (120, 180)) for i in range(1, 4)]]}
+                                      'polygon': [[self.render(f'data/structures/polygon/anim{i}.png', (120, 180)) for i in range(1, 4)]],
+                                      'institute': [[self.render(f'data/structures/institute/anim{i}.png', (120, 180)) for i in range(1, 4)]]}
 
         # self.destroyed_structures = {} для руин
 

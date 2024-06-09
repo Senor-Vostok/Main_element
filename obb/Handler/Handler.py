@@ -49,8 +49,9 @@ class EventHandler:
         self.screen.blit(self.textures.loading, (self.centre[0] - self.textures.loading.get_rect()[2] // 2, self.centre[1] - self.textures.loading.get_rect()[3] // 2))
         pygame.display.flip()
         self.sounds = Sounds()
+        self.sounds.init_music()
         pygame.mouse.set_visible(False)
-        #pygame.mixer.Channel(0).play(self.sounds.menu, -1)
+        pygame.mixer.Channel(0).play(self.sounds.menu, -1)
         self.matr, self.screen_world, self.name_save, self.timer, self.timer_backmusic, self.timer_attack, self.last_interface = None, None, None, None, None, None, None
         self.selected_cells = list()  # Начальная и конечная выбранные клетки
         self.selected_cell = [None, None]
@@ -307,7 +308,9 @@ class EventHandler:
             # запрос от таймера
 
     def load_world(self):
-        #pygame.mixer.Channel(0).play(random.choice(self.sounds.background))
+        pygame.mixer.Channel(0).play(random.choice(self.sounds.background))
+        x, y = self.centre[0] * 2 - self.textures.effects['music_anim'][0].get_rect()[2] // 2, 40 * self.textures.resizer + self.textures.ingame['back'][0].get_rect()[3] // 2 + self.textures.effects['music_anim'][0].get_rect()[3] // 2
+        self.effects.append(Effect((x, y), self.textures.effects['music_anim'], False))
         self.timer_backmusic = datetime.now()
         self.timer_attack = datetime.now()
         if self.contact.protocol == 'unknown' or self.contact.protocol == 'host':
@@ -343,7 +346,9 @@ class EventHandler:
                     self.attack(self.me, cells, False)
                 self.timer_attack = datetime.now()
             if (datetime.now() - self.timer_backmusic).seconds >= COOLDOWN_MUSIC:
-                #pygame.mixer.Channel(0).play(random.choice(self.sounds.background))
+                pygame.mixer.Channel(0).play(random.choice(self.sounds.background))
+                x, y = self.centre[0] * 2 - self.textures.effects['music_anim'][0].get_rect()[2] // 2, 40 * self.textures.resizer + self.textures.ingame['back'][0].get_rect()[3] // 2 + self.textures.effects['music_anim'][0].get_rect()[3] // 2
+                self.effects.append(Effect((x, y), self.textures.effects['music_anim'], False))
                 self.timer_backmusic = datetime.now()
             self.camera.speed = (self.camera.normal_fps + 1) / (self.clock.get_fps() + 1)
             self.camera.inter()
@@ -368,7 +373,7 @@ class EventHandler:
         self.effects = list()  # Хранит объекты класса Effects
         self.effects_disappearance_resource = list()  # Хранит объекты класса Resources
         self.now_structure = 0
-        #pygame.mixer.Channel(0).play(self.sounds.menu, -1)
+        pygame.mixer.Channel(0).play(self.sounds.menu, -1)
         show_menu(self, self.centre)
 
     def move_to_coord(self, coord):
