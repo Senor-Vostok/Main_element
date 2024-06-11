@@ -163,11 +163,12 @@ class Save_menu:
         y = 210
         for i in saves:
             try:
+                decode, game = self.__decode_world(i)
                 spisok = [BackGround(self.t.save_menu['variant_save'][0], (self.xoy[0] - 30 * r, self.xoy[1] - y * r)),
                           Label(i[:-6], (self.xoy[0] - 30 * r, self.xoy[1] - y * r), int(30 * r)),
                           Button(self.t.save_menu['button_play'], (self.xoy[0] + 235 * r, self.xoy[1] - 25 * r - y * r)),
-                          Button(self.t.save_menu['button_delete'], (self.xoy[0] + 235 * r, self.xoy[1] + 25 * r - y * r))]
-                decode, game = self.__decode_world(i)
+                          Button(self.t.save_menu['button_delete'], (self.xoy[0] + 235 * r, self.xoy[1] + 25 * r - y * r)),
+                          BackGround(self.t.ingame[f'back_{decode[2][0][2]}'][0], (self.xoy[0] - 215 * r, self.xoy[1] - y * r))]
                 if game == 'local':
                     spisok[2].connect(local, decode[0], decode[1], decode[2])
                 else:

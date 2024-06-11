@@ -17,7 +17,7 @@ class Bot:
         self.exist_structers = structures
         self.potential_resource = 0
         self.my_ground = list()
-        self.can_i_do_smth = True
+        self.can_i_do_smth = 0
         self.thread = None
         self.thread_attack = None
         self.can_i_monkey_attack = False
@@ -45,7 +45,7 @@ class Bot:
             for j in range(-obb.Constants.ATTACK_RANGE_BOT, obb.Constants.ATTACK_RANGE_BOT + 1):
                 if handler.screen_world.biomes[x + i][y + j][4] not in self.fractions:
                     handler.set_fraction((x + i, y + j), self.fraction_name, True, self)
-                    a = random.choice(["tower", "polygon", "homes"])
+                    a = random.choice(["tower0", "polygon0", "homes0"])
                     handler.place_structure((x + i, y + j), a, True, self)
                     ok = False
                     break
@@ -196,7 +196,7 @@ class Bot:
                     field = random.choice(self.my_ground)
                     x, y = int(field[2]), int(field[3])
                     structure = random.choice(self.exist_structers)
-                    if self.guides["ResourcesFromStructures"][structure][0] != '0':
+                    if self.guides["ResourcesFromStructures"][structure[:-1]][0] != '0':
                         handler.place_structure((x, y), structure, True, self)
                         break
                 else:

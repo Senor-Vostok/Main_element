@@ -87,6 +87,15 @@ class World:
                     return False
         return True
 
+    def __choice_image(self, biome):
+        ind = 0
+        for i in range(10):
+            if f'{i}' in biome:
+                ind = i
+        name = biome.split(f'{ind}')[0]
+        return self.land[name][ind]
+
     def add_ground(self, i, j, biome):  # Вспомогательная функция для добавления спрайта земля на сетку
-        sprite = Ground(random.choice(self.land[biome[0]]), (self.now_dr[0] + j * self.gr_main + self.gr_main / 2, self.now_dr[1] + i * self.gr_main + self.gr_main / 2), biome, self.textures, self.scale)
+        image = self.__choice_image(biome[0])
+        sprite = Ground(image, (self.now_dr[0] + j * self.gr_main + self.gr_main / 2, self.now_dr[1] + i * self.gr_main + self.gr_main / 2), biome, self.textures, self.scale)
         self.great_world[i][j] = sprite

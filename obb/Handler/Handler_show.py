@@ -54,7 +54,7 @@ def show_buildmenu(self, centre, ground=None):
     build.down.connect(self.next_struct, -1)
     build.up.connect(self.next_struct, 1)
     self.now_structure = 0
-    struct = self.structures[self.now_structure]
+    struct = self.structures[self.now_structure][:-1]
     build.about.new_text(f'{self.language_data["price"]}: {self.rules["StructuresCosts"][struct][0]}\n{self.language_data["gives"]}: {self.language_data["resource"]} - {self.rules["ResourcesFromStructures"][struct][0]}, {self.language_data["army"]} - {self.rules["ArmyFromStructures"][struct][0]}, {self.language_data["def"]} - {self.rules["StructuresProtection"][struct][0]}\n{self.language_data["info"]}: {self.language_data[struct]}')
     i, j = int(ground.biome[2]), int(ground.biome[3])
     build.button_project.connect(self.place_structure, (i, j), None, True, self.me)
@@ -94,7 +94,10 @@ def show_popup_menu(self, centre, ground, fraction):
     close_useless(self)
     popup = Interfaces.PopupMenu(self.language_data, centre, self.textures)
     popup.button_build.connect(show_buildmenu, self, self.centre, ground)
-    popup.button_information.text = f'{ground.biome[5]} ({int(ground.biome[5]) + int(self.rules["StructuresProtection"][ground.biome[1]][0])})'
+    struct = ground.biome[1]
+    if struct in self.textures.animations_structures:
+        struct = struct[:-1]
+    popup.button_information.text = f'{ground.biome[5]} ({int(ground.biome[5]) + int(self.rules["StructuresProtection"][struct][0])})'
     i, j = int(ground.biome[2]), int(ground.biome[3])
     popup.button_destroy.connect(self.place_structure, (i, j), 'null', True, self.me)
     popup.button_buy.connect(self.set_fraction, (i, j), fraction, True, self.me)

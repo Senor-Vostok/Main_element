@@ -27,7 +27,8 @@ class Textures:
                         'information': [self.render('data/effects/information/back_information.png', (90, 90))],
                         'music_anim': [self.render(f'data/effects/music/anim{i}.png', (160, 160)) for i in range(1, 23)]}
 
-        self.animation_ground = {'water': [self.render(f'data/ground/water{i}.png', (60, 60)) for i in range(1, 4)]}
+        self.animation_ground = {'water': [self.render(f'data/ground/water{i}.png', (60, 60)) for i in range(1, 4)],
+                                 'barrier': [self.render(f'data/ground/barrier{i}.png', (60, 60)) for i in range(1, 4)]}
 
         self.land = {'ground': [self.render(f'data/ground/ground{i}.png', (60, 60)) for i in range(1, 5)],
                      'stone': [self.render('data/ground/stone.png', (60, 60))],
@@ -102,17 +103,24 @@ class Textures:
                                          self.render('data/border_fractions/yellow_up_down.png', (60, 60)),
                                          self.render('data/border_fractions/yellow_left_right.png', (60, 60))]}
 
-        self.animations_structures = {'tower': [[self.render(f'data/structures/tower/anim{i}.png', (120, 180)) for i in range(1, 6)]],
-                                      'mill': [[self.render(f'data/structures/mill/anim{i}.png', (120, 180)) for i in range(1, 4)]],
-                                      'mill-support': [[self.render('data/structures/mill/support.png', (60, 60))]],
-                                      'mine': [[self.render(f'data/structures/mine/anim{i}.png', (120, 180)) for i in range(1, 8)]],
-                                      'homes': [[self.render(f'data/structures/homes/home1_{i}.png', (120, 180)) for i in range(1, 4)],
-                                                [self.render(f'data/structures/homes/home2_{i}.png', (120, 180)) for i in range(1, 4)],
-                                                [self.render(f'data/structures/homes/home3_{i}.png', (120, 180)) for i in range(1, 4)]],
-                                      'sawmill': [[self.render(f'data/structures/sawmill/anim1.png', (120, 180))]],
-                                      'fisherman': [[self.render(f'data/structures/fisherman/anim{i}.png', (120, 180)) for i in range(1, 4)]],
-                                      'polygon': [[self.render(f'data/structures/polygon/anim{i}.png', (120, 180)) for i in range(1, 4)]],
-                                      'institute': [[self.render(f'data/structures/institute/anim{i}.png', (120, 180)) for i in range(1, 4)]]}
+        self.animations_structures = {'tower1': [[self.render(f'data/structures/tower/anim{i}.png', (120, 180)) for i in range(1, 6)]],
+                                      'mill1': [[self.render(f'data/structures/mill/anim{i}.png', (120, 180)) for i in range(1, 4)]],
+                                      'mill0': [[self.render('data/structures/mill/support.png', (60, 60))]],
+                                      'mine1': [[self.render(f'data/structures/mine/anim{i}.png', (120, 180)) for i in range(1, 8)]],
+                                      'homes1': [[self.render(f'data/structures/homes/home1_{i}.png', (120, 180)) for i in range(1, 4)]],
+                                                #[self.render(f'data/structures/homes/home2_{i}.png', (120, 180)) for i in range(1, 4)],
+                                                #[self.render(f'data/structures/homes/home3_{i}.png', (120, 180)) for i in range(1, 4)]],
+                                      'sawmill1': [[self.render(f'data/structures/sawmill/anim1.png', (120, 180))]],
+                                      'fisherman1': [[self.render(f'data/structures/fisherman/anim{i}.png', (120, 180)) for i in range(1, 4)]],
+                                      'polygon1': [[self.render(f'data/structures/polygon/anim{i}.png', (120, 180)) for i in range(1, 4)]],
+                                      'institute1': [[self.render(f'data/structures/institute/anim{i}.png', (120, 180)) for i in range(1, 4)]],
+                                      'wall1': [[self.render('data/structures/wall/wall_centre.png', (120, 180))]],
+                                      'wall2': [[self.render('data/structures/wall/wall_forward.png', (120, 180))]],
+                                      'wall3': [[self.render('data/structures/wall/wall_midle.png', (120, 180))]],
+                                      'wall4': [[self.render('data/structures/wall/wall_upleft.png', (120, 180))]],
+                                      'wall5': [[self.render('data/structures/wall/wall_upright.png', (120, 180))]],
+                                      'wall6': [[self.render('data/structures/wall/wall_downleft.png', (120, 180))]],
+                                      'wall7': [[self.render('data/structures/wall/wall_downright.png', (120, 180))]],}
 
         # self.destroyed_structures = {} для руин
 

@@ -11,6 +11,7 @@ from obb.Constants import DEFAULT_COLOR, OCTAVES_G, PERIOD_G, AMP_G, PERCENT_MOV
 class Generation:
     def __init__(self, massive, screen, centre):
         self.textures = Textures()
+        self.counts = {'ground': 4}
         self.translate = {0: 'water', 1: 'sand', 2: 'flower', 3: 'ground', 4: 'stone', 5: 'snow'}
         self.biome_massive = [[['null', 'null', '0', '0', 'null', '0'] for _ in range(massive)] for _ in range(massive)]  # Первый биом второй структура
         self.massive = massive
@@ -57,6 +58,11 @@ class Generation:
 
         for i in range(self.massive):
             for j in range(self.massive):
-                self.biome_massive[i][j][0] = self.translate[landscale[i][j]]
+                biome = self.translate[landscale[i][j]]
+                if biome in self.counts:
+                    biome = biome + f'{random.randint(0, self.counts[biome] - 1)}'
+                else:
+                    biome += '0'
+                self.biome_massive[i][j][0] = biome
                 self.biome_massive[i][j][2] = str(i + BARRIER_SIZE)
                 self.biome_massive[i][j][3] = str(j + BARRIER_SIZE)

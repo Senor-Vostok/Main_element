@@ -55,7 +55,7 @@ class Ground(pygame.sprite.Sprite):
 
     def draw(self, screen, mouse_click, handler):
         if self.biome[1] != 'null' or self.biome[5] != '0':
-            screen.blit(self.__scale(self.textures.land['barrier'][0], self.scale), (self.rect.x, self.rect.y))
+            screen.blit(self.__scale(self.textures.land['flower'][0], self.scale), (self.rect.x, self.rect.y))
         else:
             screen.blit(self.image, (self.rect.x, self.rect.y))
         if self.biome[4] != 'null' and handler.interfaces['ingame'].state_game.active:
