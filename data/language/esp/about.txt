@@ -5,3 +5,5 @@ homes:Edificios residenciales, el lugar|n|de vida de tus ciudadanos
 sawmill:Elimina árboles innecesarios
 fisherman:Gran lugar para pescar
 polygon:El lugar principal para entrenar|n|no es como tu gimnasio.
+institute:Obtenga un nuevo plan para su protección
+wall:Protección efectiva para tu ciudad

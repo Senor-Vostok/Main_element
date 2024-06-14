@@ -53,13 +53,13 @@ def show_buildmenu(self, centre, ground=None):
     build = Interfaces.BuildMenu(self.language_data, centre, self.textures, (ground.rect[0] + ground.rect[2] // 2, ground.rect[1] + ground.rect[3] // 2), self.structures)
     build.down.connect(self.next_struct, -1)
     build.up.connect(self.next_struct, 1)
-    self.now_structure = 0
-    struct = self.structures[self.now_structure][:-1]
-    build.about.new_text(f'{self.language_data["price"]}: {self.rules["StructuresCosts"][struct][0]}\n{self.language_data["gives"]}: {self.language_data["resource"]} - {self.rules["ResourcesFromStructures"][struct][0]}, {self.language_data["army"]} - {self.rules["ArmyFromStructures"][struct][0]}, {self.language_data["def"]} - {self.rules["StructuresProtection"][struct][0]}\n{self.language_data["info"]}: {self.language_data[struct]}')
     i, j = int(ground.biome[2]), int(ground.biome[3])
     build.button_project.connect(self.place_structure, (i, j), None, True, self.me)
     if 'popup_menu' in self.interfaces: self.interfaces.pop('popup_menu')
     self.interfaces['buildmenu'] = build
+    prom = self.now_structure
+    self.now_structure = 0
+    self.next_struct(prom)
 
 
 def show_online(self, centre, t='connect', matr=None, name_save=None, info_players=None):

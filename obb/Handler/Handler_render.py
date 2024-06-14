@@ -3,6 +3,7 @@ from obb.Constants import UPDATE_LIMIT
 from obb.Constants import DEFAULT_COLOR
 from obb.Image_rendering.Efffect import Effect, Information
 import pygame.display
+import math
 import itertools
 
 
@@ -34,11 +35,13 @@ def update_resource_effects(self):
 
 
 def update_titles(handler):
+    fps_text = handler.textures.font.render(f'fps: {int(handler.clock.get_fps())}', False, DEFAULT_COLOR)
     r = handler.textures.resizer
     if 'ingame' in handler.interfaces:
         handler.interfaces['ingame'].count_resource.new_text(str(handler.me.resources))
     handler.screen.blit(handler.version, (10 * r, 10 * r))
     handler.screen.blit(handler.uid, (10 * r, 40 * r))
+    handler.screen.blit(fps_text, (310, 10 * r))
 
 
 def rendering(handler, machine):
@@ -74,14 +77,48 @@ def rendering(handler, machine):
         size = handler.screen_world.great_world[0][0].image.get_rect()[2]
         y1, x1 = dr[1] + (int(handler.selected_cell[0][2]) - cord[0]) * size, dr[0] + (int(handler.selected_cell[0][3]) - cord[1]) * size
         y2, x2 = dr[1] + (int(handler.selected_cell[1][2]) - cord[0]) * size, dr[0] + (int(handler.selected_cell[1][3]) - cord[1]) * size
-        pygame.draw.line(handler.screen, (212, 112, 78), (x1 + size / 2, y1 + size / 2), (x2 + size / 2, y2 + size / 2), 5)
+        try:
+            v1 = x2 - x1, y2 - y1
+            v2 = x2, 0
+            cosl = (v1[0] * v2[0] + v1[1] * v2[1]) / (((v1[0] ** 2 + v1[1] ** 2) ** 0.5) * ((v2[0] ** 2 + v2[1] ** 2) ** 0.5))
+            l = math.acos(cosl) * (180 / math.pi)
+            dop = 0
+            if y1 - y2 < 0:
+                dop = -2 * l
+            image = pygame.transform.rotate(handler.textures.army['way'][0], l - 90 + dop).convert_alpha()
+            x, y = x1 + size / 2, y1 + size / 2
+            delta = ((v1[0] ** 2 + v1[1] ** 2) ** 0.5) // 30
+            delta_x = v1[0] // delta
+            delta_y = v1[1] // delta
+            for i in range(int(delta)):
+                xp, yp = x + delta_x * i, y + delta_y * i
+                handler.screen.blit(image, (xp - image.get_rect()[2] / 2, yp - image.get_rect()[3] / 2))
+        except Exception:
+            pass
     for selected_cell in handler.selected_cells:
         dr = handler.screen_world.now_dr
         cord = handler.screen_world.world_coord
         size = handler.screen_world.great_world[0][0].image.get_rect()[2]
         y1, x1 = dr[1] + (int(selected_cell[0][2]) - cord[0]) * size, dr[0] + (int(selected_cell[0][3]) - cord[1]) * size
         y2, x2 = dr[1] + (int(selected_cell[1][2]) - cord[0]) * size, dr[0] + (int(selected_cell[1][3]) - cord[1]) * size
-        pygame.draw.line(handler.screen, (190, 152, 118), (x1 + size / 2, y1 + size / 2), (x2 + size / 2, y2 + size / 2), 5)
+        try:
+            v1 = x2 - x1, y2 - y1
+            v2 = x2, 0
+            cosl = (v1[0] * v2[0] + v1[1] * v2[1]) / (((v1[0] ** 2 + v1[1] ** 2) ** 0.5) * ((v2[0] ** 2 + v2[1] ** 2) ** 0.5))
+            l = math.acos(cosl) * (180 / math.pi)
+            dop = 0
+            if y1 - y2 < 0:
+                dop = -2 * l
+            image = pygame.transform.rotate(handler.textures.army['way'][0], l - 90 + dop).convert_alpha()
+            x, y = x1 + size / 2, y1 + size / 2
+            delta = ((v1[0] ** 2 + v1[1] ** 2) ** 0.5) // 30
+            delta_x = v1[0] // delta
+            delta_y = v1[1] // delta
+            for i in range(int(delta)):
+                xp, yp = x + delta_x * i, y + delta_y * i
+                handler.screen.blit(image, (xp - image.get_rect()[2] / 2, yp - image.get_rect()[3] / 2))
+        except Exception:
+            pass
     try:
         for interface in handler.interfaces.values():
             interface.surface.update(handler.camera.mouse_click, handler.screen, c)

@@ -1,6 +1,5 @@
 import random
 import threading
-import time
 
 import obb.Constants
 
@@ -17,7 +16,7 @@ class Bot:
         self.exist_structers = structures
         self.potential_resource = 0
         self.my_ground = list()
-        self.can_i_do_smth = 0
+        self.can_i_do_smth = True
         self.thread = None
         self.thread_attack = None
         self.can_i_monkey_attack = False
@@ -45,7 +44,7 @@ class Bot:
             for j in range(-obb.Constants.ATTACK_RANGE_BOT, obb.Constants.ATTACK_RANGE_BOT + 1):
                 if handler.screen_world.biomes[x + i][y + j][4] not in self.fractions:
                     handler.set_fraction((x + i, y + j), self.fraction_name, True, self)
-                    a = random.choice(["tower0", "polygon0", "homes0"])
+                    a = random.choice(["tower1", "polygon1", "homes1"])
                     handler.place_structure((x + i, y + j), a, True, self)
                     ok = False
                     break

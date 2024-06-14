@@ -11,7 +11,7 @@ class ClassicStructure(pygame.sprite.Sprite):
         self.image = self.__scale(image, scale)
         self.name = name
         try:
-            self.animation = [self.__scale(image, scale) for image in random.choice(textures.animations_structures[name])]
+            self.animation = [self.__scale(image, scale) for image in textures.animations_structures[name]]
         except Exception:
             pass
         self.rect = self.image.get_rect(center=xoy)
@@ -30,7 +30,7 @@ class ClassicStructure(pygame.sprite.Sprite):
         screen.blit(self.image, (self.rect.x, self.rect.y))
 
     def __scale(self, image, scale):
-        image = pygame.transform.scale(image, (image.get_rect()[2] * scale, image.get_rect()[3] * scale))
+        image = pygame.transform.scale(image, (image.get_rect()[2] * scale, image.get_rect()[3] * scale)).convert_alpha()
         return image
 
     def update(self, move, y_n):
@@ -45,5 +45,5 @@ class MainStructure(ClassicStructure):
         self.animation = [self.__scale(image, scale) for image in textures.animations_main_structures[name]]
 
     def __scale(self, image, scale):
-        image = pygame.transform.scale(image, (image.get_rect()[2] * scale, image.get_rect()[3] * scale))
+        image = pygame.transform.scale(image, (image.get_rect()[2] * scale, image.get_rect()[3] * scale)).convert_alpha()
         return image

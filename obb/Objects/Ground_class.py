@@ -20,7 +20,7 @@ class Ground(pygame.sprite.Sprite):
         self.rect = self.image.get_rect(center=xoy)
         self.select = False
         if biome[1] in textures.animations_structures:
-            self.structure = ClassicStructure(textures.animations_structures[biome[1]][0][0], (self.rect[0] + self.rect[2] // 2, self.rect[1] + self.rect[3] // 2), biome[1], self.textures, self.scale)
+            self.structure = ClassicStructure(textures.animations_structures[biome[1]][0], (self.rect[0] + self.rect[2] // 2, self.rect[1] + self.rect[3] // 2), biome[1], self.textures, self.scale)
         elif biome[1] in textures.animations_main_structures:
             self.structure = MainStructure(textures.animations_main_structures[biome[1]][0], (self.rect[0] + self.rect[2] // 2, self.rect[1] + self.rect[3] // 2), biome[1], self.textures, self.scale)
         else:
@@ -84,7 +84,7 @@ class Ground(pygame.sprite.Sprite):
             self.rect.move_ip(move)
 
     def __scale(self, image, scale):
-        image = pygame.transform.scale(image, (image.get_rect()[2] * scale, image.get_rect()[3] * scale))
+        image = pygame.transform.scale(image, (image.get_rect()[2] * scale, image.get_rect()[3] * scale)).convert_alpha()
         return image
 
     def __draw_structure(self, screen):

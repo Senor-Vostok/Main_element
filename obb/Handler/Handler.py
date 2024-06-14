@@ -197,7 +197,7 @@ class EventHandler:
             self.info_players[c].append([start_point[0], start_point[1]])
             self.info_players[c].append(FIRST_RESOURCES)
             self.info_players[c].append(0)
-            message += self.start_structures(start_point, fraction, 4)
+            message += self.start_structures(start_point, fraction, 2)
             if "bot" in self.info_players[c][1]:
                 self.init_bot(self.info_players[c][2], self.info_players[c][3], self.info_players[c][4], 0)
             for i in range(-4, 5):
@@ -402,9 +402,9 @@ class EventHandler:
         self.now_structure = (self.now_structure + ind) % len(self.structures) if self.now_structure + ind >= 0 else len(self.structures) - 1
         fs1 = (self.now_structure + 1) % len(self.structures) if self.now_structure + 1 >= 0 else len(self.structures) - 1
         fs2 = (self.now_structure - 1) % len(self.structures) if self.now_structure - 1 >= 0 else len(self.structures) - 1
-        self.interfaces['buildmenu'].structure.image = pygame.transform.scale(self.textures.animations_structures[self.structures[self.now_structure]][0][0], (240 * self.textures.resizer, 360 * self.textures.resizer))
-        self.interfaces['buildmenu'].s2.image = self.textures.animations_structures[self.structures[fs1]][0][0]
-        self.interfaces['buildmenu'].s1.image = self.textures.animations_structures[self.structures[fs2]][0][0]
+        self.interfaces['buildmenu'].structure.image = pygame.transform.scale(self.textures.animations_structures[self.structures[self.now_structure]][0], (240 * self.textures.resizer, 360 * self.textures.resizer))
+        self.interfaces['buildmenu'].s2.image = self.textures.animations_structures[self.structures[fs1]][0]
+        self.interfaces['buildmenu'].s1.image = self.textures.animations_structures[self.structures[fs2]][0]
         struct = self.structures[self.now_structure][:-1]
         about = "\n".join(self.language_data[struct].split("|n|"))
         self.interfaces['buildmenu'].about.new_text(f'{self.language_data["price"]}: {self.rules["StructuresCosts"][struct][0]}\n{self.language_data["gives"]}: {self.language_data["resource"]} - {self.rules["ResourcesFromStructures"][struct][0]}, {self.language_data["army"]} - {self.rules["ArmyFromStructures"][struct][0]}, {self.language_data["def"]} - {self.rules["StructuresProtection"][struct][0]}\n{self.language_data["info"]}: {about}')
@@ -490,6 +490,13 @@ class EventHandler:
                 ground_to[5] = f'{int(ground_to[5]) + count_army_from}'
             else:
                 if count_army_from > count_army_to:
+                    if count_army_to != 0:
+                        i, j = i_to - self.screen_world.world_coord[0], j_to - self.screen_world.world_coord[1]
+                        if i in range(self.screen_world.sq2) and j in range(self.screen_world.sq1):
+                            im = self.textures.effects['fight'][0]
+                            c = self.screen_world.great_world[i][j].rect[2] // 2
+                            x, y = self.screen_world.great_world[i][j].rect[0] + c - im.get_rect()[2] // 2, self.screen_world.great_world[i][j].rect[1] + c - im.get_rect()[3] // 2
+                            self.effects.append(Effect((x, y), self.textures.effects['fight'], True, 8))
                     ground_from[5] = f'{int(ground_from[5]) - count_army_from}'
                     ground_to[5] = f'{count_army_from - count_army_to}'
                     if structure_to in self.fractions:
@@ -654,10 +661,10 @@ class EventHandler:
             xoy = (ground.rect[0] + ground.rect[2] // 2, ground.rect[1] + ground.rect[3] // 2)
             self.effects.append(Effect(xoy, self.textures.effects['place'], True))
             if structure in self.structures + self.variants_structures:
-                image = self.textures.animations_structures[structure][0][0]
+                image = self.textures.animations_structures[structure][0]
                 ground.structure = ClassicStructure(image, xoy, structure, self.textures, ground.scale)
             else:
-                image = self.textures.animations_main_structures[structure][0][0]
+                image = self.textures.animations_main_structures[structure][0]
                 ground.structure = MainStructure(image, xoy, structure, self.textures, ground.scale)
         elif in_matrix and structure == 'null':
             ground = self.screen_world.great_world[sq_i][sq_j]
